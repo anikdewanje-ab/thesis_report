@@ -1,0 +1,69 @@
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+% ===========================================================================
+% WARNING. The original skeleton claimed contribution 1 as "EMPIRICAL:
+% LLM-agent coordination degrades more gracefully than a doctrine-grounded
+% workflow baseline under novel disruption." THAT IS THE OPPOSITE OF THE
+% RESULT. It was the proposal's expectation. It has been replaced below.
+% ===========================================================================
+
+\section{Summary}
+\label{sec:concl:summary}
+% Restate the four research questions and answer each in two or three
+% sentences. No new evidence here, and no hedging.
+%   RQ1 Can it beat the scripted baseline? No, and it also loses to a null
+%       policy. Chapters~\ref{ch:results} and \ref{ch:critique}.
+%   RQ2 Why not? A commitment failure, not a comprehension failure.
+%       Chapter~\ref{ch:discussion}.
+%   RQ3 What would have to change? Constrain commitment; test on scenarios
+%       that discriminate. Section~\ref{sec:concl:future}.
+%   RQ4 What should a designer consider? Chapter~\ref{ch:design}.
+% Then the four engineering sub-questions, one line each, pointing at
+% Chapters~\ref{ch:data}, \ref{ch:agentic}, \ref{ch:eval} and \ref{ch:results}.
+
+\section{Contributions Revisited}
+\label{sec:concl:contributions}
+% The four contributions from Section~\ref{sec:intro:contributions}, restated
+% against the evidence that was actually produced:
+%
+%  1. ARTEFACT. Built and running: 10 agents across 8 organisations, Postgres
+%     as single source of truth and active broker, plus a doctrine-grounded
+%     baseline at audited parity (Chapter~\ref{ch:validity}).
+%
+%  2. EMPIRICAL, AND NEGATIVE. 310 scored runs over 7 scenarios. The agentic
+%     architecture does not outperform the scripted baseline on resident
+%     survival, and underperforms a null policy. This is a result, and it is
+%     reported as one.
+%
+%  3. DIAGNOSTIC. The deficit is located and measured: commitment, not
+%     comprehension. This is the part a future builder can act on.
+%
+%  4. METHODOLOGICAL. The shared append-only event log as the backbone of a
+%     fair, auditable, replayable comparison; and Gate 0, the treatment-
+%     validity check that catches a non-discriminating disruption before it is
+%     scored. A protocol that found its own primary arm degenerate and
+%     specified the gate that would have caught it.
+
+\section{Future Work}
+\label{sec:concl:future}
+% RQ3 lives here. Lead with the one experiment that matters and rank the rest.
+%
+% 1. THE COMMITMENT-CONSTRAINED VARIANT. The highest-value follow-up this
+%    analysis produces. Cap re-plans, or forbid cancelling a leg already in
+%    flight; run against the same scenarios under the same models. One
+%    campaign, no new scenario authoring. It is also the experiment that would
+%    settle the causal direction this thesis explicitly leaves open.
+%
+% 2. SCENARIOS THAT PASS GATE 0. Author disruptions where a no-replan control
+%    demonstrably fails, so adaptation has something to prove. Until that runs,
+%    "can an agentic architecture ever beat a scripted one" is open, not
+%    answered.
+%
+% 3. A DESIGN THE EVALUATION COULD SEE. A larger k (10 could not detect a
+%    moderate effect), more than one SIM_TIME_SCALE (H4 was never tested), and
+%    a model set fixed before the arm runs.
+%
+% 4. Longer-horizon: resident-level agents, an equity dimension in the rubric,
+%    compound and cascading disruptions, multi-case replication beyond a single
+%    facility, other cities and hazards.

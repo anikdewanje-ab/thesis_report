@@ -1,0 +1,103 @@
+\chapter{Validity: Are the Two Systems Comparable?}
+\label{ch:validity}
+
+% SOURCE OF TRUTH: thesis-pack/08-validity/PARITY.md (authoritative on every
+% parity claim and every deviation). Bound to workflow_baseline/test_parity.py.
+% Supporting: ADR-0015 (scope of the independent variable), ADR-0016 (the world
+% is an execution model), ADR-0003 (event log as evaluation backbone).
+%
+% WHY THIS CHAPTER EXISTS. The whole thesis rests on one comparison. If the two
+% systems do not see the same world or cannot say the same things, the
+% comparison measures the rig and not the architecture. This chapter is what
+% makes the result admissible. Write it BEFORE the results chapter is defended.
+%
+% The claim to make: parity is DEMONSTRATED by a capability table and a
+% conformance test, not asserted. Deviations are declared, not hidden, and each
+% one is reported WITH ITS DIRECTION.
+
+\section{What Parity Has to Mean Here}
+\label{sec:val:definition}
+% The single independent variable is the coordination strategy: LLM reasoning
+% against pre-scripted branching. Everything else is held identical and audited.
+% Parity is held by reuse by identity, not by subclassing (PARITY sec.0).
+
+\section{The Capability Table}
+\label{sec:val:table}
+% The five axes PARITY audits, one subsection or one table row each:
+%   1. Information horizon  - same world events, same sim-time, same event_log
+%   2. Action vocabulary    - same command set
+%   3. World model          - same map, ORS routing, geocoding, fleet state
+%   4. Scenario inputs      - same loader, paired agentic_/baseline_ files
+%   5. Output substrate     - one shared event_log, one scoring path
+% Note the collapsed edge (ADR-0015 rule 3) and the declared reach gap (2d).
+
+\section{Scope of the Independent Variable}
+\label{sec:val:scope}
+% ADR-0015, superseding B1: since ADR-0015 the IC absorbs agent-bis AND
+% agent-hochbahn and authors its own run schedule.
+% CRITICAL: ADR-0015 rule 7 (a sequential baseline reserve) is NOT implemented.
+% The thesis must not cite it as built. See the dated status note on the ADR.
+
+\section{The Seven Declared Deviations}
+\label{sec:val:deviations}
+% Report each one WITH ITS DIRECTION. This is required by
+% EVALUATION_PROTOCOL sec.14 item 7. From RESULTS sec.6.7:
+%   1-4  Inert. Envelope id, envelope to, RESPONSE_KIND, empty model_id.
+%        None can affect a result; each is pinned by a test.
+%   5    The consolidated Lage (one node holds command and fleet pictures).
+%        A REAL ADVANTAGE TO THE CONTROL. Accepted for doctrinal reasons and,
+%        in PARITY's words, "reported rather than corrected".
+%   6    The IC reads ORS road distance and duration for its run schedule.
+%        Also a real advantage to the control. Same treatment.
+%   7    Only the baseline's scenarios declare a world. Still OPEN when the
+%        campaign ran, which gate 4 did not permit.
+%        CLOSED BY RE-ARGUMENT - see the next section.
+
+\section{Deviation 7 and Why It Does Not Threaten the Result}
+\label{sec:val:dev7}
+% EVALUATION_PROTOCOL sec.12 gate 4 requires deviation 7 "closed, or re-argued
+% in writing". PARITY sec.4e IS the written re-argument; it was simply never
+% named as the gate's discharge.
+% The argument: declaring a world on the baseline side removes the last place
+% the control's outcome was written down rather than earned. So the deviation
+% runs AGAINST the baseline.
+% What settles it: the claim being made is that the BASELINE WON. A deviation
+% that disadvantages the baseline cannot explain a baseline win. It could only
+% have understated the margin.
+% Be honest about the shape of this argument: had the agentic side won, this
+% gate would have had to be closed properly first. Say so.
+% Declare it as: an asymmetry that remained open, whose direction is opposed to
+% the result, therefore not a threat to it. (RESULTS sec.6.8 item 1.)
+
+\section{Two Further Asymmetries Outside the Numbered Seven}
+\label{sec:val:extra}
+% Both favour the baseline. Both belong here and in the limitations.
+%   - The bus-km replacement-leg anchor. Where a replacement leg starts differs
+%     between the systems. Declared and deliberately not closed. At most 6 km on
+%     the three scenarios measured (83.1 vs a depot-anchored 89.1 on
+%     baseline_road_closure). No level moves in that band.
+%   - The _PB_FALLBACK mis-framing. agentic/bis/prompts.py::_playbook_for has no
+%     route_update or bus_breakdown branch, so both fall to the fallback
+%     playbook, whose instruction is to assume the resource is not coming.
+%     An AGENTIC-SIDE deficit that makes the S02 comparison unfair IN THE
+%     BASELINE'S FAVOUR. The deadline to fix it passed. Disclosed limitation.
+
+\section{The Reserve-Bus Mechanism}
+\label{sec:val:reserve}
+% A NAMED MECHANISM, NOT A CONFOUND. This is the author's decision of
+% 2026-09-06, recorded in ADR-0017 sec.1.
+% What happens: every scenario declares bus-2 as role: reserve. The baseline's
+% logistics.run_schedule never reads role, so it assigns greedily to the
+% earliest-free bus and bus-2 flies in parallel from t0. The agentic Hochbahn
+% releases bus-2 only for four named reasons and otherwise runs bus-1 serially.
+% How to report it: under that decision, leaving the reserve parked while
+% residents would drown is a DECISION-QUALITY FAILURE of the agentic side.
+% Report it as a finding and name the mechanism. Do not call it noise.
+
+\section{How Parity Is Verified}
+\label{sec:val:verification}
+% workflow_baseline/test_parity.py and agentic/core/test_report_contracts.py are
+% the two tests that read the docs. 160 tests collected in workflow_baseline/.
+% Mention the one known inaccuracy in the suite's own bookkeeping (PARITY).
+% Also: the retired instrument and what the thesis loses by its retirement
+% (PARITY sec.0).

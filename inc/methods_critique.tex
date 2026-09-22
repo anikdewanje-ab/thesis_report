@@ -1,0 +1,113 @@
+\chapter{Methods Critique}
+\label{ch:critique}
+
+% SOURCE OF TRUTH: thesis-pack/09-method/EVALUATION_PROTOCOL_V2.md
+% (= PREREGISTRATION Amendment 16, 2026-09-22), plus RESULTS sec.6.7 and 6.8,
+% and the Gate 0 evidence in thesis-pack/11-results/data/discrimination-*.md.
+%
+% WHY THIS IS A CHAPTER AND NOT A SUBSECTION.
+% Both pre-registered hypotheses failed, and the protocol then found that its
+% own primary arm could not have resolved in either direction. That is the
+% thesis's strongest contribution, not its weakest moment. A protocol that
+% detects its own degenerate treatment and specifies the negative control that
+% would have caught it is a better result than a confirmed hypothesis.
+% Write it in that voice: a finding, reported, not an apology.
+%
+% TONE RULE. No hedging and no self-flagellation. State the defect, state the
+% evidence, state the gate that catches it, state what stands.
+
+\section{The Defect}
+\label{sec:crit:defect}
+% V2 Part I sec.1. On all five novel scenarios a controller that IGNORES every
+% disruption commits byte-identical orders and scores the identical level. The
+% baseline drives the same 60.63 bus-km disrupted as undisrupted.
+% Therefore the baseline's S = 1.000 is THE NULL POLICY'S SCORE.
+% The novel arm was not a valid adaptability test.
+
+\section{Gate 0: Treatment Validity}
+\label{sec:crit:gate0}
+% V2 Part II, sec.4-6. The rule, its three conditions, and the result of
+% applying it to the v1 scenario set.
+% THE EVIDENCE: thesis-pack/11-results/data/discrimination-20260922T122707.md.
+% Every row reads discriminates: no. This one table supports the supersession
+% and belongs in the thesis as a table, not a footnote.
+% The contribution to claim: a pre-registered protocol that specifies the
+% negative control a disruption must pass BEFORE it can be scored as a
+% disruption at all.
+
+\section{What Is Withdrawn and What Stands}
+\label{sec:crit:withdrawn}
+% V2 sec.2. Be precise, because this is where an examiner will push.
+% WITHDRAWN: H2's verdict AS A STATEMENT ABOUT ADAPTABILITY. Never write that
+%   the baseline "adapted", "recovered" or "replanned better".
+% NOT REPLACED BY: an agentic win. The withdrawal cuts one way only.
+% STANDING, UNCHANGED: every number. scores.jsonl was not regenerated. S, RD,
+%   every recovery level and all 27 Gate 1 verdicts are byte-identical.
+%   The agentic deficit is NOT softened: regret against the null policy is
+%   negative in all 15 novel cells, and 68 of 150 runs came out worse than
+%   doing nothing.
+
+\section{The Mechanism, Corrected by Measurement}
+\label{sec:crit:mechanism}
+% V2 sec.11.2 and 11.4. The v1 write-up diagnosed "execution handshakes".
+% MEASUREMENT SUPERSEDES IT: handshake closure is 0.938 over 1,932 addressed
+% requests. The dominant mechanism is residents NEVER DISPATCHED AT ALL
+% (r = -0.745 with S).
+% The re-diagnosis is a COMMITMENT failure, not a comprehension one. Losses are
+% quantised at whole bus-loads. Full-delivery rate falls from 90 % at the
+% minimum plan-revision count to 32 % at six or more.
+% STATE THE LIMIT: the causal direction is explicitly NOT established. Plan
+% revisions track survival (r = -0.408) but 53 % of aborts are post-failure
+% stand-downs, so observational data cannot separate cause from consequence.
+% Name the experiment that would: a commitment-constrained variant on the same
+% scenarios. This is FUTURE WORK, not a defect.
+
+\section{The Pre-Registered Primary Was Underpowered by Construction}
+\label{sec:crit:power}
+% RESULTS sec.2 and sec.6.8 item 4; PREREGISTRATION Amendment 15.
+% Two separate things to report, and do not merge them:
+%  (a) A TIMING DEVIATION. The registered Clopper-Pearson interval, the
+%      scenario-level sign test and Holm-Bonferroni were all implemented AFTER
+%      the result was known. Under sec.0 that analysis is exploratory. It agrees
+%      with the verdict it was checking, which does not excuse the timing.
+%  (b) A DESIGN FINDING, which is the more interesting one. At k = 10 the
+%      registered aggregation CANNOT REACH conventional significance however the
+%      data fall. A two-sided exact sign test on five scenarios cannot return
+%      less than 0.0625, and ties push it higher: qwen3.5 and glm-5.2 each tie
+%      two scenarios, leaving a floor of 0.250. Both models are ALREADY AT the
+%      smallest p their data could have produced.
+% Report (b) as a methods finding about pre-registered analysis plans, not as an
+% apology. The design would not have detected a moderate effect had one existed.
+
+\section{The Cut-Point Sensitivity Analysis}
+\label{sec:crit:sensitivity}
+% RESULTS sec.6.7. EVALUATION_PROTOCOL sec.14 item 1 makes the
+% 0.40 / 0.50 / 0.60 sensitivity a PRECONDITION on the headline, and it was
+% missing: summary.md asserted it must be reported but printed no table.
+% It is now emitted, and THE RESULT SUPPORTS THE HEADLINE. Every cell in the
+% three full novel arms reads the same median at all three cuts except
+% unverified_persons_report / deepseek (2.0 -> 1.5 at 0.60). No
+% agentic-vs-baseline ordering moves anywhere in the cut range.
+
+\section{Limitations Declared, With the Position Taken on Each}
+\label{sec:crit:limitations}
+% From thesis-pack/README.md. These are POSITIONS, not open questions, and none
+% blocks submission. One short subsection or one table row each:
+%   1. The novel arm was not a valid adaptability test (Gate 0). Declare it and
+%      claim the methods contribution.
+%   2. The causal direction of plan churn is open. FUTURE WORK, not a defect.
+%      Name the commitment-constrained experiment.
+%   3. PARITY deviation 7. Closed by re-argument; see Chapter~\ref{ch:validity}.
+%   4. 42 of 87 SOURCE_PENDING citations. A limitation on the "doctrine-grounded"
+%      claim ONLY. Affects no number. 45 of 87 are cited to a page.
+%   5. One SIM_TIME_SCALE (8.4). H4 WAS NOT TESTED. Report no crossover, trend
+%      or scale-dependence claim of any kind. Permanent.
+%   6. The H2 primary implemented late. Already written up; labelled exploratory.
+% Plus the standing caveats from RESULTS sec.6.1-6.6: the level cap on partial
+% series, the six over-ceiling runs, the third-model churn, the two dirty-tree
+% runs, the 28 non-quiescent runs, and the unfrozen :cloud model tags.
+
+\section{What This Protocol Still Does Not Measure}
+\label{sec:crit:scope}
+% V2 sec.15. Close the chapter on scope, honestly and without padding.
+% Then sec.16: what an examiner should take from this.

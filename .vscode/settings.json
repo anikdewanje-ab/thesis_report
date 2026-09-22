@@ -1,0 +1,48 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/*.aux": true,
+        "**/*.log": true,
+        "**/*.out": true,
+        "**/*.toc": true,
+        "**/*.lof": true,
+        "**/*.lot": true,
+        "**/*.bbl": true,
+        "**/*.blg": true,
+        "**/*.synctex.gz": true,
+        "**/*.fls": true,
+        "**/*.fdb_latexmk": true
+    },
+
+    "latex-workshop.latex.tools": [
+        {
+            "name": "tectonic",
+            "command": "tectonic",
+            "args": [
+                "-X",
+                "compile",
+                "--synctex",
+                "--keep-logs",
+                "--keep-intermediates",
+                "%DOC%.tex"
+            ],
+            "env": {}
+        }
+    ],
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "tectonic",
+            "tools": ["tectonic"]
+        }
+    ],
+    "latex-workshop.latex.recipe.default": "tectonic",
+    "latex-workshop.latex.autoBuild.run": "onSave",
+    "latex-workshop.latex.outDir": "%DIR%",
+    "latex-workshop.view.pdf.viewer": "tab",
+    "latex-workshop.message.update.show": false,
+    "makefile.configureOnOpen": false
+}

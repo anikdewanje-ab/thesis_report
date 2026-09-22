@@ -1,0 +1,101 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+% ===========================================================================
+% WARNING, READ BEFORE WRITING. The original skeleton of this chapter asserted
+% "LLM-agent coordination degrades more gracefully than pre-scripted
+% workflows". THAT IS THE OPPOSITE OF WHAT HAPPENED. It was the proposal's
+% expected finding, written in before the data existed. It has been removed.
+% If any draft still carries it, delete it.
+% ===========================================================================
+
+\section{Interpretation}
+\label{sec:disc:interpretation}
+% Answer RQ1 and RQ2 directly, in operational terms, then stop.
+%
+% RQ1: No. The baseline saved every resident in every novel run; the best
+% agentic configuration saved 90 %. Gate 1 fails 26 of 27 cells.
+% Sharpen it with the regret result: the agentic system did not merely lose to
+% a better system, it lost to INACTION. 68 of 150 runs came out worse than
+% doing nothing.
+%
+% BUT SAY WHAT THE BASELINE'S WIN IS AND IS NOT. Its S = 1.000 is invariance,
+% not recovery. It gained nothing by responding: regret exactly zero in all 50
+% runs. Never write that it "adapted" or "replanned better"
+% (Chapter~\ref{ch:critique}).
+%
+% RQ2: The deficit is a COMMITMENT failure, not a comprehension failure.
+% Walk the eliminated alternatives, because the elimination is what makes the
+% claim credible: wrong population (no, 150/150 correct), message layer (no,
+% 93.8 % closure), too few missions or a withheld reserve (no, ~2.3 dispatches
+% either way, bus-2 used in 100 % of runs), scorer dedup (no), driver
+% over-claiming (no), running out of clock (mostly no).
+% Then the positive evidence: the loss is QUANTISED at whole bus-loads, and
+% plan revisions band monotonically against delivery.
+%
+% The rubric is where "they can reason, they cannot finish" is visible:
+% parity on the five criteria about DECIDING, short on five about CLOSING THE
+% LOOP. Do not round that to "decision-quality parity" - it is a split.
+
+\section{The Capability Ordering}
+\label{sec:disc:capability}
+% Mean RD narrows with model capability: deepseek -0.27, glm-5.2 -0.16,
+% qwen3.5 -0.10, consistent across all five novel disruptions.
+% Under the regret reading this is "how much damage the response did", not
+% "how far behind the baseline it fell". Say it that way.
+% DO NOT EXTRAPOLATE past qwen3.5. The design does not support it, and there is
+% no capability threshold observable within the final model set.
+% qwen3.5 also strands far fewer residents than the others (2.0-5.0 per 100 vs
+% 10-22.5), so its deficit has a materially different shape from deepseek's.
+
+\section{Trade-offs}
+\label{sec:disc:tradeoffs}
+% The baseline wins response time, cost and determinism, and it also won the
+% primary outcome. Report that without softening.
+% The agentic cost is an order of magnitude: 9-10x messages per resident
+% delivered, ~800k tokens, 1.8-2.7x wall-clock.
+% The honest framing: this is a cost with no demonstrated benefit ON THESE
+% SCENARIOS. Whether it ever buys anything is untested here, because no
+% scenario in this thesis required it to.
+
+\section{Transferability}
+\label{sec:disc:transfer}
+% Which domains share the two conditions this case was built around: a
+% disruption space too large to pre-enumerate, and heterogeneous actors holding
+% local information.
+% CAUTION. This thesis did not demonstrate an agentic advantage under those
+% conditions. What transfers is the METHOD and the DIAGNOSIS, not a positive
+% result. Generalise the design considerations
+% (Chapter~\ref{ch:design}), not the architecture's performance.
+
+\section{Threats to Validity}
+\label{sec:disc:validity}
+% Construct, internal, external, conclusion validity.
+% Construct validity of the primary DV is argued in
+% Section~\ref{sec:eval:construct}; parity and the deviations are
+% Chapter~\ref{ch:validity}; treatment validity is
+% Chapter~\ref{ch:critique}. Summarise, do not repeat.
+
+\section{Limitations}
+\label{sec:disc:limits}
+% State these plainly. Being caught not having noticed is worse than declaring.
+% The full list with the position on each is in Chapter~\ref{ch:critique};
+% keep this section short and point there.
+%   - single case: one facility, one city, one hazard
+%   - one SIM_TIME_SCALE (8.4), so H4 was not tested
+%   - k = 10 (NOT the ~30 the proposal planned; Amendment 1 set it on budget
+%     and precision grounds after power.py showed no k buys H1)
+%   - the scenario-scaling sweep was never run
+%   - no equity dimension: the resident population is homogeneous by
+%     declaration, so a max-min subgroup difference is identically zero
+%   - residents modelled as a passive count, not as agents
+%   - the feasibility ceiling complicates cross-study comparison
+%   - LLM nondeterminism; :cloud tags are not version-frozen
+%   - the novel arm's third model changed four times, so that arm is
+%     exploratory under PREREGISTRATION sec.0
+
+\section{Lessons Learned}
+\label{sec:disc:lessons}
+% Short. What would be built differently, as a bridge into
+% Chapter~\ref{ch:design}, which carries the generalisable version.
+% Resist duplicating that chapter here.

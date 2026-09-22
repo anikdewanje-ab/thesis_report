@@ -1,0 +1,32 @@
+\chapter{Live Visualization UI}
+\label{ch:ui}
+
+\section{Goals}
+\label{sec:ui:goals}
+% Real-time observability for both systems; same UI, swappable backend.
+% Also an inspection tool: the process log is how agent behaviour was debugged
+% and is how a reader can audit a single run.
+
+\section{Backend: FastAPI and WebSocket Fan-Out}
+\label{sec:ui:backend}
+% Per-agent watchers, scenario dispatcher, sim control (play/pause/reset),
+% ORS route enrichment, broadcast hub.
+% Target design uses LISTEN/NOTIFY; the current prototype tails per-agent state
+% files. Keep consistent with Section~\ref{sec:data:notify}.
+
+\section{Frontend: React and Leaflet}
+\label{sec:ui:frontend}
+% Hamburg map, agent and vehicle markers, state panel, event timeline, process
+% log with expandable JSON rows.
+
+\section{The ACK Channel}
+\label{sec:ui:ack}
+% The UI is a passive viewer but it closes the feedback loop: when an animation
+% finishes it sends task_complete with the real position, which becomes the
+% agent's ground truth. See Section~\ref{sec:ag:runtime}.
+% Note the parity implication: this channel must behave identically for both
+% systems, see Section~\ref{sec:eval:parity}.
+
+\section{System Selector}
+\label{sec:ui:selector}
+% Workflow vs. agentic toggle over the same visualisation.

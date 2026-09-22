@@ -1,0 +1,134 @@
+\chapter{Case Study: Storm Surge in Hamburg}
+\label{ch:casestudy}
+
+\section{Scenario Overview}
+\label{sec:cs:overview}
+
+This thesis uses one concrete case to study evacuation coordination. The case is
+a predicted storm surge in Hamburg that forces the evacuation of a nursing home
+on the bank of the river Elbe. This section describes the hazard, the site, and
+the coordination task. The sections that follow then describe the organizations
+involved, the ten steps they go through, and the disruptions used to test them.
+
+\subsection{The Hazard}
+\label{sec:cs:overview:hazard}
+
+Hamburg lies about 100 kilometres inland, but the Elbe is tidal along its whole
+course through the city. A storm over the North Sea can push water up the
+estuary and raise the water level in the middle of the city. Hamburg has lived
+with this risk for a long time, and the risk is expected to grow with climate
+change \parencite{vonstorch2008}. Risk studies for the German Bight and for the
+Elbe estuary model how such extreme surges develop and what areas they reach
+\parencite{oumeraci2015a,wahl2015a}. The case study takes this hazard as given.
+The thesis does not model the flood itself. It models what people and
+organizations have to do once a surge is forecast.
+
+The important property of the hazard, for this thesis, is the warning time. A
+storm surge is not a sudden event. It is forecast hours in advance. This gives
+responders a window to act, but the window is fixed and it closes. That makes
+the scenario a planning problem under a deadline, which is what the thesis wants
+to study.
+
+\subsection{The Site}
+\label{sec:cs:overview:site}
+
+The site is the Augustinum, a senior care facility at Elbchaussee 374, 22609
+Hamburg. It sits close to the river in the west of the city. The scenario
+assumes 100 residents who all have to leave before the water arrives.
+
+The residents are the reason this case is hard. They are old. Many of them
+cannot walk far, cannot drive, and cannot be told to leave on their own.
+Evacuating them is not a matter of warning people. It is a transport and care
+operation. Buses have to be requested, staffed, and routed. Shelters have to be
+found that can take a large group at short notice. Medical staff have to travel
+with the convoy. Research on evacuation planning for coastal cities shows that
+moving elderly populations is the part that dominates the logistics
+\parencite{yin2024}, and evacuation models that ignore differences in mobility
+underestimate how long the operation takes \parencite{alqahtani2025a}.
+
+Here the thesis also meets a gap in the literature. The German storm-surge work
+cited above studies the hazard, the risk, and the damage. It does not study the
+evacuation logistics of vulnerable groups on the Elbe coast. The elderly
+evacuation work is set in Shanghai and New York, not in Germany. So there is no
+ready-made model of this exact operation to reuse, which is one reason the case
+is worth building.
+
+\subsection{The Coordination Task}
+\label{sec:cs:overview:task}
+
+The task is to move 100 residents from the Augustinum to school buildings that
+serve as emergency shelters, before the forecast high water, and to bring them
+there safely.
+
+No single organization can do this alone. The city crisis unit knows which
+facilities are at risk. The nursing home knows how many residents it has and
+what care they need. The schools know how many beds they can offer. The public
+transport operator owns the buses. The police can escort a convoy. The medical
+service can send a team for the trip. Each of these actors holds information the
+others do not have, and each controls resources the others cannot use directly.
+The plan only exists once they talk to each other.
+
+This is the property that makes the case a fair test of the thesis claim. Two
+conditions hold at the same time. First, the actors are heterogeneous and hold
+local information, so coordination has to be done by communication and not by a
+central planner who already knows everything. Second, the space of things that
+can go wrong is too large to write down in advance. A road can flood, a shelter
+can lose capacity, a bus can break down, and these can happen together and in
+the middle of the operation. A pre-written script can cover the cases its author
+thought of. It cannot cover the rest. Chapter~\ref{ch:eval} uses exactly
+this difference to compare the two systems.
+
+The scenario is deliberately small enough to run many times and large enough to
+be realistic. The roster is fixed at two buses and two receiving shelters, with
+one police escort and one medical team. Each bus has 50 seats, so the 100
+residents do not fit in a single trip. Each shelter declares 60 beds, so the
+120 beds cover the residents with only 20 to spare, and neither shelter on its
+own can take everyone.
+
+These numbers are chosen, not incidental. They are what make the allocation a
+real decision. A single bus and a single shelter could absorb the whole mission
+between them, and then there would be nothing to allocate and nothing to
+compare. At two and two, a plan has to split the population across the shelters
+and it has to schedule more than one run. Bus-2 is further declared a reserve,
+so the intended plan is bus-1 making two sequential runs while bus-2 answers a
+breakdown. How each system treats that reserve turns out to be one of the
+findings, and Chapter~\ref{ch:eval} returns to it.
+
+% TODO(figure): map of the site and the candidate shelters (pics/), referenced here.
+
+\section{Organizational Agents}
+\label{sec:cs:agents}
+% Ten agents across eight organisations. Roster fixed at 2 shelters + 2 bus
+% drivers; SC3-SC5 and bus-3/bus-4 were dropped as a scope decision.
+%   LLM-driven (6): Agent-Bus-Driver-1, Agent-Bus-Driver-2, Agent-BIS,
+%                   Agent-Hochbahn, Agent-Polizei, Agent-DRK
+%   Scripted (4):   Agent-ZKD, Agent-Augustinum, Agent-SC1, Agent-SC2
+% Source: thesis-pack/04-architecture-agentic/agents/ and PROJECT_BRIEFING sec.4.
+
+\section{Coordination Storyline (10 Steps)}
+\label{sec:cs:storyline}
+% 1. Identification        6. Police coordination
+% 2. Evacuation assessment 7. Medical support
+% 3. Resource allocation   8. Evacuation execution
+% 4. Route planning        9. Arrival & handover
+% 5. Logistics            10. Mission report
+
+\section{Disruption Scenarios}
+\label{sec:cs:disruptions}
+% NOT the three development-era fixtures (road closure / school capacity loss /
+% bus breakdown). Those were prototyping only; see PROJECT_BRIEFING sec.4.
+% The evaluated set is seven scenarios:
+%   Anticipated (visible during development):
+%     S01 closed_loop                        - undisrupted control
+%     S02 road_closure                       - closure mid-transport
+%   Novel (supplied blind by the domain expert, after the baseline was frozen):
+%     S04 medical_emergency_in_flight        - resident collapses on a moving bus
+%     S05 unverified_persons_report          - 112 report of extra people, retracted
+%     S06 conflicting_evacuation_orders      - Bezirksamt contradicts the plan
+%     S07 bus1_suspension_capacity_reduction - bus-1 degraded to 25 seats
+%     S08 sc1_partial_capacity_loss          - report that SC1 is down to 40 beds
+% S03 (baseline_shelter_closure) was retired: no agentic counterpart. Never reuse it.
+
+\section{Assumptions and Simplifications}
+\label{sec:cs:assumptions}
+% TODO: Residents are passive (count only); no real-time citizen apps; etc.

@@ -1,0 +1,140 @@
+\documentclass[english,headsepline,footsepline,12pt]{scrreprt}
+
+% --- Core packages -------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
+% --- Layout & graphics --------------------------------------------
+\usepackage{graphicx,color}
+\usepackage{xcolor}
+\usepackage{url}
+% Breakable monospace for code identifiers. Lines may break at an underscore
+% and no hyphen is inserted, so an identifier is never misread. Use
+% \code{some_identifier} in prose and tables; \texttt stays for short words.
+\DeclareUrlCommand\code{\urlstyle{tt}}
+\usepackage{verbatim}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage[automark]{scrlayer-scrpage}
+
+% --- Math ----------------------------------------------------------
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% --- Algorithms, code, diagrams -----------------------------------
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+
+% --- Cross-references (load LAST) ---------------------------------
+\usepackage[breaklinks,colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
+
+% --- Bibliography (biblatex, bibtex backend so Tectonic runs it) ---
+\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,maxbibnames=99,giveninits=true]{biblatex}
+\addbibresource{bibs/litDB.bib}
+
+\usepackage{cleveref}
+
+% --- listings defaults --------------------------------------------
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=single,
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+}
+
+% --- Header / footer ----------------------------------------------
+\clearpairofpagestyles
+\chead{\headmark}
+\ofoot[\pagemark]{\pagemark}
+\ifoot{\invnr}
+\pagestyle{scrheadings}
+
+% --- Page geometry -------------------------------------------------
+\setlength{\topmargin}{1.5cm}
+\setlength{\headheight}{12pt}
+\setlength{\headsep}{20pt}
+\setlength{\topskip}{12pt}
+\setlength{\evensidemargin}{0pt}
+\setlength{\oddsidemargin}{0pt}
+\setlength{\textheight}{240mm}
+\setlength{\textwidth}{160mm}
+\setlength{\voffset}{-2cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\input{inc/profile.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% --- Front matter --------------------------------------------------
+\input{inc/title}
+\pagenumbering{roman}
+
+\input{inc/abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+
+% --- Main matter ---------------------------------------------------
+\pagenumbering{arabic}
+
+% Chapter order follows thesis-pack/README.md. Two chapters were added on
+% 2026-09-22: validity (from 08-validity/PARITY.md) and the methods critique
+% (from 09-method/EVALUATION_PROTOCOL_V2.md). The instrument implementation
+% (10-instrument) folds into the evaluation chapter, which already covers the
+% scorer and the harness.
+
+\input{inc/intro}
+\input{inc/background}
+\input{inc/casestudy}
+
+% Architecture: the agentic system first, then the baseline it is compared
+% against, then the data layer that earns "database-centric" in the title.
+\input{inc/agentic_system}
+\input{inc/workflow_baseline}
+\input{inc/data_architecture}
+\input{inc/ui}
+
+% Validity comes before the method: it establishes that the comparison the
+% method then specifies is admissible at all.
+\input{inc/validity}
+\input{inc/evaluation}
+\input{inc/results}
+
+% The methods critique reads the results back against the protocol. It follows
+% the results because it depends on them.
+\input{inc/methods_critique}
+\input{inc/discussion}
+
+% RQ4: the generalisable deliverable. Follows the discussion because it
+% generalises from it, and precedes the conclusion because the conclusion
+% points back at it.
+\input{inc/design_considerations}
+\input{inc/conclusion}
+
+% --- Bibliography --------------------------------------------------
+\newpage
+\printbibliography[heading=bibintoc]
+
+% --- Back matter ---------------------------------------------------
+\appendix
+\input{inc/appendix}
+
+\input{inc/declaration}
+
+\end{document}

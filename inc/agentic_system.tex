@@ -1,0 +1,69 @@
+\chapter{Database-Centric Agentic System}
+\label{ch:agentic}
+
+% Answers RQ sub-question 2 (integration of heterogeneous organizational agents).
+% NOTE: no LangGraph and no PostgresSaver. The system is Ollama + a custom
+% asyncio engine (agentic/core/agentic_engine.py). See PROJECT_BRIEFING.md 6.5.
+
+\section{Architecture Overview}
+\label{sec:ag:overview}
+% Shared database as source of truth and broker; one runtime per agent; the UI
+% as a passive viewer. Contrast with the framework-based approach surveyed in
+% Section~\ref{sec:bg:agentic}, and justify the custom engine.
+
+\section{The Agent Specification Template}
+\label{sec:ag:template}
+% The nine facets applied identically to every agent and to both systems:
+% context/role, sensing, messaging, addressbook, tools, state, cronjobs,
+% instructions, reasoning loop. See PROJECT_BRIEFING.md 4.
+
+\section{The AgenticEngine Loop}
+\label{sec:ag:engine}
+% sense -> check_messages -> reason -> execute -> reflect.
+% Three wake event types and nothing else: message, cron_fire, task_complete.
+% One wake = one LLM call. Sim clock keeps ticking during inference.
+
+\section{Prompt Structure}
+\label{sec:ag:prompts}
+% CORE system prompt + three event playbooks (MESSAGE / CRON_FIRE /
+% TASK_COMPLETE). Role-based projections to keep prompts small (~900 tokens/call
+% vs ~2.7k before). JSON response contract: thinking, state_updates, tasklist,
+% new_crons, crons_to_cancel, frontend_commands, reply_to_sender, reflection.
+% Full prompts in Appendix~\ref{app:prompts}.
+
+\section{Runtime Ownership and Ground Truth}
+\label{sec:ag:runtime}
+% Why the runtime, not the LLM, owns certain state. Task statuses re-stamped so
+% an omitted "done" cannot undo a completed task. ACK dedupe via acked_seqs.
+% Ground-truth GPS written back from UI ACKs so the next prompt sees the real
+% position, not the address the model guessed.
+% These are correctness mechanisms AND parity-relevant: document them, because
+% they shape what the agentic system can and cannot do.
+
+\section{Self-Scheduling and the Sim Clock}
+\label{sec:ag:crons}
+% Agent-scheduled wake-ups for time-critical waypoints. SimClock and
+% SIM_TIME_SCALE as a logged experimental constant, see
+% Section~\ref{sec:eval:responsetime}.
+
+\section{Agent Roster}
+\label{sec:ag:roster}
+% Who is LLM-driven and who is a scripted fast-path responder, and why.
+% Coordinator BIS; Hochbahn; bus drivers; Polizei and Patrol-Car-1; DRK and
+% ambulance; ZKD; Augustinum and shelter coordinators.
+% Bus-Driver-1 (Hans Mueller) as the canonical reference agent.
+
+\section{Replanning by Tasklist Rewrite}
+\label{sec:ag:replan}
+% There is NO separate re_plan() branch. Replanning is implicit: the model may
+% rewrite the tasklist on any wake.
+% Splice vs. supersede: minor edits to the scheduled tail vs. a change of mission
+% trajectory that archives the current event as aborted.
+% This is the mechanism the primary DV measures, see Section~\ref{sec:eval:rubric}.
+% Supersede count is a DIAGNOSTIC only, not the success metric.
+
+\section{Action Vocabulary}
+\label{sec:ag:actions}
+% The allowed command set (move_agent, get_in, get_out, move_vehicle) and its
+% validation. Identical to the baseline's, which is one leg of the parity
+% specification in Section~\ref{sec:eval:parity}.

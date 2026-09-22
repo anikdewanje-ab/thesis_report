@@ -1,0 +1,175 @@
+\chapter{Evaluation Design}
+\label{ch:eval}
+
+% Answers RQ sub-question 4 (comparative performance) and carries contribution 2.
+% EVERYTHING IN THIS CHAPTER MUST BE WRITTEN AND FROZEN BEFORE EVALUATION DAY.
+% Results go in Chapter~\ref{ch:results}.
+% Sources for each design decision: thesis_doc/rubric-bibliography.md.
+% Most of those sources are not yet in bibs/litDB.bib. Check before citing.
+%
+% ---------------------------------------------------------------------------
+% STALE PLANNING ASSUMPTIONS IN THE COMMENTS BELOW (checked 2026-09-22 against
+% thesis-pack/). The comments are kept as the design record; these are what
+% actually happened. Do not write the chapter from the comments alone.
+%   * k is 10, NOT ~30. Amendment 1 set it on budget and precision grounds
+%     after evaluation/power.py showed no k buys H1.
+%   * The scenario-scaling sweep WAS NEVER RUN. Only SIM_TIME_SCALE = 8.4
+%     executed, so H4 was not tested. Drop the third tier from the suite
+%     section and declare it. See Chapter~\ref{ch:critique}.
+%   * The scenario suite is 7 scenarios: 2 anticipated (S01 closed_loop,
+%     S02 road_closure) and 5 novel (S04-S08). S03 was retired.
+%   * Cut-point sensitivity WAS eventually run and supports the headline.
+%   * The equity dimension gap is REAL and was declared, not filled: the
+%     resident population is homogeneous by declaration, so a max-min subgroup
+%     difference is identically zero (PREREGISTRATION sec.4).
+%   * The open level-0-vs-1 and equal-vs-weighted transition decisions are
+%     settled in ADR-0004 and evaluation/scorer.py. Read those, not the TODO.
+% Parity now has its own chapter: Chapter~\ref{ch:validity}. Keep the parity
+% section here short and cross-reference it rather than duplicating it.
+% ---------------------------------------------------------------------------
+
+\section{Overview and Design Goals}
+\label{sec:eval:overview}
+% What the comparison has to survive: a rigged-comparison objection, a strawman
+% objection, a cherry-picked-threshold objection, and a construct-validity
+% objection. Each following section answers one of them.
+
+\section{Parity Specification}
+\label{sec:eval:parity}
+% Single independent variable: coordination strategy (LLM reasoning vs.
+% pre-scripted branching). Held identical and audited:
+%   1. information horizon (same world events, same sim-time, same event_log)
+%   2. action vocabulary (same command set, see Section~\ref{sec:ag:actions})
+%   3. world model (same map, ORS routing, geocoding, fleet state)
+%   4. scenario inputs (same YAML)
+% Parity is DEMONSTRATED via a capability table + conformance test, not asserted.
+% OPEN AUDIT ITEM (CONTEXT.md): find anything the agentic system can sense or do
+% that the baseline cannot, and equalise it BEFORE the baseline freezes.
+
+\section{The Disruption Firewall}
+\label{sec:eval:firewall}
+% Novel disruptions supplied by an independent domain expert, blind to the
+% frozen baseline. The characteristics-only brief: the kind of disruption
+% needed, not the content. Why this preserves the firewall while steering
+% difficulty into the productive band.
+% State the accepted residual risk: the behavioural pilot was declined, so the
+% null-zone risk (too easy -> tie; too hard -> both collapse) is a stated
+% limitation. A mechanical smoke-test of the scorer is still required.
+
+\section{Scenario Suite}
+\label{sec:eval:scenarios}
+% Three tiers:
+%   1. anticipated set (the baseline must pass 100% of it to freeze)
+%   2. novel set (externally supplied, blind, revealed on evaluation day)
+%   3. scenario-scaling sweep: resident count x shelter topology x fleet size,
+%      as robustness evidence that the architecture and not the map is winning.
+% Cite Wahl et al. 2015 for scenario generation rationale.
+
+\section{Recovery-Outcome Rubric}
+\label{sec:eval:rubric}
+% PRIMARY DV. Five ordinal levels, 0 collapse -> 4 optimal recovery.
+% Justify each design decision, one paragraph each:
+%   - ordinal ladder, not pass/fail (Savitz et al. 2007; Nunn et al. 2016)
+%   - equal-vs-weighted transitions: 0->1 currently counts the same as 3->4.
+%     DECISION STILL OPEN. State which is chosen and why (OAST line).
+%   - outcome scoring, not area under a resilience curve. This is a deliberate
+%     departure from Bruneau et al. 2003; justify it with the documented
+%     critique that the triangle scores different trajectories identically
+%     (PMC11954729). See Section~\ref{sec:bg:resilience}.
+
+\section{Feasibility Ceiling}
+\label{sec:eval:ceiling}
+% Normalising the ladder by the achievable maximum for a given disruption.
+% Precedent: the sliding dichotomy / baseline-severity-adjusted thresholds in
+% stroke and TBI trials.
+% HARD RULE: the ceiling is computed from the scenario and disruption spec ONLY,
+% never from the run log, or a system can lower its own denominator.
+% State the cost the precedent literature documents: harder cross-study
+% comparison and more complex interpretation.
+
+\section{Deterministic Scorer}
+\label{sec:eval:scorer}
+% No human scores anything. A frozen function of the event_log does, and the
+% same script runs identically on both systems. Consumes the log specified in
+% Section~\ref{sec:data:evalbackbone}.
+% Residual level-0-vs-1 edge calls go to a written adjudication log,
+% Appendix~\ref{app:adjudication}.
+% Contrast with LLM-as-judge approaches (zheng2023; TheAgentCompany), which this
+% design deliberately avoids.
+
+\section{Threshold Freezing as Preregistration}
+\label{sec:eval:prereg}
+% Thresholds frozen in git before evaluation day; hash and date recorded.
+% Precedent: the NeurIPS preregistration workshops (Bengio et al. 2020;
+% Albanie et al. 2021). Rationale: Gelman & Loken, garden of forking paths;
+% Kerr 1998, HARKing. Frozen artifact listed in Appendix~\ref{app:frozen}.
+
+\section{Cut-Point Sensitivity}
+\label{sec:eval:sensitivity}
+% The "you picked numbers that make agentic win" defence.
+% Sweep the level thresholds and report the whole result surface.
+% Method: specification curve analysis (Simonsohn et al. 2020); multiverse
+% analysis (Steegen et al. 2016).
+% Caveat (Del Giudice & Gangestad 2021): only genuinely arbitrary choices belong
+% in the sweep. Argue which thresholds are domain-justified and which are not.
+
+\section{Secondary and Diagnostic Metrics}
+\label{sec:eval:metrics}
+% Decision quality: resource efficiency (residents / bus-km), time-to-safety,
+% constraint violations.
+% Process diagnostics: supersede count, splice-vs-supersede ratio. These EXPLAIN
+% the outcome distribution (e.g. high supersede + low level = thrashing). They
+% do NOT score success; supersede count rewards churn and is demoted on purpose.
+% Cost: LLM tokens.
+% GAP FLAGGED BY THE RUBRIC BIBLIOGRAPHY: there is no equity dimension. The
+% ladder cannot distinguish sheltering the 60 most mobile residents from the 60
+% least mobile. Either add a diagnostic equity KPI here or declare the omission
+% in Section~\ref{sec:disc:limits} (Beamon & Balcik 3E framework).
+
+\section{Response-Time Cost}
+\label{sec:eval:responsetime}
+% Reported as a TRADE-OFF the baseline is expected to win, not an axis the
+% agentic system claims.
+% Two views: raw wall-time LLM latency per model, and operational delay as a
+% fraction of each disruption's own decision-time budget.
+% SIM_TIME_SCALE held as a logged experimental constant, so significance comes
+% from the deadline and not from an arbitrary global scale.
+% Expected shape: irrelevant under slow-clock disruptions, decisive under tight
+% deadlines.
+
+\section{Analysis Design}
+\label{sec:eval:analysis}
+% Unit of analysis is the RUN, not the disruption. k ~ 30 repetitions per
+% disruption per system.
+% Report per-disruption level distributions and stochastic dominance, not means.
+% Dominance for ordinal variables: Yalonetzky 2013. Inference machinery:
+% Davidson & Duclos; Barrett & Donald bootstrap.
+% Practical caution: dominance tests lose power in sparse tails. With k ~ 30 and
+% five levels some cells will be near-empty, so report raw level counts and
+% bootstrap CIs alongside any test.
+% The workflow baseline is a deterministic reference spike. Agentic variance is
+% reported as an honest cost, not hidden.
+
+\section{Model Sweep}
+\label{sec:eval:models}
+% At least three LLMs spanning a capability range, each pinned by digest and
+% labelled per run. Local version-frozen models preferred over :cloud tags.
+% Tests whether the advantage is model-robust and exposes a capability threshold
+% below which weak models emit invalid plans and the advantage disappears.
+% Nondeterminism in inference: yuan2025; bjarnason2026.
+
+\section{Construct Validity of the Rubric}
+\label{sec:eval:construct}
+% Does the ladder measure "replanning capability"?
+% Structure after Jacobs & Wallach 2021, one short paragraph per component:
+% face, content, convergent, discriminant, predictive, hypothesis, consequential.
+% Convergent validity is where the diagnostics earn their keep (supersede count
+% should correlate sensibly with level). Consequential validity is where gaming
+% is discussed, including the feasibility-ceiling denominator.
+% Note that the mRS analogy is STRUCTURAL, not domain-based. Say so explicitly.
+
+\section{Evaluation Harness}
+\label{sec:eval:harness}
+% How a run is launched, logged, scored, and replayed. What is recorded per run
+% (model digest, seeds, SIM_TIME_SCALE, scenario id, git hashes of both systems
+% and of the scorer).

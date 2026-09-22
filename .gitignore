@@ -1,0 +1,30 @@
+# LaTeX build products. Tectonic regenerates every one of these from main.tex.
+# main.pdf is deliberately untracked: this repository holds source only.
+main.pdf
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.lot
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.run.xml
+*.synctex.gz
+main-blx.bib
+
+# Python artifacts from the figure scripts in data/scripts/.
+__pycache__/
+*.pyc
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# The chapter-organised source pack. Every file in it is a copy of something
+# tracked in the RescueSim code repository, except the scored evaluation data,
+# which that repository deliberately keeps out of git. Rebuild the folder
+# rather than editing it; see thesis-pack/README.md.
+thesis-pack/

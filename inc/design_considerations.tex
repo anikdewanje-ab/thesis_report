@@ -1,0 +1,98 @@
+\chapter{Design Considerations for Agentic Emergency Simulation}
+\label{ch:design}
+
+% ===========================================================================
+% THIS CHAPTER ANSWERS RQ4 and carries the generalisable contribution. It is
+% where the thesis stops being about one nursing home in Hamburg.
+%
+% SOURCES: EVALUATION_PROTOCOL_V2 sec.11.4 and sec.16, RESULTS sec.4-5,
+% PARITY.md, and the ADRs (which are the design record of what was decided and
+% what it cost).
+%
+% VOICE. Each consideration is a claim EARNED BY THE EVIDENCE in this thesis,
+% not advice in general. For every one: state the consideration, give the
+% measurement from this study that motivates it, then state its limit. If a
+% consideration has no number behind it, mark it as a judgement, not a finding.
+% ===========================================================================
+
+\section{Commit Before You Re-Plan}
+\label{sec:design:commitment}
+% THE CENTRAL LESSON, and the one with the most evidence behind it.
+% An architecture whose advertised capability is "re-plan when disrupted" must
+% also answer: what stops it re-planning? On these scenarios the correct number
+% of re-plans was zero, and runs that re-planned the minimum delivered everyone
+% 90 % of the time against 32 % at six or more revisions.
+% Design implication: a plan leg already in flight needs a commitment boundary.
+% Re-planning must be an explicit, costed act, not the default response to any
+% new message.
+% STATE THE LIMIT HONESTLY: the causal direction is not established. 53 % of
+% aborts are post-failure stand-downs, so a failing run plausibly re-plans
+% BECAUSE it is failing. This is a design consideration supported by a strong
+% correlation, not a demonstrated cause. See Chapter~\ref{ch:critique}.
+
+\section{Closing the Loop Is Not the Same as Finishing the Job}
+\label{sec:design:closure}
+% The message layer worked: 93.8 % handshake closure over 1,932 addressed
+% requests. The residents were still not delivered.
+% Design implication: message-level health metrics are necessary and nowhere
+% near sufficient. Instrument DELIVERY, not correspondence. A coordinator that
+% cannot establish whether a leg finished will re-plan a leg that succeeded.
+% Evidence: the coordinator's own abort texts name exactly this
+% ("plan revision 2 claimed both runs drop off by 10:50, but no
+% transport_complete arrived").
+
+\section{Make the Resource Allocation Genuinely Bind}
+\label{sec:design:binding}
+% From the case design (Chapter~\ref{ch:casestudy}): 100 residents, 2 buses at
+% 50 seats, 2 shelters at 60 beds. One bus and one shelter could have absorbed
+% the whole mission, and then there would have been nothing to allocate.
+% Design implication: if the scenario's resources are slack, the simulation
+% measures nothing about coordination. Size the fit deliberately and say so.
+
+\section{Decide What a Reserve Means, and Enforce It on Both Sides}
+\label{sec:design:reserve}
+% The reserve bus is the clearest example in this thesis of a semantic
+% declared in a scenario file and honoured by only one of the two systems.
+% The agentic Hochbahn honours role: reserve and serialises; the baseline's
+% run_schedule never reads role and flies bus-2 in parallel from t0.
+% Design implication: any semantic a scenario declares must be either enforced
+% by the shared substrate or declared as a deviation with its direction.
+% Cross-reference Section~\ref{sec:val:reserve}; do not re-argue it here.
+
+\section{Build the Negative Control Before the Treatment}
+\label{sec:design:gate0}
+% The single most transferable methodological point, and it belongs here as
+% well as in Chapter~\ref{ch:critique}.
+% A disruption scenario is only a disruption if a system that IGNORES it scores
+% worse than one that responds. Test that first, with a no-replan control,
+% before spending a campaign on it.
+% Evidence: on all five novel scenarios the no-replan control committed
+% byte-identical orders and scored the identical level.
+
+\section{Cost Is Architectural, Not Incidental}
+\label{sec:design:cost}
+% The agentic side spends 9-10x the messages per resident delivered, ~800k
+% tokens, and 1.8-2.7x the wall-clock budget. Agentic wall latency per run
+% ranges 763 s to 3,810 s; the baseline's LLM latency is 0.0 s by construction.
+% Design implication: budget this from the start and decide what it must buy.
+% THE OPEN QUESTION TO NAME: whether that cost ever buys anything is untested
+% here, because no scenario in this thesis ever required it to.
+
+\section{Determinism, Variance, and What an Evaluation Can See}
+\label{sec:design:variance}
+% The baseline is a deterministic reference spike; the agentic side is not.
+% Report variance as an honest cost of the approach.
+% Practical notes earned the hard way in this project:
+%   - :cloud model tags are not version-frozen; no digest pins these results.
+%   - Retrying malformed LLM output would give a weak model a second attempt a
+%     strong one never needed. This system deliberately does not retry.
+%   - k = 10 could not detect a moderate effect. Size the design, or report
+%     that you did not.
+
+\section{What These Considerations Do Not Cover}
+\label{sec:design:scope}
+% Close on scope, briefly and without padding. Single case, single city, one
+% time scale, homogeneous resident population (so equity is undefined by
+% declaration), residents modelled as a passive count.
+% These considerations are grounded in one evaluation of one architecture on
+% one case. Say that, and resist generalising past it.

@@ -1,0 +1,52 @@
+\chapter{Workflow-Based Baseline}
+\label{ch:workflow}
+
+% The control condition. It must be COMPETENT, not a strawman: a faithful
+% implementation of an established coordination doctrine, frozen before the
+% novel disruptions are revealed. See CONTEXT.md, "Workflow Baseline".
+
+\section{Design Rationale}
+\label{sec:wf:rationale}
+% Why a plain Python script and not Camunda/Temporal/Airflow: the engine is not
+% the independent variable. Pre-scripted branching is, see
+% Section~\ref{sec:bg:workflow}.
+
+\section{Doctrine Grounding}
+\label{sec:wf:doctrine}
+% DECIDE FIRST: DV 100 or ICS as the single primary anchor. CONTEXT.md still
+% lists both as candidates.
+% Element-by-element mapping table: doctrine element -> baseline component, each
+% row cited. Design criterion is fidelity to the source model, explicitly NOT
+% "fit to our storyline". Combination allowed only where the primary model lacks
+% a coordination step, and each borrowed element sourced.
+
+\section{Sequential Ten-Step Workflow}
+\label{sec:wf:steps}
+% TODO: Walk through each of the ten storyline steps as procedural code.
+% Cross-reference Section~\ref{sec:cs:storyline}.
+
+\section{Branching for Anticipated Disruptions}
+\label{sec:wf:disruptions}
+% The pre-written handlers. Precondition gate: the baseline must pass 100% of
+% the anticipated disruption set before it is allowed to freeze.
+
+\section{Freeze Protocol}
+\label{sec:wf:freeze}
+% The audit trail. Baseline committed and tagged in git BEFORE evaluation-day
+% disruptions are revealed; record commit hash and date here.
+% This is the firewall evidence that the baseline could not have pre-encoded the
+% novel disruptions. Optional co-certification by the domain expert.
+% Artifact recorded in Appendix~\ref{app:frozen}.
+
+\section{Scenario Runner}
+\label{sec:wf:cli}
+% How a run is launched, and how it reads the same scenario inputs and writes to
+% the same event log as the agentic system.
+
+\section{Expected Failure Mode}
+\label{sec:wf:limits}
+% NOT a list of weaknesses built in on purpose. State it as a principled property
+% of pre-scripted branching: anticipated exceptions get build-time handlers,
+% unanticipated ones fall back to a generic or degraded response
+% (Reichert & Weber). Note the compensating strengths the baseline is expected to
+% win on: latency, cost, and determinism.

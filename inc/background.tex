@@ -1,0 +1,68 @@
+\chapter{Background and Related Work}
+\label{ch:background}
+
+\section{Evacuation Coordination and Command Doctrine}
+\label{sec:bg:evacuation}
+% Domain background: disaster response, evacuation planning, vulnerable groups.
+% Established command models the workflow baseline is grounded in:
+% DV 100 / FwDV 100 (German civil protection) and ICS / NIMS.
+% Cite: bigley2001a (ICS as high-reliability organizing), FwDV 100, Plattner,
+% Buck/Trainor/Aguirre (critical evaluation of ICS), Moynihan (network governance).
+% This section is what makes the baseline "doctrine-grounded" rather than invented.
+
+\section{Multi-Agent Systems}
+\label{sec:bg:mas}
+% Classical MAS, BDI (Rao & Georgeff), organizational agents, computational
+% organization theory (Carley). Positions the "human-organizational agent" choice.
+
+\section{Workflow Flexibility and Unanticipated Exceptions}
+\label{sec:bg:workflow}
+% BACKBONE SECTION for the baseline's known limits.
+% Reichert & Weber (2012): PAIS flexibility, the anticipated-vs-unanticipated
+% exception distinction, adaptive workflow (ADEPT/AristaFlow).
+% van der Aalst et al. (2009): imperative vs. declarative processes.
+% Adams et al. (2007); Marrella SmartPM; Casati; Klein & Dellarocas.
+% Also: why heavy engines (Camunda/Temporal/Airflow) are out of scope and a
+% plain Python script is the right control condition.
+
+\section{LLM-Driven Agents}
+\label{sec:bg:agentic}
+% Reasoning-and-acting loops and multi-agent frameworks.
+% Cite: yao2023 (ReAct), shinn2023 (Reflexion), park2023 (Generative Agents),
+% wu2023 (AutoGen), hong2024 (MetaGPT), li2023 (CAMEL), qian2024 (ChatDev),
+% tran2025 + zhuLLMBasedMultiAgentOrchestration2026a (surveys).
+% NOTE: no LangGraph section. Frameworks are surveyed here only as context; the
+% built system is Ollama + a custom asyncio engine, see Chapter~\ref{ch:agentic}.
+
+\section{Limits of LLM Planning}
+\label{sec:bg:llmlimits}
+% The honest counterweight to the thesis claim. If LLMs plan poorly, the claim
+% must be about graceful degradation, not about planning superiority.
+% Cite: kambhampati2024, valmeekam2024, stechly2024, huang2024,
+% tran2026 (single- vs multi-agent under equal token budgets),
+% wang2024 (are multi-agent discussions the key?), cemri2025 (why MAS fail).
+
+\section{Event Sourcing and Database-Centric Architectures}
+\label{sec:bg:dbcentric}
+% Append-only logs, single source of truth, replay. Cite: overeem2021, Fowler.
+% Blackboard and tuple-space lineage: Erman et al. (Hearsay-II), Nii,
+% Gelernter (Linda), Omicini & Zambonelli (TuCSoN), stigmergy.
+% IMPORTANT: this is where the thesis explicitly does NOT claim a shared database
+% as a novel coordination substrate. See CONTEXT.md, contribution 2.
+
+\section{Resilience and Graceful Degradation}
+\label{sec:bg:resilience}
+% Gives "degrades more gracefully" a formal meaning.
+% Cite: woods2015a (four concepts for resilience), Woods (2018) graceful
+% extensibility, Bruneau et al. 2003 (resilience triangle, Q(t), robustness +
+% rapidity), Cimellaro 2010, Zobel 2010.
+% The rubric's departure from area-under-curve scoring is argued in
+% Section~\ref{sec:eval:rubric}, not here.
+
+\section{Related Work}
+\label{sec:bg:related}
+% Prior systems for evacuation simulation and agentic emergency response.
+% Cite: sultimov2026 (RESPOND), lee2025, li2026, wang2026, alqahtani2025a,
+% yin2024, Haghpanah (ED evacuation ABM).
+% Close with the gap: no prior work evaluates LLM-agent vs. workflow coordination
+% for evacuation logistics under blind, externally supplied novel disruption.

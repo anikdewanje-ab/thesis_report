@@ -1,0 +1,60 @@
+\chapter{Data Architecture}
+\label{ch:data}
+
+% Answers RQ sub-questions 1 (data modeling) and 3 (persistent runtime structures
+% for control AND evaluation). Contribution 2 lives in this chapter.
+
+% OPEN QUESTION before drafting: the target design is PostgreSQL with
+% LISTEN/NOTIFY; the current runtime is file-backed JSON (.<agent>/state.json,
+% .<agent>/world_events.jsonl) and shared/models/ is empty. Decide whether this
+% chapter is written as-built, as-designed, or as both with a migration section.
+% See thesis_doc/notes/README.md.
+
+\section{Design Principles}
+\label{sec:data:principles}
+% Single source of truth, shared by workflow baseline and agentic system.
+% Why "centric" and not "supported": the DB is the truth store, the message
+% broker, AND the scoring backbone. See CONTEXT.md, "Database-Centric".
+
+\section{Conceptual Model}
+\label{sec:data:conceptual}
+% Actors, states, events, dependencies, resources, scenarios.
+% Human-organizational agents are actors; vehicles are passive fleet rows.
+
+\section{Relational Schema}
+\label{sec:data:schema}
+% TODO: ER diagram + key tables. DDL in Appendix~\ref{app:ddl}.
+
+\section{Append-Only Event Log}
+\label{sec:data:eventlog}
+% TODO: Event schema, ordering, append-only guarantee, replay semantics.
+
+\section{The Event Log as Evaluation Backbone}
+\label{sec:data:evalbackbone}
+% CONTRIBUTION 2. The methodological claim: one shared append-only log used by
+% BOTH systems-under-test AND the scoring harness is what makes the comparison
+% fair, auditable, deterministically scored, and replayable.
+% State plainly what is NOT claimed: a shared DB as novel coordination substrate
+% (blackboards and tuple spaces predate it, see Section~\ref{sec:bg:dbcentric}).
+% The scorer that consumes this log is specified in Section~\ref{sec:eval:scorer}.
+
+\section{Runtime State and Message Passing}
+\label{sec:data:runtime}
+% Queryable agent state, inbox/messages, cronjobs, tasklists.
+% Describe the current file-backed realisation and the Postgres target.
+
+\section{Live Notifications}
+\label{sec:data:notify}
+% Waking agents without polling; the UI bridge. LISTEN/NOTIFY in the target
+% design, file tailing in the current prototype.
+
+\section{External Data Sources}
+\label{sec:data:external}
+% OpenRouteService routing, geocoding and the on-disk caches.
+% Hamburg seed data: Augustinum, candidate schools, depots.
+
+\section{Determinism and Replay}
+\label{sec:data:replay}
+% What must be recorded for a run to be replayable and re-scorable: sim clock,
+% SIM_TIME_SCALE as a logged constant, model identity pinned by digest, seeds,
+% cached routes. This is what the evaluation harness depends on.
