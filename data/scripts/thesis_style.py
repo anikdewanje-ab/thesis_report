@@ -66,7 +66,10 @@ def apply():
 
 
 def save(fig, path):
-    fig.savefig(path)
+    # Drop the PDF creation timestamp. Without this every re-run produces a
+    # byte-different file with identical content, so git reports the figures as
+    # modified whenever a script is run.
+    fig.savefig(path, metadata={"CreationDate": None})
     print("wrote", path)
     # Set THESIS_FIG_PNG to a directory to also drop a raster preview there.
     # Handy for eyeballing a figure without opening the PDF. Never used by the
