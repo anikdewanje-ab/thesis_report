@@ -1,175 +1,1102 @@
-\chapter{Evaluation Design}
+\chapter{Method and Evaluation Design}
 \label{ch:eval}
 
-% Answers RQ sub-question 4 (comparative performance) and carries contribution 2.
-% EVERYTHING IN THIS CHAPTER MUST BE WRITTEN AND FROZEN BEFORE EVALUATION DAY.
-% Results go in Chapter~\ref{ch:results}.
-% Sources for each design decision: thesis_doc/rubric-bibliography.md.
-% Most of those sources are not yet in bibs/litDB.bib. Check before citing.
+% SOURCES OF TRUTH:
+%   thesis-pack/09-method/EVALUATION_PROTOCOL.md  metric definitions and gates
+%   thesis-pack/09-method/PREREGISTRATION.md      hypotheses, margins, k, models,
+%                                                 and the 16 amendments
+%   thesis-pack/00-start-here/RESULTS.md          wins on any executed number
+%   thesis_doc/rubric-bibliography.md             the defence for each rubric choice
 %
-% ---------------------------------------------------------------------------
-% STALE PLANNING ASSUMPTIONS IN THE COMMENTS BELOW (checked 2026-09-22 against
-% thesis-pack/). The comments are kept as the design record; these are what
-% actually happened. Do not write the chapter from the comments alone.
-%   * k is 10, NOT ~30. Amendment 1 set it on budget and precision grounds
-%     after evaluation/power.py showed no k buys H1.
-%   * The scenario-scaling sweep WAS NEVER RUN. Only SIM_TIME_SCALE = 8.4
-%     executed, so H4 was not tested. Drop the third tier from the suite
-%     section and declare it. See Chapter~\ref{ch:critique}.
-%   * The scenario suite is 7 scenarios: 2 anticipated (S01 closed_loop,
-%     S02 road_closure) and 5 novel (S04-S08). S03 was retired.
-%   * Cut-point sensitivity WAS eventually run and supports the headline.
-%   * The equity dimension gap is REAL and was declared, not filled: the
-%     resident population is homogeneous by declaration, so a max-min subgroup
-%     difference is identically zero (PREREGISTRATION sec.4).
-%   * The open level-0-vs-1 and equal-vs-weighted transition decisions are
-%     settled in ADR-0004 and evaluation/scorer.py. Read those, not the TODO.
-% Parity now has its own chapter: Chapter~\ref{ch:validity}. Keep the parity
-% section here short and cross-reference it rather than duplicating it.
-% ---------------------------------------------------------------------------
+% RULES FOR THIS CHAPTER:
+%  * Describe the design AS REGISTERED, in the present tense. Say where the
+%    execution differed, in the past tense.
+%  * The design's own failure (Gate 0, the null policy at the ceiling) belongs
+%    to Chapter~\ref{ch:critique}. Here it gets a factual pointer only.
+%  * Never write that the baseline "adapted", "recovered" or "replanned better".
 
-\section{Overview and Design Goals}
+This chapter fixes what the evaluation measured and how it decided. It is
+written as the design was registered before the evaluation ran. Where the
+execution differed from the plan, the difference is stated at the place where
+it matters, with the amendment that records it. The results are reported in
+Chapter~\ref{ch:results}. The criticism of the design, including the finding
+that its main test could not resolve in either direction, is
+Chapter~\ref{ch:critique}.
+
+The thesis is a design-and-evaluation study. The method therefore has one job.
+It has to make the comparison between the two systems fair enough that its
+answer can be trusted, whichever way that answer goes. Every section below
+answers one objection an examiner could raise: that the comparison was rigged,
+that the baseline was a strawman, that the thresholds were picked to produce a
+result, or that the instrument did not measure what it claims to measure.
+
+% =====================================================================
+\section{Study Design}
 \label{sec:eval:overview}
-% What the comparison has to survive: a rigged-comparison objection, a strawman
-% objection, a cherry-picked-threshold objection, and a construct-validity
-% objection. Each following section answers one of them.
 
-\section{Parity Specification}
+The study compares two coordination systems on the same evacuation task. The
+\emph{treatment} is the database-centric agentic system of
+Chapter~\ref{ch:agentic}, where distributed LLM agents reason about the
+situation and negotiate through the shared database. The \emph{control} is the
+workflow baseline of Chapter~\ref{ch:workflow}, a single scripted Incident
+Commander that follows written coordination doctrine.
+
+There is one independent variable: the coordination architecture at the
+command post. Everything else is held constant. It is held by reuse, not by
+matching. The baseline engine is a subclass of the agentic engine, and 27 of
+its attributes are the very same function objects that the live agents use,
+not copies of them. Chapter~\ref{ch:validity} audits this in detail.
+
+\paragraph{Pairing.} Runs are paired. A treatment run and a control run of the
+same scenario receive byte-identical inputs through the same loader and write
+to the same append-only \code{event_log}. A reference protocol for this kind of
+comparison splits randomness into seven streams and asks that the six external
+ones be matched across a pair. In this simulator six of the seven are constant
+by construction. The map is a fixed set of real addresses, the flood is one
+declared arrival time per zone, the head-count is declared per scenario,
+residents have no behaviour model, and there is no sensor or message-latency
+model. Only the policy stream is live. Matching the other six is therefore
+trivial.
+
+The live stream is controlled by a seed. Each run records
+\begin{equation}
+\texttt{policy\_seed} = \operatorname{sha256}\big(\texttt{"<scenario>|<scale>|<replicate>"}\big) \bmod 2^{31}.
+\end{equation}
+The key leaves out the system and the model on purpose. A treatment run and its
+paired control therefore draw the same seed, and a test fails if either field
+is ever added. The seed is passed to every model call. A seeded call is still
+only \emph{near}-deterministic, because batching and cache state move the
+sampling. The claim is therefore ``seeded and logged'', never ``reproducible
+at the inference level''. This is the reason for replication.
+
+\paragraph{Unit of analysis.} The unit is the run, not the disruption. Each
+cell of system, scenario, model and time scale is repeated $k = 10$ times, with
+replicate indices 1000 to 1009. Section~\ref{sec:eval:analysis} explains how
+$k$ was set. The baseline runs no language model. For each scenario it is a
+deterministic reference point, not a distribution. The variance of the agentic
+side is reported as a cost of the architecture and is never averaged away.
+
+% =====================================================================
+\section{Hypotheses}
+\label{sec:eval:hypotheses}
+
+Four hypotheses were registered before any evaluation run. They are listed in
+Table~\ref{tab:eval:hypotheses}. H1 and H2 are confirmatory and together they
+answer RQ1. H3 and H4 are estimation questions and carry no significance test.
+
+\begin{table}[htbp]
+\centering
+\caption{The registered hypotheses.}
+\label{tab:eval:hypotheses}
+\small
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}Xll}
+\toprule
+ & Hypothesis & Arm & Form \\
+\midrule
+H1 & The agentic system is not worse than the baseline on survival, on disruptions the baseline has a written branch for. & Anticipated & Non-inferiority, $\delta_{NI} = 0.05$ \\
+H2 & The agentic system is better than the baseline on disruptions the baseline could not have encoded. & Novel & Superiority, $\delta_m = 1$ level \\
+H3 & An H2 advantage holds across a range of models, with a capability threshold below which it disappears. & Both & Estimation \\
+H4 & There is a time scale at which the agentic system's thinking time starts to cost more than its coordination gains. & Both & Estimation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+H1 alone is not a positive result, and H2 alone does not support the
+registered claim either. A system that wins on novel disruptions but loses
+clearly on routine ones has not matched the baseline first. Both have to hold.
+
+The pre-registration also says in advance what would count as failure. H1
+fails if the paired mean survival difference is at or below $-\delta_{NI}$. H2
+fails if there is no stochastic dominance on the novel set, or if the median
+level difference is below $\delta_m$. A third outcome is named as well, the
+\emph{null zone}: both systems collapse to level 0 or 1 across the novel set.
+That outcome is reported as an uninformative campaign, not as a tie.
+
+One boundary applies to every answer this design gives. It tests whether the
+agentic system won \emph{on these scenarios}. It cannot show whether such a
+system can ever win. Whether the scenarios actually demanded a change of plan
+is a question the design assumed rather than tested, and
+Chapter~\ref{ch:critique} returns to it.
+
+% =====================================================================
+\section{Parity Between the Two Conditions}
 \label{sec:eval:parity}
-% Single independent variable: coordination strategy (LLM reasoning vs.
-% pre-scripted branching). Held identical and audited:
-%   1. information horizon (same world events, same sim-time, same event_log)
-%   2. action vocabulary (same command set, see Section~\ref{sec:ag:actions})
-%   3. world model (same map, ORS routing, geocoding, fleet state)
-%   4. scenario inputs (same YAML)
-% Parity is DEMONSTRATED via a capability table + conformance test, not asserted.
-% OPEN AUDIT ITEM (CONTEXT.md): find anything the agentic system can sense or do
-% that the baseline cannot, and equalise it BEFORE the baseline freezes.
 
-\section{The Disruption Firewall}
-\label{sec:eval:firewall}
-% Novel disruptions supplied by an independent domain expert, blind to the
-% frozen baseline. The characteristics-only brief: the kind of disruption
-% needed, not the content. Why this preserves the firewall while steering
-% difficulty into the productive band.
-% State the accepted residual risk: the behavioural pilot was declined, so the
-% null-zone risk (too easy -> tie; too hard -> both collapse) is a stated
-% limitation. A mechanical smoke-test of the scorer is still required.
+A comparison is only fair if both systems see the same world and can say the
+same things to it. Parity is audited on five axes: the information horizon,
+the action vocabulary, the world model, the scenario inputs, and the output
+substrate. It is demonstrated by a capability table and an executable
+conformance test, not asserted. Every known deviation is declared with its
+direction, including two that favour the control. Chapter~\ref{ch:validity}
+carries the full audit and does not need repeating here.
 
+One difference is not a deviation and is named here so that it is not mistaken
+for one. Every scenario declares bus-2 as a reserve. The baseline sends it out
+in parallel from its first schedule. The agentic side holds it back unless one
+of four named reasons releases it. Both sides have the same capability, so this
+is a difference in \emph{decisions}, which is exactly what the comparison
+measures. Section~\ref{sec:val:reserve} describes the mechanism.
+
+% =====================================================================
 \section{Scenario Suite}
 \label{sec:eval:scenarios}
-% Three tiers:
-%   1. anticipated set (the baseline must pass 100% of it to freeze)
-%   2. novel set (externally supplied, blind, revealed on evaluation day)
-%   3. scenario-scaling sweep: resident count x shelter topology x fleet size,
-%      as robustness evidence that the architecture and not the map is winning.
-% Cite Wahl et al. 2015 for scenario generation rationale.
 
-\section{Recovery-Outcome Rubric}
-\label{sec:eval:rubric}
-% PRIMARY DV. Five ordinal levels, 0 collapse -> 4 optimal recovery.
-% Justify each design decision, one paragraph each:
-%   - ordinal ladder, not pass/fail (Savitz et al. 2007; Nunn et al. 2016)
-%   - equal-vs-weighted transitions: 0->1 currently counts the same as 3->4.
-%     DECISION STILL OPEN. State which is chosen and why (OAST line).
-%   - outcome scoring, not area under a resilience curve. This is a deliberate
-%     departure from Bruneau et al. 2003; justify it with the documented
-%     critique that the triangle scores different trajectories identically
-%     (PMC11954729). See Section~\ref{sec:bg:resilience}.
+The suite has two arms (Table~\ref{tab:eval:scenarios}). The content of each
+disruption is described in Section~\ref{sec:cs:disruptions}. Every scenario
+exists as a pair of files, one per condition, read by the same loader under
+the same hazard.
 
-\section{Feasibility Ceiling}
+\begin{table}[htbp]
+\centering
+\caption{The scenario suite as evaluated.}
+\label{tab:eval:scenarios}
+\small
+\begin{tabularx}{\textwidth}{ll>{\raggedright\arraybackslash}X}
+\toprule
+Arm & ID & Scenario \\
+\midrule
+Anticipated & S01 & \code{closed_loop}, the undisrupted control \\
+            & S02 & \code{road_closure}, a road closes during transport \\
+\midrule
+Novel & S04 & \code{medical_emergency_in_flight} \\
+      & S05 & \code{unverified_persons_report} \\
+      & S06 & \code{conflicting_evacuation_orders} \\
+      & S07 & \code{bus1_suspension_capacity_reduction} \\
+      & S08 & \code{sc1_partial_capacity_loss} \\
+\midrule
+Gate only & (S03) & \code{baseline_shelter_closure}, a fixture for the negative control. Never scored. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{The anticipated arm.} These are disruptions the baseline has a
+written branch for, and both were visible during development. A third
+scenario, a shelter closure, had no agentic counterpart. A scenario cannot be
+reported for one side only, so it was excluded from scoring on 2026-09-10. It
+lives on as the fixture for the negative control
+(Section~\ref{sec:eval:noreplan}). The reason it has no agentic pair is a
+property of the implementation. The live shelter agent recomputes its free
+beds from its own identity on every query and has no handler that lowers them.
+A capacity disruption would therefore invert: a coordinator that correctly
+redistributed would score below one that ignored the loss. This leaves an
+anticipated arm of two scenarios, which is thin for a per-scenario analysis.
+It is declared as a limitation.
+
+\paragraph{The novel arm.} Five disruptions were supplied blind and revealed
+only after the baseline was frozen (Section~\ref{sec:eval:firewall}). Their
+identifiers were reserved as \code{novel_1} to \code{novel_5} before their
+content existed, so the set could not be extended quietly after results were
+seen. Every supplied scenario had to be run. A novel scenario may not be
+dropped for being too hard, badly formed, or unfavourable.
+
+\paragraph{What is not in the suite.} An earlier plan had a third tier, a
+scenario-scaling sweep over resident count, shelter topology and fleet size.
+It was registered as exploratory and was never run. The evidence therefore
+rests on one case study, and that is stated as a limitation rather than
+argued around.
+
+% =====================================================================
+\section{The Disruption Firewall}
+\label{sec:eval:firewall}
+
+The novel disruptions are the part of the design an author could most easily
+bias without meaning to. The firewall exists to prevent that. The disruptions
+are written by the external supervisor, who is a domain expert, and they are
+written blind to the baseline. They are revealed only after the baseline is
+committed and tagged in git. The tag and its timestamp are the auditable proof
+that the baseline could not have encoded them in advance.
+
+The supervisor received a \emph{characteristics-only brief}. It named the kind
+of disruption wanted (compound, involving several actors, unfolding in the
+middle of the mission, not a single clean road closure) and never the content.
+The brief is reproduced in Appendix~\ref{app:brief}. Its purpose is to steer
+blind content towards disruptions that are hard enough to matter, without the
+author seeing any of them.
+
+\paragraph{As executed.} No separate baseline-freeze tag was cut. The freeze is
+commit \texttt{67a14f8}, made at 11:41 on 2026-09-10 and tagged
+\code{eval-day-2026-09-10}. The five novel scenarios were supplied through the supervisor and
+saved the same afternoon, between 15:27 and 16:04, and then committed. The
+freeze therefore precedes the reveal by several hours. One later change to
+baseline code was merged after the reveal (\texttt{e9e20cd}). It added the
+switch that turns off re-planning for the negative control. Amendment~6
+discloses it, together with the evidence that the doctrine's own behaviour did
+not change.
+
+\paragraph{The residual risk.} Blind supply has a known cost, the null zone. A
+blind disruption may land too easy, so both systems tie, or too hard, so both
+collapse, and there is no time to supply a new one. The brief was the only
+mitigation. A behavioural pilot on self-written held-out disruptions was
+considered and declined. This risk was recorded before the evaluation, not
+explained afterwards.
+
+% =====================================================================
+\section{Primary Outcome}
+\label{sec:eval:primary}
+
+The primary outcome is the Recovery-Outcome Level, an ordinal scale from 0 to 4.
+It is built from a continuous quantity, the survival rate $S$, which is the
+co-primary outcome for safety. Both are computed by a frozen function of the
+event log. This section builds them up in order: the denominator, the
+numerator, and then the ladder.
+
+\subsection{Feasibility Ceiling}
 \label{sec:eval:ceiling}
-% Normalising the ladder by the achievable maximum for a given disruption.
-% Precedent: the sliding dichotomy / baseline-severity-adjusted thresholds in
-% stroke and TBI trials.
-% HARD RULE: the ceiling is computed from the scenario and disruption spec ONLY,
-% never from the run log, or a system can lower its own denominator.
-% State the cost the precedent literature documents: harder cross-study
-% comparison and more complex interpretation.
 
-\section{Deterministic Scorer}
+Not every disruption leaves every resident savable. If a shelter loses beds,
+the best possible result is lower. The outcome is therefore normalised by the
+number of residents who \emph{could} have been saved, the feasibility ceiling
+\begin{equation}
+N =
+\begin{cases}
+\min\!\left(P,\ \sum_s b_s\right) & \text{if } \sum_s b_s > 0,\\[2pt]
+P & \text{if no shelter declared any capacity,}
+\end{cases}
+\label{eq:eval:ceiling}
+\end{equation}
+where $P$ is the population the scenario declares and $b_s$ is the number of
+beds shelter $s$ declared. The population cap is there because evacuating more
+residents than exist is not a higher achievement. The bed cap is there because
+residents cannot be sheltered in beds that do not exist. The fallback is not
+``zero beds''. With no declaration anywhere the sum is unknown, and treating it
+as zero would make every run trivially complete. The fallback is written into
+the run's notes and is never silent.
+
+The ceiling is a known point of attack. If it could depend on what a run did,
+a system could lower its own denominator and score better by doing worse. The
+rule is therefore that the ceiling comes from what the scenario and the
+shelters \emph{declared}, never from the run's own placements.
+
+The idea of normalising an ordinal outcome by what is achievable has a
+precedent in clinical trials. In stroke and brain-injury trials, a minority of
+studies define a favourable outcome relative to how severe the case was at the
+start, because a fixed threshold is out of reach for the most severe patients
+\parencite{murray2005,nunn2016}.
+That literature also names the cost, and it applies here too. A normalised
+outcome is harder to interpret and harder to compare across studies.
+
+\subsection{Survival Rate and Loss Decomposition}
+\label{sec:eval:survival}
+
+Residents in the simulation are not killed. They are lost to the operation, and
+there are exactly three ways for that to happen. A resident is \emph{never
+moved}: still in the building when the zone floods, after which nobody can
+board. A resident is \emph{late}: set down after the flood arrival of the zone,
+which means in the water and not in a shelter. Or a resident is \emph{refused}:
+delivered to a shelter that was closed or full. The third channel is the
+``routed into danger'' case, and it is why safety cannot be read from timing
+alone. A system can be perfectly on time and still deliver 60 residents to a
+shelter with no beds.
+
+Two filters decide who counts, and they are applied in this order. First the
+deadline: an arrival counts only if it was set down at or before the flood
+arrival of its zone. Then an admission pass: the in-time arrivals are taken in
+time order, and each shelter admits residents only up to its declared beds.
+Only the excess over the beds is invalidated, never the whole delivery and
+never the whole run. This rule exists so that ``saved everyone, with one flaw''
+cannot rank below ``cleanly saved a third''.
+
+The residents who pass both filters are the validly sheltered residents $V$.
+The survival rate is
+\begin{equation}
+S = \frac{V}{N},
+\label{eq:eval:survival}
+\end{equation}
+the share of the residents who could have been saved that were set down, in
+time, at an open shelter with a free bed. Every run also reports where the
+others went:
+\begin{equation}
+N = \underbrace{(N - H)}_{\text{never moved}} + \underbrace{M}_{\text{late}} + \underbrace{O}_{\text{refused}} + \underbrace{V}_{\text{safe}},
+\label{eq:eval:loss}
+\end{equation}
+where $H$ is the number of residents reported sheltered, $M$ the number set
+down late, and $O$ the number refused for want of a bed. $S$ alone cannot tell
+``too slow'' apart from ``drove them somewhere lethal''. These are different
+failures of a coordinator, so the decomposition is always published and never
+folded into one number.
+
+\subsection{Recovery-Outcome Level}
+\label{sec:eval:rubric}
+
+The primary dependent variable places each run on a five-level ladder. It has
+one axis, valid completeness $C = S$, and it uses bus-kilometres $K$ only to
+split the top two levels:
+\begin{equation}
+L(C, K) =
+\begin{cases}
+0 & C < 0.10 \quad \text{collapse}\\
+1 & 0.10 \leq C < 0.50 \quad \text{major loss}\\
+2 & 0.50 \leq C < 1.00 \quad \text{partial}\\
+3 & C = 1.00 \ \wedge\ K > 1.25\,K^\ast \quad \text{complete, degraded}\\
+4 & C = 1.00 \ \wedge\ K \leq 1.25\,K^\ast \quad \text{complete and efficient}
+\end{cases}
+\label{eq:eval:ladder}
+\end{equation}
+Figure~\ref{fig:eval:ladder} draws it.
+
+\input{pics/method-ladder}
+
+\paragraph{Why each cut sits where it does.} Each cut has a domain reason, and
+each reason was written down before any result existed. The cut at 0.50 is
+``half the home''. An evacuation that gets fewer than half the residents out
+has failed in a different way from one that got most of them out and fell
+short. The first is a mass-casualty event. The second is an incomplete but
+largely successful operation. The cut at 0.10 is one part-load of a single
+50-seat bus in a 100-resident home. A run that never moves more than that did
+not perform an evacuation, it failed to start one. The 25\,\% band at the top
+is round headroom. Handling a disruption legitimately costs extra driving,
+such as a detour or a second pickup, and a tighter band would score necessary
+work as waste.
+
+\paragraph{The clean-run reference.} $K^\ast$ is the median bus-kilometres of
+the control runs in the same cell that delivered everyone with per-shelter
+attribution. It is defined only when at least three such runs exist. Only
+complete runs qualify, because a run that sheltered part of the home also drove
+less, and admitting it would tighten the band for everyone else. Three is the
+smallest number of runs for which a median is not just one observation. When
+$K^\ast$ is undefined, no run may rise above level 3, and the reason is written
+into its notes. The comparison is always within a system: it asks whether a
+system drove further than it needed to, never whether it drove further than
+the other system.
+
+\paragraph{Where safety and efficiency meet.} Level 4 is the one place where the
+ladder mixes safety with efficiency. This is exactly the kind of blend the
+gate structure of Section~\ref{sec:eval:gates} warns against. The protocol
+therefore states it openly as an identity,
+\begin{equation}
+L = 4 \iff \text{Gate 1 passed} \wedge \text{Gate 2 passed},
+\end{equation}
+so that it is visible rather than hidden inside the ladder.
+
+\paragraph{Why an ordinal ladder.} A pass/fail outcome would throw away the
+difference between losing one resident and losing fifty. The design borrows
+from stroke trials, where the modified Rankin Scale is an ordered outcome with
+a long methods literature. That literature recommends keeping the ordinal
+structure instead of cutting it into two
+\parencite{optimisinganalysisofstroketrialsoastcollaboration2007a,ganesh2018},
+and it documents disagreement about where a single cut should fall
+\parencite{nunn2016}. The sensitivity check in Section~\ref{sec:eval:sensitivity}
+answers that second point. The analogy is \emph{structural} only. The ladder
+borrows the shape of an ordered clinical scale and its analysis methods. It
+makes no claim that an evacuation outcome is clinically comparable to a
+stroke outcome. The same literature raises one counter-point, which is
+accepted here: an ordinal analysis treats every step as equal in rank, so a
+step from 0 to 1 counts the same as a step from 3 to 4. The analysis never
+does arithmetic on levels (Section~\ref{sec:eval:analysis}), so it never has to
+say how far apart two steps are.
+
+\paragraph{Why an outcome and not an area.} Resilience engineering usually
+measures ``graceful degradation'' as the area lost under a functionality curve,
+the resilience triangle \parencite{bruneau2003}. The ladder deliberately does
+not. An area weights every moment equally, so very different trajectories can
+receive the same score \parencite{cremen2025}.
+In an evacuation, what matters is whether residents were in a shelter before
+the water arrived. The ladder scores that outcome directly.
+
+\subsection{Deterministic Scorer}
 \label{sec:eval:scorer}
-% No human scores anything. A frozen function of the event_log does, and the
-% same script runs identically on both systems. Consumes the log specified in
-% Section~\ref{sec:data:evalbackbone}.
-% Residual level-0-vs-1 edge calls go to a written adjudication log,
-% Appendix~\ref{app:adjudication}.
-% Contrast with LLM-as-judge approaches (zheng2023; TheAgentCompany), which this
-% design deliberately avoids.
 
-\section{Threshold Freezing as Preregistration}
-\label{sec:eval:prereg}
-% Thresholds frozen in git before evaluation day; hash and date recorded.
-% Precedent: the NeurIPS preregistration workshops (Bengio et al. 2020;
-% Albanie et al. 2021). Rationale: Gelman & Loken, garden of forking paths;
-% Kerr 1998, HARKing. Frozen artifact listed in Appendix~\ref{app:frozen}.
+No human scores anything. A frozen function of the event log computes every
+outcome, and the same function runs on both systems. It reads the log
+described in Section~\ref{sec:data:evalbackbone}. This is a deliberate contrast
+with the common practice of using a language model as a judge
+\parencite{zheng2023}, and with agent benchmarks that use one for some rubric
+items \parencite{xu2025}. A model judging models would bring back exactly the
+nondeterminism the design is trying to measure.
 
-\section{Cut-Point Sensitivity}
-\label{sec:eval:sensitivity}
-% The "you picked numbers that make agentic win" defence.
-% Sweep the level thresholds and report the whole result surface.
-% Method: specification curve analysis (Simonsohn et al. 2020); multiverse
-% analysis (Steegen et al. 2016).
-% Caveat (Del Giudice & Gangestad 2021): only genuinely arbitrary choices belong
-% in the sweep. Argue which thresholds are domain-justified and which are not.
+Two conventions run through the scorer. First, a missing value is not a zero.
+\texttt{None} means ``this run's log cannot answer that question'' and is never
+treated as 0. The worst failure of a thesis instrument is not a wrong number,
+it is a number that looks like a measurement when nothing was measured.
+Second, every interpretive constant lives in one file, \code{thresholds.py},
+which contains data and no logic. Its hash is written into every run's
+manifest. The claim ``the thresholds were frozen before the runs'' is
+therefore a checkable fact about one file's history, not a promise about a
+whole package.
 
-\section{Secondary and Diagnostic Metrics}
+% =====================================================================
+\section{The Three Gates}
+\label{sec:eval:gates}
+
+A system is not better because it wins a combined score. A combined score lets
+a system trade safety for speed. The protocol therefore reads three gates in a
+fixed order, and a gate is read only if every gate above it passed
+(Figure~\ref{fig:eval:gates}). The order is the point. A clearance time
+measured over a run that abandoned part of the home is not a slow number, it is
+an undefined one. Reading speed without safety is what lets a system look fast
+by giving up on the hardest residents. The gate order makes that impossible by
+construction.
+
+\input{pics/method-gates}
+
+The reference protocol this design descends from has four gates: safety,
+operational efficiency, equity, and robustness. This thesis runs three. Equity
+is not dropped. It is registered as undefined, and the reason is printed in the
+same place as the other gates' verdicts (Section~\ref{sec:eval:metrics}).
+
+\subsection{Gate 1: Safety}
+\label{sec:eval:gate1}
+
+Gate 1 asks whether the residents survived. Its effect measure is the risk
+difference, computed paired, per scenario, treatment minus control:
+\begin{equation}
+\widehat{RD} = \frac{1}{n}\sum_{i=1}^{n} \big(S_{A,i} - S_{B,i}\big),
+\label{eq:eval:rd}
+\end{equation}
+over the $n$ matched pairs. A positive value favours the agentic system. It is
+always reported with a bootstrap confidence interval and a Wilcoxon check
+(Section~\ref{sec:eval:analysis}). The pass rule depends on the arm:
+
+\begin{itemize}
+  \item \textbf{Anticipated arm:} pass when $\widehat{RD} > -\delta_{NI}$, with
+    $\delta_{NI} = 0.05$. The agentic system is not worse on survival by more
+    than the margin.
+  \item \textbf{Novel arm:} pass when $\widehat{RD} > 0$ \emph{and} the paired
+    bootstrap interval excludes zero. The agentic system is better on
+    survival.
+\end{itemize}
+
+If no margin has been registered, the verdict is \texttt{unregistered}, and
+that is not a pass. A run or condition that fails Gate 1 is reported as a
+failure. Its Gate 2 and Gate 3 figures are not published as achievements.
+
+\paragraph{The two margins.} $\delta_{NI} = 0.05$ is five residents out of a
+home of 100. It is stated on $S$ because a non-inferiority margin must be a
+quantity of harm: ``how many residents may we lose and still call it
+matching?'' has an answer, while the same question in levels does not. Five is
+half of the smallest unit the ladder already recognises, the 0.10 part-load.
+The margin is strict on purpose. A wide margin makes ``matching'' easy to show
+and worthless to claim. $\delta_m$, the minimum effect for the novel arm, is
+one whole level, because on an ordinal scale the level \emph{is} the
+substantive unit. $RD$ lives between $-1$ and $1$ while $\delta_m$ is one level,
+so the two are never read against each other. Reading them together would make
+every possible novel win look too small. The code keeps them apart, and a test
+enforces it.
+
+Passing Gate 1 on the novel arm is not yet a claim to have won. Whether a win
+is large enough to be worth claiming is a separate registered rule, stated on
+the level scale (Section~\ref{sec:eval:analysis}).
+
+\subsection{Gate 2: Speed and Flow}
+\label{sec:eval:gate2}
+
+Gate 2 asks how quickly the residents reached safety, given that they
+survived. It is read over the Gate-1-clearing runs only. Its main measures are
+clearance times at four quantiles, $q \in \{0.50, 0.90, 0.95, 1.00\}$. With
+the admitted arrivals in time order and $F(j)$ the running count of admitted
+residents,
+\begin{equation}
+T_q = \min\big\{\, t_j \ :\ F(j) \geq \lceil q\,N \rceil \,\big\}.
+\label{eq:eval:tq}
+\end{equation}
+
+The single most important choice in Gate 2 is the denominator. The quantile
+$q$ is a share of the ceiling $N$, not of the residents a run happened to save.
+If a run's survival is below $q$, then $T_q$ does not exist. It is reported as
+censored. It is never imputed, never dropped silently, and never replaced by
+the time of the last resident who did arrive. A run that abandons 15\,\% of
+the home has no $T_{90}$ and no $T_{95}$, and it cannot appear in a
+clearance table as a fast run. Defining $q$ over survivors would bring back
+exactly the gaming the quantiles exist to prevent: a system that saves the
+easy half and stops would post an excellent $T_{90}$ of that half.
+
+``Flow'' in the reference protocol means road occupancy and queues. This
+simulator has no congestion model, so flow is measured as operational effort
+instead: bus-kilometres, residents per bus-kilometre, and the response-time
+cost of Section~\ref{sec:eval:responsetime}.
+
+Gate 2 is descriptive, not pass/fail. One expectation was registered in
+advance: the baseline would win on latency and cost. That was stated as the
+honest trade-off before the runs, not discovered afterwards.
+
+\subsection{Gate 3: Adaptability}
+\label{sec:eval:gate3}
+
+Gate 3 asks whether an advantage survives disruptions that nobody planned for.
+It has three sub-tests.
+
+\begin{enumerate}
+  \item[(a)] \textbf{The anticipated precondition.} The baseline must pass
+    100\,\% of the anticipated set. A control that cannot run a clean
+    evacuation makes every comparison meaningless. On this set the agentic
+    system is tested only for non-inferiority.
+  \item[(b)] \textbf{The novel set.} The per-scenario level distributions over
+    the $k$ replicates are compared by first-order stochastic dominance. This
+    is the primary test of H2.
+  \item[(c)] \textbf{The degradation curve.} The advantage
+    $A(z) = Y_A(z) - Y_B(z)$, where $Y$ is the \emph{median} level at time
+    scale $z$, and the crossover band where the advantage first vanishes.
+\end{enumerate}
+
+Sub-test (c) uses the time scale \code{SIM_TIME_SCALE} as its axis. It asks at
+what exchange rate between wall-clock and simulated time the agentic system's
+thinking time starts to cost residents. It needs runs at several scales. Only
+one scale, 8.4, was executed, so the curve has one point per cell and the
+crossover was never read. H4 was therefore not tested
+(Section~\ref{sec:res:h4}).
+
+\subsection{The No-Replan Control}
+\label{sec:eval:noreplan}
+
+A third condition runs beside the two under test. It is the doctrine baseline
+with its re-planning switched off. The only path to a second dispatch order is
+disabled, so the first committed plan is its only plan. Everything else in the
+doctrine stays unchanged. It is the one ablation this design carries, and it
+serves two purposes. It separates \emph{re-planning} from \emph{reasoning about
+what to re-plan}. And it is the instrument's negative control, under a rule
+registered as a gate on the whole campaign:
+
+\begin{quote}
+Before any result is claimed, the no-replan control must score strictly below
+the doctrine baseline on at least one disruption.
+\end{quote}
+
+If a system that ignores every disruption scores the same as one that handles
+them, the instrument is not measuring adaptation, and no comparison built on it
+means anything.
+
+\paragraph{Where the gate was read.} The gate was read on the shelter-closure
+fixture, a scenario outside the scored set. On that fixture a re-plan changes
+who is delivered. It passed on 2026-09-14: the doctrine reached level 3 with
+$S = 1.0$, and the no-replan control reached level 0 with $S = 0.0$. The
+protocol also records, in writing, why the gate was not read on the scored
+scenarios. On those files the control ``cannot differ from the doctrine in
+outcome, by construction''. It commits the same orders on the undisrupted run
+and on the novel files, and on \code{road_closure} the completeness ties
+whatever was ordered. That note was written as the reason to move the gate to a
+fixture. Its consequence for the scored arms was not drawn at the time.
+Chapter~\ref{ch:critique} draws it (Section~\ref{sec:crit:gate0}).
+
+% =====================================================================
+\section{Secondary Instruments}
+\label{sec:eval:secondary}
+
+\subsection{Held-Out Decision Rubric}
+\label{sec:eval:heldout}
+
+Four of the five novel scenarios say in their own text that their main effect
+is ``judged mainly on the decision rubric''. The simulator models no patient
+(S04), no staircase or police officer (S06), no payload cap (S07), and no
+partly damaged shelter (S08). A coordinator that ignores the report can still
+reach a full level. S05 is not flagged that way, but it carries an explicit
+checklist and is judged beside the others. A decision rubric was therefore
+added. It was decided on 2026-09-11, with anticipated-arm pilot data in hand and
+no novel-arm data, and registered by Amendment~6 as the novel arm's
+\emph{secondary} outcome.
+
+The rubric is secondary and descriptive. It is never confirmatory, never turned
+into a level, and never merged with $L$. It is reported as counts of yes, no
+and unanswerable per criterion, by disruption, system and model. It reads
+\emph{structure only}: who was addressed and when, what the orders booked, and
+what was set down where. It never reads message text or model reasoning. A
+clause that depends on what a message \emph{says} is listed as not judged
+rather than approximated with keywords. An unanswerable criterion stays
+unanswerable and is never counted as a failure.
+Table~\ref{tab:eval:heldout} condenses the 16 criteria.
+
+\begin{table}[htbp]
+\centering
+\caption{The held-out decision rubric, condensed. Each clause from the
+supplier's scenario text becomes a mechanical rule on the log.}
+\label{tab:eval:heldout}
+\small
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
+\toprule
+Scenario & Criteria \\
+\midrule
+S04 & A medical team is requested to meet bus-1 at its destination shelter. Bus-1's leg is neither withdrawn nor diverted. ZKD is informed. \\
+S05 & The report is verified with police or ZKD before it is retracted. The standing runs land as ordered. The reserve bus is committed as a hedge by 10:57. Nothing new is still moving after the retraction. \\
+S06 & The nursing home is told by 10:58. The conflict is escalated to ZKD. Seats on the standing legs still cover the whole population. \\
+S07 & No bus-1 leg sets down more than 25 after the report. Bus-2 is committed. Seats still cover the population. \\
+S08 & No order books SC1 above 40. The excess goes to SC2. The valid count, with SC1 capped at 40, reaches the population. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+What the baseline would do was written down before any held-out run. The
+doctrine answers every held-out report with the same hold: status messages to
+ZKD, the transport operator and the home, and no new order. It therefore
+passes the ``was informed'' criteria by construction and fails the ones that
+need a changed plan. That is a finding about the doctrine, not a flaw in the
+rubric. It is also part of why the rubric stays descriptive. It shows
+\emph{where} the two conditions differ, not an effect size H2 could read.
+
+\subsection{Secondary and Diagnostic Metrics}
 \label{sec:eval:metrics}
-% Decision quality: resource efficiency (residents / bus-km), time-to-safety,
-% constraint violations.
-% Process diagnostics: supersede count, splice-vs-supersede ratio. These EXPLAIN
-% the outcome distribution (e.g. high supersede + low level = thrashing). They
-% do NOT score success; supersede count rewards churn and is demoted on purpose.
-% Cost: LLM tokens.
-% GAP FLAGGED BY THE RUBRIC BIBLIOGRAPHY: there is no equity dimension. The
-% ladder cannot distinguish sheltering the 60 most mobile residents from the 60
-% least mobile. Either add a diagnostic equity KPI here or declare the omission
-% in Section~\ref{sec:disc:limits} (Beamon & Balcik 3E framework).
 
-\section{Response-Time Cost}
+Beside the primary outcome, each run reports the secondary measures in
+Table~\ref{tab:eval:kpis}. None of them can move the level.
+
+\begin{table}[htbp]
+\centering
+\caption{Secondary measures, in the registered order of priority after the
+clearance quantiles and the loss decomposition.}
+\label{tab:eval:kpis}
+\small
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
+\toprule
+Measure & Meaning \\
+\midrule
+Bus-km $K$ & Distance actually driven. Charged once per leg, priced from where the bus stands. \\
+Resource efficiency & $\eta = V / K$, validly sheltered residents per bus-km. \\
+Wall latency, tokens & The response-time cost (Section~\ref{sec:eval:responsetime}). \\
+Capacity overloads & Distinct events where a shelter received more than it declared. These do affect the outcome, through $O$. \\
+Constraint violations & Rejected commands and rejected messages, counted in two separate channels. \\
+Time to safety & Time of the last counted dropoff. This is \emph{not} $T_{100}$, which is censored unless everyone arrived. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Three points about these measures matter for reading the results.
+
+\paragraph{Bus-km is not comparable across systems.} Each total is consistent
+within its own system, but they are composed differently. The agentic total
+sums the legs a driver committed to. The baseline total is priced from depot to
+pickup to shelter for each assignment, because its commander allocates rather
+than drives. That is enough for the level-3-versus-4 split, which is a
+within-system comparison. It is not enough for a cross-system efficiency
+claim, and the code refuses to present it as one.
+
+\paragraph{Two kinds of invalid action.} A \emph{command} violation is a verb
+the world has no handler for. An \emph{outbound} violation is a message to a
+recipient outside the address book, or of a type the agent may not send. The
+second is the coordination violation, and it bears on the shared-database
+architecture. Each rejection carries a reason code from a closed list, so the
+counts survive a change in the wording of an error message.
+
+\paragraph{Diagnostics, not scores.} Leg count and supersede count explain an
+outcome, for example ``many plan changes and a low level'' reads as thrashing.
+They are never used to score success, because a supersede count rewards
+churn.
+
+\paragraph{Equity is registered as undefined.} Humanitarian logistics usually
+treats equity as an outcome on the same footing as efficiency and
+effectiveness \parencite{huang2012}.
+An equity gate would compare survival across subgroups. Here it is registered
+as undefined, and the reason is a property of the case. A nursing home is a
+homogeneous vulnerable population. The whole population \emph{is} the
+vulnerable group, residents are counted as integers with no attribute to split
+on, and a difference across one group is always zero. A better measurement was
+considered: mobility tiers such as walking, wheelchair and bed-bound, with an
+equity margin. It was declined because it was new scope competing with the
+runs, and because a subgroup structure introduced late would be one chosen with
+the campaign in view. The ladder therefore cannot tell a run that sheltered the
+60 most mobile residents from one that sheltered the 60 least mobile. This is
+declared as a limitation.
+
+\subsection{Response-Time Cost}
 \label{sec:eval:responsetime}
-% Reported as a TRADE-OFF the baseline is expected to win, not an axis the
-% agentic system claims.
-% Two views: raw wall-time LLM latency per model, and operational delay as a
-% fraction of each disruption's own decision-time budget.
-% SIM_TIME_SCALE held as a logged experimental constant, so significance comes
-% from the deadline and not from an arbitrary global scale.
-% Expected shape: irrelevant under slow-clock disruptions, decisive under tight
-% deadlines.
 
-\section{Analysis Design}
+The agentic system thinks, and thinking takes time. That cost is reported as a
+trade-off the baseline was expected to win, not as an axis the agentic system
+claims. It has two views. The first is the raw wall-clock latency $\lambda$ of
+the model calls, per model. The second is the operational delay in simulated
+time, $\Delta_{\text{op}} = \lambda \cdot \sigma$, where $\sigma$ is the time
+scale. It is reported as a fraction of the disruption's own decision budget,
+$\phi = \Delta_{\text{op}} / (D_z - t_{\text{first event}})$. The same delay can
+be harmless under a slow disruption and fatal under a tight deadline, and the
+fraction makes that visible.
+
+Two cautions apply. $\lambda$ is summed over every turn of every agent, but the
+ten agents think in parallel, so $\Delta_{\text{op}}$ is an upper bound on the
+delay the operation actually suffered. And both quantities are withheld unless
+$\sigma$ is supplied explicitly as a logged constant, so no delay is ever
+computed against an assumed scale.
+
+The primary outcome deliberately leaves latency and cost out. The humanitarian
+logistics literature has an established argument that operational cost is not
+the outcome that matters in a disaster \parencite{holguin-veras2013}.
+
+% =====================================================================
+\section{Statistical Analysis}
 \label{sec:eval:analysis}
-% Unit of analysis is the RUN, not the disruption. k ~ 30 repetitions per
-% disruption per system.
-% Report per-disruption level distributions and stochastic dominance, not means.
-% Dominance for ordinal variables: Yalonetzky 2013. Inference machinery:
-% Davidson & Duclos; Barrett & Donald bootstrap.
-% Practical caution: dominance tests lose power in sparse tails. With k ~ 30 and
-% five levels some cells will be near-empty, so report raw level counts and
-% bootstrap CIs alongside any test.
-% The workflow baseline is a deterministic reference spike. Agentic variance is
-% reported as an honest cost, not hidden.
 
+\paragraph{No arithmetic on levels.} The levels are ranked, not spaced. The
+distance from 0 to 1 is not the distance from 3 to 4, so a mean level is not a
+quantity that exists. Levels are compared by distributions and medians only.
+Where a continuous quantity is needed, $S$ is used, since the level is a
+function of it. $RD$ is a mean of paired differences precisely because $S$ is
+continuous.
+
+\paragraph{Stochastic dominance.} Level distributions are compared by
+first-order stochastic dominance, which needs no arithmetic on an ordinal
+scale \parencite{yalonetzky2013,davidson2000,davidson2013}. With
+$\hat p_{\mathcal A}(L)$ the share of runs in sample $\mathcal A$ that score
+above level $L$,
+\begin{equation}
+\mathcal A \succ \mathcal B \iff
+\big(\exists L : \hat p_{\mathcal A}(L) > \hat p_{\mathcal B}(L)\big)
+\wedge
+\big(\nexists L : \hat p_{\mathcal B}(L) > \hat p_{\mathcal A}(L)\big).
+\label{eq:eval:dominance}
+\end{equation}
+The verdict is one of: $\mathcal A$ dominates, $\mathcal B$ dominates, neither
+(the distributions cross), identical, or undetermined (an empty sample). The
+single-ladder comparison used here is the one-dimensional special case of the
+ordinal dominance conditions in \textcite{yalonetzky2013}. Dominance checks
+lose power in sparse tails, and with $k = 10$ and five levels some cells are
+nearly empty. The raw level counts are therefore always printed beside the
+verdict.
+
+\paragraph{Confidence intervals and the paired check.} Every risk difference
+carries a percentile bootstrap interval. The paired differences are resampled
+with replacement 10\,000 times at a fixed seed (20260904), and the 2.5th and
+97.5th percentiles of the resampled means form the 95\,\% interval. An empty
+sample gets no interval rather than a meaningless $(0,0)$. A Wilcoxon
+signed-rank test on the same differences is reported beside it as an
+assumption-light check. Zero differences are dropped, as Wilcoxon's rule
+requires, but they are \emph{counted}, because a set of pairs that is mostly
+exact ties is a result about the systems. The test is exact for up to 20
+non-zero differences without ties, and uses a normal approximation with tie
+correction otherwise.
+
+\paragraph{The H1 rule.} H1 passes on a scenario when
+$\widehat{RD} > -\delta_{NI}$. This is a rule on the point estimate, and it
+carries no significance level. The pre-registration first registered a
+one-sided test on the lower bound of the interval. The implementation had
+always decided on the point estimate, and on 2026-09-12, with pilot data seen,
+the author registered the implemented rule rather than change the code. The
+consequence is stated openly. An H1 pass has no controlled error rate, so a
+system that sits exactly at the margin passes about half the time at any $k$.
+A pass is therefore reported as ``the point estimate lies inside the margin'',
+never as ``non-inferiority demonstrated''. The margin itself did not change.
+
+\paragraph{The H2 effect rule.} Gate 1 decides whether the agentic system is
+better on survival. A second rule decides whether the win is large enough to
+claim, on the level scale. It has two conditions, and both are required:
+\begin{equation}
+\operatorname{median}\big\{L_{A,i} - L_{B,i}\big\} \geq \delta_m = 1
+\quad\wedge\quad
+\mathcal L_A \succ \mathcal L_B.
+\label{eq:eval:h2}
+\end{equation}
+Dominance is a requirement here, not a second number beside the median. Four
+runs at level 4 and two at level 0 give a median shift of two whole levels
+from a system that abandoned the home in a third of its runs. Under this rule
+that is a failure, not a double success.
+
+\paragraph{The registered H2 primary, implemented late.} The pre-registration
+also named a primary test for H2: the probability that an agentic run reaches
+at least the baseline's level, with an exact Clopper--Pearson interval over the
+$k$ runs, combined across scenarios by a sign test and corrected with
+Holm--Bonferroni within each arm. None of the three was implemented when the H2
+verdict was first written. All three were implemented afterwards and agree with
+the verdict (Amendment~15). Because they were coded after the data were seen,
+that analysis is exploratory. Section~\ref{sec:crit:power} discusses a second
+finding that came with it: at $k = 10$ this registered test could not reach
+conventional significance whatever the data.
+
+\paragraph{Multiplicity and aggregation.} H1 and H2 are two claims on two
+disjoint scenario sets, each with one primary outcome, so no correction is
+applied between them. Within an arm, across scenarios, the correction is
+Holm--Bonferroni. Runs are never pooled across scenarios, because scenarios
+differ in ceiling, fleet and deadline, and a pooled mean would average
+quantities that cannot be compared. Secondary outcomes are not corrected and
+are reported as descriptive.
+
+\paragraph{Choosing $k$.} The reference protocol forbids an arbitrary number of
+replicates, so $k$ was to be sized on a pilot. The pilot was planned as 24
+paired cells on the anticipated set with two models. It ran as 22 paired cells,
+unbalanced across models after mid-pilot swaps that the pre-registration
+discloses. A resampling tool drew each cell's differences with replacement from
+its own pilot differences, 10\,000 times, for $k$ from 3 to 200, and estimated
+how often the H1 rule would pass. The target was 0.80. No cell reached it at any
+$k$, and the pass probability \emph{fell} as $k$ grew, because every pilot mean
+already lay below $-\delta_{NI}$. No value of $k$ could buy H1. Widening the
+margin was prohibited by the registration. So $k = 10$ was set on budget and
+precision grounds (Amendment~1), and H1 was declared not expected to pass
+before the campaign ran. The pilot data were used for sizing only and were
+excluded from every confirmatory analysis.
+
+\paragraph{Exclusions and censoring.} Only three reasons can exclude a run: a
+simulator or harness crash, a harness timeout, or right-censoring. A run is
+censored if it stopped less than 900 simulated seconds after its flood deadline,
+\begin{equation}
+\text{censored} \iff t_{\text{end}} < D_z + 900\,\text{s},
+\end{equation}
+because residents still on their way at the deadline never had the chance to
+arrive. Scoring such a run would record the harness's impatience as the
+system's failure. Fifteen minutes is about one shuttle turnaround. Explicitly
+\emph{not} admissible are an unfavourable outcome, an outlying latency, a model
+that emits malformed plans (that is a result), or a novel scenario that proves
+too hard. Every exclusion is counted and published beside the distribution it
+qualifies. The event log is append-only, enforced by a database trigger, so a
+run cannot be removed afterwards without the removal being visible.
+
+\subsection{Cut-Point Sensitivity}
+\label{sec:eval:sensitivity}
+
+The obvious attack on a threshold-based outcome is that the thresholds were
+chosen to produce the result. The defence is to show the result at other
+thresholds too. Every score carries its own level at three alternative cuts
+for the level-1/2 boundary: 0.40, 0.50 and 0.60. The registered rule is that
+the headline may not be reported without this sensitivity table.
+
+This is a small specification curve: the result is shown across the set of
+defensible choices instead of along one path
+\parencite{simonsohn2020,steegen2016}.
+Only the level-1/2 cut is swept. A multiverse should contain only the choices
+that are genuinely arbitrary \parencite{delgiudice2021}. The 0.10 cut is
+anchored to one part-load of one bus and the 1.00 cut is ``everyone'', so
+neither is arbitrary. ``Half the home'' is the most defensible of the three,
+but it is also the one a reader is most likely to question, so it is the one
+swept.
+
+% =====================================================================
 \section{Model Sweep}
 \label{sec:eval:models}
-% At least three LLMs spanning a capability range, each pinned by digest and
-% labelled per run. Local version-frozen models preferred over :cloud tags.
-% Tests whether the advantage is model-robust and exposes a capability threshold
-% below which weak models emit invalid plans and the advantage disappears.
-% Nondeterminism in inference: yuan2025; bjarnason2026.
 
-\section{Construct Validity of the Rubric}
+The design called for at least three language models across a range of
+capability. Each is pinned by digest where possible and named on every run. The
+sweep tests whether an advantage is robust across models (H3), and whether
+there is a capability threshold below which weak models emit invalid plans.
+
+\paragraph{As executed.} The execution departed from the registered selection
+rule, and every departure was recorded as an amendment. The anticipated arm ran
+glm-5.2, deepseek-v4-pro and minimax-m3 (Amendment~1). After screening two
+further models, the author chose a final set of the three strongest models in
+the pool, which overrode the model the registered rule would have picked
+(Amendment~5). On the novel arm the third slot then moved three more times,
+each time after runs had been seen, and settled on qwen3.5
+(Amendments~10 to~12). Three models completed the novel arm at 50 runs each:
+glm-5.2, deepseek-v4-pro and qwen3.5. Three others hold partial series:
+kimi-k3 (11 runs), gpt-oss (4) and kimi-k2.7-code (3). Partial series are
+reported on their own and never pooled with the full arms.
+
+Because the third slot changed after data were seen, the novel arm's model set
+and any analysis that depends on it are exploratory. glm-5.2 and
+deepseek-v4-pro were fixed before the arm ran and are unaffected. Two further
+consequences follow for H3. A set of the strongest models is not expected to
+show a capability threshold, and the model below the set (minimax-m3) was not
+run on the novel arm, so the threshold cannot be observed there. Amendment~12
+also records that levels are not comparable across models, only $S$, because
+each model's clean-run reference is its own.
+
+\paragraph{Model drift and nondeterminism.} Hosted \texttt{:cloud} model tags
+cannot be frozen to a version. The model metadata is captured on every run, so
+drift can be detected, but not prevented. Inference itself is not bit-exact
+even with a fixed seed \parencite{yuan2025}, and agentic evaluations are
+known to vary from run to run for this reason \parencite{bjarnason2026}. This
+is what the replicates are for.
+
+\paragraph{No retry.} Neither the planning agents nor the model client retry a
+failed or malformed model call. A malformed response is surfaced as a hard
+failure. Adding a retry would give a weak model a second attempt that a strong
+model never needed, which is exactly the capability difference the sweep is
+meant to measure. A retry would have to be a declared experimental factor,
+not a default. The cost of this choice is stated as a limitation: one timed-out
+call at a critical step can lose a run.
+
+% =====================================================================
+\section{Pre-Registration and Amendments}
+\label{sec:eval:prereg}
+
+Every analytic choice was to be fixed before the first evaluation run, so that
+no choice could be made after seeing a result. This is the discipline that
+stops the ``garden of forking paths'', where choices made after seeing data
+bias a result without any intent to cheat, and it prevents forming hypotheses
+after the results are known \parencite{gelman2014,kerr1998}.
+Pre-registration is an established practice in machine-learning research, with
+dedicated workshops at NeurIPS \parencite{bertinetto2021}, and there is
+practical guidance for what a pre-registration in a language-technology setting
+should contain \parencite{miltenburg2021}.
+
+\paragraph{The amendment rule.} After the pre-registration is tagged, nothing in
+it is edited. Changes are appended as dated amendments. Each one states what
+changed, why, and whether any evaluation data had been seen at the time. An
+amendment made after data were seen is not misconduct. It is a normal event in
+a long campaign. But it must be visible, and any analysis it touches is
+reported as exploratory rather than confirmatory. Sixteen amendments were
+written. Table~\ref{tab:eval:amendments} lists the ones that shape how the
+results must be read.
+
+\begin{table}[htbp]
+\centering
+\caption{The amendments that change how a result is read. All sixteen are in
+the pre-registration's amendment log.}
+\label{tab:eval:amendments}
+\small
+\begin{tabularx}{\textwidth}{lll>{\raggedright\arraybackslash}X}
+\toprule
+\# & Date & Data seen & Change \\
+\midrule
+1  & 09-12 & Pilot & $k = 10$; campaign models; replicates 1000--1009; H1 declared not expected to pass. \\
+5  & 09-14 & Anticipated arm & Final model set chosen by the author over the registered rule. \\
+6  & 09-14 & Anticipated arm only & Novel arm fixed before any novel score: five scenarios, freeze and reveal dates, the negative-control verdict, the rubric as secondary, the new thresholds hash. \\
+10--12 & 09-16 to 09-18 & Novel arm, partly & The third model slot moves three times, ending at qwen3.5. \\
+13 & 09-20 & Whole novel arm & qwen3.5 anticipated \code{closed_loop} cells added to complete its level ladder; closing audit disclosures. \\
+14 & 09-21 & Everything & Reporting correction: Gate 1 has 27 cells, not 26. No analytic change. \\
+15 & 09-21 & Everything & The registered H2 primary implemented late, hence exploratory; reporting fixes. No confirmatory number moves. \\
+16 & 09-22 & Everything & Treatment validity and Protocol v2. Exploratory by construction (Chapter~\ref{ch:critique}). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{As executed.} The margins $\delta_{NI}$ and $\delta_m$ and the equity
+decision were registered on 2026-09-04, against zero evaluation runs, and
+committed to \code{thresholds.py} in the same commit. The tags
+\code{prereg-v1} and \code{prereg-amendment-1} were cut together on
+2026-09-12, on commit \texttt{7a4d7cc}, the commit the anticipated campaign ran
+on. The tag did \emph{not} precede the first evaluation run: the pilot ran
+before it, and the pre-registration says so. \code{thresholds.py} changed once
+after the reveal, when two fenced sections for the negative control and the
+decision rubric were merged in \texttt{e9e20cd}. Neither section holds anything
+the ladder reads. The threshold hash recorded with the scored runs,
+\texttt{d08c1e35}, is identical across all 310 of them. The frozen artifacts
+are listed in Appendix~\ref{app:frozen}.
+
+\paragraph{Campaign gates.} Five conditions had to hold before any result
+could be claimed. Table~\ref{tab:eval:campaigngates} gives their status.
+
+\begin{table}[htbp]
+\centering
+\caption{The campaign gates and their final status.}
+\label{tab:eval:campaigngates}
+\small
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\# & Gate & Status \\
+\midrule
+1 & The baseline freeze predates the novel reveal. & Met. 11:41 against 15:27, 2026-09-10 (Amendment~6). \\
+2 & The baseline passes 100\,\% of the anticipated set. & Evidence present: all 20 campaign baseline runs score $S = 1.0$. Never recorded in an amendment. \\
+3 & The no-replan control scores strictly below the baseline on at least one disruption. & Passed on the fixture, level 3 against level 0 (Section~\ref{sec:eval:noreplan}). \\
+4 & PARITY deviation 7 is closed or re-argued in writing. & Open when the campaign ran. Closed afterwards by re-argument (Section~\ref{sec:val:dev7}). \\
+5 & Everything declared out of scope appears in the limitations. & Section~\ref{sec:eval:scope} and Section~\ref{sec:crit:limitations}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Gate 4 needs one sentence here. The campaign ran while it was still open, which
+the gate did not permit. It was closed afterwards by the written argument the
+gate allows: the deviation runs against the baseline, so it cannot explain a
+baseline win. Had the agentic side won, the gate would have had to be closed
+properly first.
+
+% =====================================================================
+\section{Construct Validity}
 \label{sec:eval:construct}
-% Does the ladder measure "replanning capability"?
-% Structure after Jacobs & Wallach 2021, one short paragraph per component:
-% face, content, convergent, discriminant, predictive, hypothesis, consequential.
-% Convergent validity is where the diagnostics earn their keep (supersede count
-% should correlate sensibly with level). Consequential validity is where gaming
-% is discussed, including the feasibility-ceiling denominator.
-% Note that the mRS analogy is STRUCTURAL, not domain-based. Say so explicitly.
 
+The ladder is meant to measure how well a coordinator handles a disruption. That
+is a construct that cannot be observed directly, and the ladder is a model of
+it. Following \textcite{jacobs2021}, the question of whether the model measures
+the construct splits into seven parts.
+
+\paragraph{Face validity.} The ladder speaks the language of the domain:
+residents in a shelter before the water arrives. The doctrine baseline it is
+compared against was co-certified by the domain expert. There is no empirical
+loss data for this facility to anchor it against, and the expert's review is
+the substitute.
+
+\paragraph{Content validity.} The ladder covers completeness, the deadline,
+shelter capacity and driving effort. It does not cover equity
+(Section~\ref{sec:eval:metrics}), the medical care given on the way, or the
+content of messages. The decision rubric covers part of the last gap, and the
+rest is declared.
+
+\paragraph{Convergent validity.} Measures that should move together, do they?
+This is where the diagnostics earn their place. A high supersede count
+together with a low level should read as thrashing. The results chapter tests
+this link (Section~\ref{sec:res:diagnostics}).
+
+\paragraph{Discriminant validity.} The ladder must separate a coordinator that
+handles a disruption from one that ignores it. The negative control exists to
+show this, and on the fixture it did. Whether it held on the scored scenarios
+is the question Chapter~\ref{ch:critique} answers. It is the weakest part of
+this design.
+
+\paragraph{Predictive validity.} There is no outcome from a real evacuation to
+predict. The ladder cannot be checked against a real evacuation of this home,
+and this is declared.
+
+\paragraph{Hypothesis validity.} The ladder should behave as theory predicts on
+cases with a known answer. The scorer's fixtures pin this. For example, a plan
+that sends residents to a closed shelter must score below one that re-routes
+them.
+
+\paragraph{Consequential validity.} How could a system game the measure? Three
+rules close the obvious routes. The ceiling is computed from what was declared,
+not from the run. The clearance quantiles are computed over the ceiling, not
+over survivors. And an overload invalidates only the excess residents, so no
+system gains by delivering fewer.
+
+% =====================================================================
 \section{Evaluation Harness}
 \label{sec:eval:harness}
-% How a run is launched, logged, scored, and replayed. What is recorded per run
-% (model digest, seeds, SIM_TIME_SCALE, scenario id, git hashes of both systems
-% and of the scorer).
+
+One harness runs every cell of the evaluation. For each run it records a
+manifest row inside the append-only log: the system, the model and its digest,
+the scenario and its hash, the time scale, the replicate, the policy seed, the
+git commit and whether the working tree was clean, the threshold hash, and the
+platform. A run's provenance can therefore be recovered from the log itself,
+not only from this document. The reproduction steps are in
+Appendix~\ref{app:repro}.
+
+\paragraph{The headless world client.} On the agentic side, a bus leg closes
+only when the world acknowledges that the task is complete. At first, the only
+source of that acknowledgement was the browser's vehicle animation. Cells run
+without a browser therefore ran in a world where no bus ever arrived. The first
+pilot measured this missing acknowledgement, not the models: all its agentic
+cells scored level 0. It was declared invalid and re-run on the same plan. Every
+agentic cell now runs a headless client that plays the vehicle animations from
+the backend's own events. A cell refuses to start while a browser tab is
+connected, because tab and client would acknowledge every leg twice.
+
+\paragraph{A serial sweep.} The sweep cannot run in parallel on one machine.
+Agent state is keyed by a fixed agent name, the agents' working directories are
+fixed paths, and the route cache is a single file. It is therefore serial and
+resumable. An agentic cell takes about 20 wall-minutes. The anticipated arm's
+60 agentic cells took about 21 hours. The fixed order has one declared cost:
+any drift in the hosted models or the hardware over time is confounded with a
+run's position in the sweep.
+
+\paragraph{Replicate blocks.} The replicate index shifts the policy seed, so
+blocks are kept apart by index and by output file. Replicates 100--105 are the
+pilot, 1000--1009 the confirmatory runs, and 2000 onwards the model
+screenings. The scoring and summary commands read only the confirmatory file
+by default. Pilot and screening runs are therefore kept out of the confirmatory
+analysis mechanically, not by convention.
+
+\paragraph{Two-pass scoring.} A cell's clean-run reference $K^\ast$ must exist
+before any run in it may rise to level 4. Scoring therefore runs in two passes:
+first the references, then the levels.
+
+% =====================================================================
+\section{Declared Scope}
+\label{sec:eval:scope}
+
+The protocol states in advance what it does not measure, so that an examiner
+reads it here rather than finding it. Table~\ref{tab:eval:scope} condenses the
+list. The limitations that arose from executing the design are discussed in
+Section~\ref{sec:crit:limitations}.
+
+\begin{table}[htbp]
+\centering
+\caption{What the protocol does not measure, declared before the evaluation.}
+\label{tab:eval:scope}
+\small
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
+\toprule
+Not measured & Why \\
+\midrule
+Continuous hazard exposure & No water model. The flood is one arrival time per zone, and the deadline is its discrete substitute. \\
+Equity across subgroups & Registered as undefined (Section~\ref{sec:eval:metrics}). \\
+Congestion and queues & No road-capacity model. \\
+Per-resident trajectories & Residents are counts. The organisations are the agents, the residents are the payload. \\
+Sensor noise, message delay and loss & No sensor or communication model. Adding one would test the database architecture, not the coordination policy. \\
+Further ablations & Only the no-replan control. Other components are not separable, or need the declined subgroup structure. \\
+Message content & The decision rubric reads structure, never prose. \\
+Oracle-relative regret & No optimum is computable over an open space of novel disruptions. \\
+Route-choice baselines & Route choice lives in the driver agents, which neither coordinator controls. \\
+Randomised run order & The sweep is serial by construction. \\
+Bit-exact reproducibility & Seeded inference is near-deterministic only. \\
+The H3 capability threshold & The final set holds the strongest models, and the weaker one did not run on the novel arm. \\
+The effect four novel scenarios test & It is judged on the secondary rubric, while the level is likely to tie. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The last row deserves emphasis, because it was known before the novel arm ran.
+The protocol recorded that on four of the five novel scenarios, H2 would be
+read on a level that was likely to tie, with the rubric's counts beside it.
+How far this reached, and what it means for the answer to RQ1, is the subject
+of Chapter~\ref{ch:critique}.

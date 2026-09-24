@@ -1,69 +1,514 @@
 \chapter{Database-Centric Agentic System}
 \label{ch:agentic}
 
-% Answers RQ sub-question 2 (integration of heterogeneous organizational agents).
-% NOTE: no LangGraph and no PostgresSaver. The system is Ollama + a custom
-% asyncio engine (agentic/core/agentic_engine.py). See PROJECT_BRIEFING.md 6.5.
+% Sources: thesis-pack/04-architecture-agentic/agentic-core-README.md,
+% agents/*.md (bus_driver.md is the reference agent), and thesis-pack/adr/.
+% Stack: Ollama + a custom asyncio engine + PostgreSQL. No LangGraph, no
+% PostgresSaver. Written in pure prose on purpose: no code identifiers.
 
+This chapter describes the agentic system: how a single agent is built, how it
+wakes, what it sees, what it may answer, and what the runtime does with that
+answer. Chapter~\ref{ch:casestudy} already introduced \emph{who} the agents are
+(Table~\ref{tab:cs:roster}) and \emph{what} they must do together
+(Figure~\ref{fig:cs:storyline}). This chapter does not repeat that. It explains
+\emph{how} each agent works.
+
+The chapter describes the design as it was built and evaluated. Whether the
+design helped is a question for Chapter~\ref{ch:results}.
+
+% =====================================================================
 \section{Architecture Overview}
 \label{sec:ag:overview}
-% Shared database as source of truth and broker; one runtime per agent; the UI
-% as a passive viewer. Contrast with the framework-based approach surveyed in
-% Section~\ref{sec:bg:agentic}, and justify the custom engine.
 
+The system has ten agents in eight organizations. Six of them reason with a
+language model: the coordinator BIS, the transport dispatcher at Hochbahn, the
+two bus drivers, the police officer and the paramedic. The other four are
+scripted: the disaster staff ZKD, the Augustinum and the two schools.
+Section~\ref{sec:cs:agents} gives the rule behind this split. An agent that
+makes no decision in the case gets no language model.
+
+Every agent is its own small program. It runs its own loop, keeps its own state
+and has its own mailbox. All ten programs are built on one shared engine, so
+they wake, reason, commit and log in the same way. What differs between them
+is the persona, the set of actions they may take, and a few role-specific
+rules. Section~\ref{sec:ag:template} lists exactly what differs.
+
+The agents never talk to each other directly. The only channel between them is
+a PostgreSQL database, which is also the single source of truth for the whole
+simulation. The database holds five kinds of record:
+\begin{itemize}
+  \item the current \emph{state} of every agent, one row per agent;
+  \item the \emph{mailboxes}, where every message between agents is stored;
+  \item the \emph{world events}, which report that a physical action has
+  finished, for example that a bus has arrived;
+  \item the \emph{prompt records}, which keep the exact prompt and the exact
+  answer of every model call;
+  \item the \emph{event log}, an append-only audit trail of everything each
+  agent received and decided.
+\end{itemize}
+When one agent sends a message, it writes a row to the recipient's mailbox. The
+database then notifies the recipient, which wakes up and reads it. The same
+notification mechanism tells the observation interface that a state has
+changed. Figure~\ref{fig:ag:architecture} shows this structure. Every arrow in
+it passes through the database. This is what the word \emph{database-centric}
+in the title of this thesis refers to. Chapter~\ref{ch:data} describes the
+data layer in detail.
+
+\input{pics/ag-architecture}
+
+Vehicles are not agents. A bus, the patrol car and the ambulance are passive
+resources that a person drives. The physical world is an
+execution model, not a decision maker. It carries out the commands
+the agents send, for example ``drive to this address'', and reports back when
+each one is done. During a live run the observation interface animates this on
+a map. In the evaluation a headless harness plays the same role.
+% TODO(verify): "headless harness" wording, from the evaluation decision notes via the
+% roster summary. Check against 10-instrument/ before the final draft.
+
+Inference runs through Ollama. The engine around it is custom and written in
+plain asynchronous Python. No agent framework is used. Section~\ref{sec:bg:agentic}
+surveys such frameworks. The reason for a custom engine is that the runtime has
+to own three things a general framework would not give it: time, validation and
+the audit trail. Time must be owned because the agents act in a simulated clock
+that keeps running while they think (Section~\ref{sec:ag:crons}). Validation
+must be owned because an agent may not send a command or a message that its
+role does not allow (Section~\ref{sec:ag:runtime}). The audit trail must be
+owned because the evaluation reads every score from it, and the workflow
+baseline has to write the very same rows. A framework that hides
+these three behind its own abstractions would make the comparison in
+Chapter~\ref{ch:eval} much harder to defend.
+
+% =====================================================================
 \section{The Agent Specification Template}
 \label{sec:ag:template}
-% The nine facets applied identically to every agent and to both systems:
-% context/role, sensing, messaging, addressbook, tools, state, cronjobs,
-% instructions, reasoning loop. See PROJECT_BRIEFING.md 4.
 
-\section{The AgenticEngine Loop}
+Every agent, in both systems, is specified along the same nine facets. The
+template was fixed early in the project so that no agent is described in more
+or less detail than another.
+
+\begin{enumerate}
+  \item \textbf{Context and role.} Who the agent is, where it sits, and who
+  gives it instructions.
+  \item \textbf{Sensing.} What the agent can perceive, and how.
+  \item \textbf{Messaging.} Which message types it receives and which it may
+  send.
+  \item \textbf{Address book.} The concrete contacts it may reach, each with a
+  reason.
+  \item \textbf{Tools.} The actions it can take.
+  \item \textbf{State.} What it knows and remembers, in a form that can be
+  queried.
+  \item \textbf{Scheduling.} How its actions are placed in time.
+  \item \textbf{Instructions.} The instruction types it accepts, with example
+  content.
+  \item \textbf{Reasoning loop.} How it turns an instruction into a plan and a
+  plan into actions. The key rule here is that there are \emph{no hard-coded
+  subtasks}. The agent derives its own plan from its goal.
+\end{enumerate}
+
+The original template described scheduling as wake-ups that the agent sets for
+itself. The built engine does this differently. The agent says only whether an
+action should start now or as late as possible before a deadline, and the
+runtime works out the exact time. Section~\ref{sec:ag:crons} explains this.
+
+The shared engine gives every agent the whole wake cycle for free. This covers
+the model call, the checking of the answer, the commit of a new step, the
+replanning rules, the timing checks, the delivery of messages, the handling of
+world events and every row in the event log. Each agent only has to supply six
+things:
+\begin{itemize}
+  \item its identity, meaning the person, the address, the vehicle and the
+  address book;
+  \item its set of allowed actions;
+  \item a way to estimate how long each action takes;
+  \item its persona and its playbooks, which together form the system prompt;
+  \item the way it renders its current situation into the user prompt;
+  \item whether it holds a step that cannot be done in time, or lets it run
+  late.
+\end{itemize}
+This division is deliberate. Everything that could bias the comparison between
+agents, or between the two systems, lives in the shared part.
+
+% =====================================================================
+\section{The Wake Cycle}
 \label{sec:ag:engine}
-% sense -> check_messages -> reason -> execute -> reflect.
-% Three wake event types and nothing else: message, cron_fire, task_complete.
-% One wake = one LLM call. Sim clock keeps ticking during inference.
 
+An agent does nothing until something wakes it. Three kinds of event wake the
+language model:
+\begin{itemize}
+  \item a \textbf{message} arrives in the agent's mailbox;
+  \item the agent's \textbf{current step finishes}, because the world has
+  confirmed its last action;
+  \item a \textbf{timing conflict} is found, because the step the agent just
+  committed cannot be finished by its deadline.
+\end{itemize}
+Each of these wakes leads to exactly one model call. The answer to that call
+is one decision.
+
+\paragraph{One wake, in order.} The engine handles every wake in the same
+sequence. Figure~\ref{fig:ag:engine} shows the steps, and the path beside them
+that needs no model.
+\begin{enumerate}
+  \item It writes the incoming event to the event log.
+  \item It updates the state \emph{before} the model sees it. A new message is
+  put into the inbox. A finished step is moved to the history, and the next
+  leg of the plan is taken from the front of the remaining plan.
+  \item It takes a fingerprint of everything the model is about to see. This
+  lets the evaluation tell whether two decisions were made from the same
+  observation.
+  \item It builds the prompt, records it, and calls the model. The prompt is
+  stored before and after the call, so the interface can show that a call is
+  in progress.
+  \item It checks the answer against the agent's rules and counts every rule
+  the answer tried to break.
+  \item It commits the new step and the new plan (Section~\ref{sec:ag:replan}).
+  \item It checks and sends the outgoing messages.
+  \item It writes one decision row to the event log, with the reasoning, the
+  step, the plan, the messages, the token counts and the latency.
+\end{enumerate}
+
+\input{pics/ag-engine}
+
+\paragraph{Work that needs no model.} Most of what happens in a run does not
+wake the model at all. When the time for a committed action comes, the clock
+sends it out to the world directly. This dispatch path makes no model call. It
+only marks the action as sent and logs it. When the world reports that an
+action is done, the engine marks it as confirmed and writes the vehicle's real
+position back into the state. Only when the \emph{last} action of a step is
+confirmed does the agent wake, with the step-finished event. Some agents also
+answer certain routine messages without the model, for example a plain
+acknowledgement or a position update. These \emph{fast paths} are opt-in for
+each agent, because whether a message is purely informational depends on the
+role that receives it. Each fast path still writes a decision row, with zero
+tokens, so the event log stays complete.
+
+\paragraph{No second chances.} The model runs at a low temperature of 0.2. If
+it returns an answer that is not valid JSON, the engine does not ask again. It
+records the failure and moves on. A retry would give a weak model a second
+attempt that a strong model never needed, and it would hide a real difference
+between models. The cost is that one bad answer can lose one decision. This is
+declared in the evaluation protocol (Chapter~\ref{ch:eval}).
+
+% =====================================================================
 \section{Prompt Structure}
 \label{sec:ag:prompts}
-% CORE system prompt + three event playbooks (MESSAGE / CRON_FIRE /
-% TASK_COMPLETE). Role-based projections to keep prompts small (~900 tokens/call
-% vs ~2.7k before). JSON response contract: thinking, state_updates, tasklist,
-% new_crons, crons_to_cancel, frontend_commands, reply_to_sender, reflection.
-% Full prompts in Appendix~\ref{app:prompts}.
 
+Every model call has two parts. The system prompt says who the agent is and how
+it must act. The user prompt says what the situation is right now.
+
+\paragraph{The system prompt.} It is built from three blocks, in this order.
+\begin{enumerate}
+  \item The \textbf{persona} says who this person is: name, age, job,
+  employer, vehicle, the contacts in the address book, and the message types
+  the person may send. This is the only block that is different for every
+  agent.
+  \item The \textbf{contract} says how the agent acts. It explains the wake
+  types, the exact format of the answer, the allowed actions, how an address
+  must be written, and the handover rules at the nursing home and at the
+  school. The three driving agents share one contract shape. The two
+  coordinators each have their own.
+  \item The \textbf{playbook} is chosen by the kind of wake. A bus driver has
+  three: one for planning from a new message, one for planning the next step
+  after a step finishes, and one for handling a timing conflict. The
+  coordinators select among more. BIS, for example, has separate playbooks for
+  the first alarm, a refusal, a request for more time, a new transport plan
+  and the final status of the facility.
+\end{enumerate}
+Each playbook is a numbered list of decision rules, followed by one worked
+example. The example is set in a made-up Hamburg situation that appears in no
+test scenario. This keeps the model from copying the live scenario from its own
+instructions. The system prompt contains nothing specific to the scenario, so
+it is the same on every wake of a run.
+
+\paragraph{The user prompt.} It is split into fixed sections. For a bus driver
+these are: the wake itself, the current location, the place where the bus is
+parked, the mission brief, the mission status, the remaining plan, the current
+step, the last three finished steps, and the conversations. The mission brief is
+the newest dispatch order, pinned in full so it never scrolls out of view. The
+conversations show the last five messages with each contact, in time order,
+including the agent's own earlier messages. The agent therefore sees what it
+said before, even though the model keeps no memory between calls. Every section
+is always printed, with ``none'' if it is empty, so the layout never changes
+from one wake to the next.
+
+\paragraph{The answer.} The model must answer with one JSON object. It holds:
+\begin{itemize}
+  \item a short piece of \textbf{reasoning} in plain text, which is required;
+  \item the \textbf{current step}, with a label, a deadline and an ordered
+  list of actions. For each action the model says only whether it should start
+  \emph{now} or \emph{by the deadline}. It never writes a clock time;
+  \item the \textbf{remaining plan}, a list of future legs, each with a label
+  and a deadline. If the model leaves the plan out, the old plan is kept. If it
+  writes one, the new plan replaces the old one completely;
+  \item the \textbf{outgoing messages}, each with a recipient, a type and a
+  body;
+  \item optionally, an \textbf{abort} with a reason.
+\end{itemize}
+The rule about the remaining plan matters for the evaluation. Because leaving
+it out means ``no change'', every plan the model does write is a deliberate
+revision. Appendix~\ref{app:prompts} gives the full prompts of the reference
+agent.
+
+% =====================================================================
 \section{Runtime Ownership and Ground Truth}
 \label{sec:ag:runtime}
-% Why the runtime, not the LLM, owns certain state. Task statuses re-stamped so
-% an omitted "done" cannot undo a completed task. ACK dedupe via acked_seqs.
-% Ground-truth GPS written back from UI ACKs so the next prompt sees the real
-% position, not the address the model guessed.
-% These are correctness mechanisms AND parity-relevant: document them, because
-% they shape what the agentic system can and cannot do.
 
-\section{Self-Scheduling and the Sim Clock}
+The model proposes. The runtime decides what actually happens. Some state is
+owned by the runtime and cannot be changed by anything the model writes. These
+rules are correctness mechanisms. They are also part of the comparison, because
+they limit what the agentic system can do, so they are listed here in full.
+
+\begin{enumerate}
+  \item \textbf{The runtime sets every action time.} Any time the model writes
+  is thrown away and computed again from the routed duration and the fire mode.
+  \item \textbf{Only allowed actions pass.} An action that is not in the
+  agent's action set is dropped. The model cannot invent a new command.
+  \item \textbf{Messages are checked twice.} The recipient must be in the
+  address book, and the message type must be one the agent may send. A message
+  that fails is dropped with a warning. It never blocks the wake, and it is
+  counted as an invalid action.
+  \item \textbf{Completion needs evidence.} A mission counts as complete only
+  when there is no current step, no remaining plan, at least one finished step
+  in the history, and no abort. An empty answer can never end a mission by
+  accident.
+  \item \textbf{An abort clears the plan.} After an abort, the remaining plan
+  is empty, even if the same answer also wrote a new one.
+  \item \textbf{History is never lost.} A step is always moved to the history
+  before it is replaced. The full sequence of steps can be rebuilt from every
+  run.
+  \item \textbf{Each world report counts once.} A report that is delivered
+  twice is recognised and ignored.
+\end{enumerate}
+
+\paragraph{Ground truth from the world.} The agent's position comes from the
+world, not from the model. Each report of a finished drive carries the
+vehicle's real coordinates, and the runtime writes them into the state. If a
+drive is stopped half-way, for example because the agent changed its plan, the
+world reports where the vehicle halted. The next prompt therefore shows where
+the vehicle really is, not where the model assumed it would be. The next route
+is also computed from that real position.
+
+These rules are not an advantage for the agentic side. Several of them exist
+because an earlier version failed without them. They also do not do the
+agent's reasoning for it. The runtime never chooses a destination, a split of
+residents or a message. It only refuses what the role does not allow, and it
+keeps the record honest.
+
+% =====================================================================
+\section{Time and the Simulation Clock}
 \label{sec:ag:crons}
-% Agent-scheduled wake-ups for time-critical waypoints. SimClock and
-% SIM_TIME_SCALE as a logged experimental constant, see
-% Section~\ref{sec:eval:responsetime}.
 
+The agents live in simulated time. Every agent runs its own clock, which moves
+forward in fixed ticks. The ratio between simulated and wall-clock time is set
+by a time scale. In every scored run this scale was 8.4. Only this
+one value ran, so this thesis makes no claim about how the results change with
+the time scale (Section~\ref{sec:eval:responsetime}).
+
+\paragraph{Fire modes.} As Section~\ref{sec:ag:prompts} said, the model marks
+each action either \emph{now} or \emph{by the deadline}. The runtime turns this
+into clock times. First it estimates how long each action takes. A drive is
+routed over real roads with OpenRouteService. A walk is estimated from the
+straight-line distance at walking speed. Boarding and leaving a vehicle take a
+fixed minute. If routing fails, the runtime falls back to a straight-line
+estimate and marks the action as degraded. It never blocks the step. Then it
+sets the times. A \emph{now} action starts as soon as the previous action ends.
+A \emph{by the deadline} action starts as late as possible so that the whole
+step still finishes on its deadline. The coordinators' actions are
+administrative and take no time, so for them every action simply falls on the
+deadline.
+
+\paragraph{Timing conflicts.} After a step is committed, the runtime checks
+whether any action that has not yet been sent would have had to start in the
+past. A slack of 60 seconds is allowed, because the model itself takes time to
+answer. If the check fails, the agent is woken with a timing conflict, together
+with the size of the gap. Actions that are already sent are not checked again,
+because they are facts, not plans. Changing their times on paper would not
+change when they happen. Section~\ref{sec:ag:replan} describes what happens
+when the conflicts repeat.
+
+\paragraph{The clock during a model call.} A model call takes real seconds. If
+the clock kept running at full speed, one slow call could move simulated time by
+many minutes, and the step being planned would already be late when it arrived.
+If the clock stopped completely, thinking would be free. The engine does
+something in between. During a call the clock keeps running for a limited grace
+window, and then freezes until the answer arrives. The window is exactly the
+simulated time that the slowest allowed call can take, which is the client
+timeout of 120 seconds multiplied by the time scale. Thinking therefore costs
+simulated time, as it would for a real person, but the cost has an upper bound.
+
+% =====================================================================
 \section{Agent Roster}
 \label{sec:ag:roster}
-% Who is LLM-driven and who is a scripted fast-path responder, and why.
-% Coordinator BIS; Hochbahn; bus drivers; Polizei and Patrol-Car-1; DRK and
-% ambulance; ZKD; Augustinum and shelter coordinators.
-% Bus-Driver-1 (Hans Mueller) as the canonical reference agent.
 
-\section{Replanning by Tasklist Rewrite}
+Table~\ref{tab:cs:roster} lists the agents. This section only describes how
+the shared engine is used differently by each class of agent.
+
+\paragraph{The bus drivers.} Both drivers use the same engine and the same
+prompts. Only their identity is different. They have the richest action set:
+walk, board a vehicle, leave a vehicle, drive, drive via a detour, stop, and
+inform the escorts. They are the only agents that \emph{hold} a step that
+cannot be done in time. A held step is not sent to the world, so the bus does
+not leave while the driver negotiates. A driver who runs more than one trip
+returns to the nursing home after each run, not to the depot, until the last
+run is done.
+
+\paragraph{The escorts.} The police officer and the paramedic each drive their
+own vehicle as part of the convoy. The police car leads, the bus follows, and
+the ambulance runs at the tail. Their contract has the same
+shape as the drivers', with six physical actions. For them a timing conflict is
+only a warning. The step still runs, and they tell BIS they will be late.
+
+\paragraph{The coordinators.} BIS and Hochbahn move nothing physical. Their
+actions are administrative: ask the schools for beds, request buses, order an
+escort, send a dispatch, submit a report. BIS has eleven such actions and
+Hochbahn seven. Each action produces a message, so BIS sends messages only
+through its actions. Because nothing is dispatched to the world, their clock
+does a different job. When a step's deadline arrives, it checks whether the
+replies the step was waiting for have come in. If they have, the step is
+finished. If not, the coordinator is woken with a timing conflict. BIS is the
+only agent that decides the mission, and the only one that may call it off.
+Every other agent that cannot meet a deadline asks BIS for more
+time through the same request, and this includes Hochbahn.
+
+The run schedule travels on three edges. Hochbahn sends BIS a
+transport plan with every run, its passenger count and its deadline. BIS passes
+the run numbers and the list of runs on to the two escorts. Hochbahn tells each
+driver which run it is on and how many there are. By default bus-1 makes two
+runs in sequence and bus-2 stays in reserve. Hochbahn releases the reserve for
+only four reasons: a leg needs more seats than bus-1 has, bus-1 is not
+available, BIS names bus-2, or the schedule fails Hochbahn's deadline test. The
+baseline treats the reserve bus differently. Section~\ref{sec:val:reserve}
+describes this and what it means for the comparison.
+
+\paragraph{The scripted agents.} ZKD, the Augustinum and the two schools use
+no language model. They receive a message, apply
+a fixed rule and reply. Each of them still owns one fact that no other agent can
+change. The Augustinum owns the count of residents who have left and the report
+that the building is cleared. Each school owns the count of residents who have
+arrived. ZKD owns the formal authority to close or stand down the mission.
+
+\paragraph{The reference agent: Bus-Driver-1.} Hans Müller drives bus-1, a city
+bus with 50 seats, from a depot in the north-west of Hamburg. His part of one
+run goes like this.
+\begin{enumerate}
+  \item A dispatch order from Hochbahn arrives. Hans wakes with the
+  message playbook. He accepts the mission, writes a plan of legs (drive to the
+  home, load, drive to the school, unload, return), and commits the first step:
+  walk to the bus, board it, drive to the Augustinum.
+  \item The runtime routes the drive and sets the action times. The clock sends
+  each action to the world when its time comes. No model call is needed.
+  \item When the world confirms his arrival, Hans wakes with the next-step
+  playbook. He tells the Augustinum he has arrived and receives the boarding
+  order.
+  \item After loading, he reports the bus as departed with the number of
+  residents on board. His next step starts with informing the escorts. The
+  runtime sends the convoy start to the police officer and the paramedic two
+  minutes before the bus leaves.
+  \item At the school he reports the drop-off to the school and to Hochbahn.
+  If this was not the last run, his plan takes him back to the Augustinum.
+\end{enumerate}
+If a road closure or a late order makes a step impossible in time, Hans wakes
+with the timing-conflict playbook. It gives him three choices: ask for more time
+and hold, commit a step with an honest later deadline and start driving, or
+abort. The playbook tells him that holding is not free, because the clock keeps
+running while he waits.
+
+% =====================================================================
+\section{Replanning by Plan Rewrite}
 \label{sec:ag:replan}
-% There is NO separate re_plan() branch. Replanning is implicit: the model may
-% rewrite the tasklist on any wake.
-% Splice vs. supersede: minor edits to the scheduled tail vs. a change of mission
-% trajectory that archives the current event as aborted.
-% This is the mechanism the primary DV measures, see Section~\ref{sec:eval:rubric}.
-% Supersede count is a DIAGNOSTIC only, not the success metric.
 
+The system has no separate replanning module. There is no special branch that
+runs ``when something goes wrong''. Instead, the model may write a new step or a
+new plan on \emph{any} wake. Replanning is simply what happens when that new
+step differs from the one already committed. The playbook for the wake steers
+it. The timing-conflict playbook, for example, asks the model to recover from a
+missed deadline. BIS has its own playbooks for a refusal and for a request for
+more time.
+
+When a new step arrives, the engine compares it with the step already
+committed. There are four cases.
+
+\begin{description}
+  \item[Echo.] The model repeats the same step, with the same label, deadline
+  and actions. Nothing changes. The step is not archived and not renumbered.
+  \item[Splice.] The new step keeps every action that has already been sent to
+  the world, and changes only the ones still waiting. The sent actions are kept
+  exactly as they are. The waiting tail is replaced and timed again. For
+  example, a driver who has boarded and is already driving may add a message at
+  the end of the step without disturbing the drive.
+  \item[Supersede.] The new step tries to change an action that has already
+  been sent. That cannot be undone, so the old step is archived as aborted, and
+  the new step starts from the beginning. A supersede is a change of course, not
+  an edit.
+  \item[Back-pressure.] Each timing conflict wakes the model again, and the
+  model may answer with another late step. Without a limit, this can loop. So
+  the engine stops raising timing conflicts once the reported gap no longer
+  shrinks from one attempt to the next, or after three attempts in a row. The
+  plan is then released to run late. A late delivery still scores, while a plan
+  parked forever would not.
+\end{description}
+
+The last rule came from a real run. In one evaluation rerun, Bus-Driver-1 spent
+eight timing-conflict wakes across six steps. The reported gap moved from 8 to
+3, 6, 12, 7, 23, 16 and 23 minutes. The run used 869 thousand prompt tokens,
+3.4 times its decision budget, and the gap never closed. Holding the step made it
+worse. A held step never moves the bus, so every new step was routed again from
+the same depot, and the gap kept growing.
+
+Two points about this mechanism matter for the rest of the thesis. First, the
+number of supersedes is a \emph{diagnostic}. It shows how often an agent
+changed course. It is not a measure of success, and the evaluation does not
+score it as one (Section~\ref{sec:eval:rubric}). Second, the ability to rewrite
+the plan on any wake is the capability this architecture was built to offer.
+Chapter~\ref{ch:results} reports how often the agents used it and what
+followed. On the tested scenarios, runs that revised their plan more often
+delivered everyone less often (Table~\ref{tab:res:commitment}). Whether the
+revisions caused the losses, or followed from them, cannot be told from these
+data. Section~\ref{sec:crit:mechanism} discusses this.
+
+% =====================================================================
 \section{Action Vocabulary}
 \label{sec:ag:actions}
-% The allowed command set (move_agent, get_in, get_out, move_vehicle) and its
-% validation. Identical to the baseline's, which is one leg of the parity
-% specification in Section~\ref{sec:eval:parity}.
+
+Each agent has a closed set of actions. The model may use nothing else.
+\begin{itemize}
+  \item \textbf{Bus drivers}, seven physical actions: walk to a place, board a
+  vehicle, leave a vehicle, drive to a place, drive through waypoints, stop,
+  and inform the escorts.
+  \item \textbf{Police officer and paramedic}, six physical actions: the same
+  set without informing the escorts, because they are the escorts.
+  \item \textbf{Hochbahn}, seven administrative actions, such as dispatching a
+  bus, asking BIS for more time, and reporting a run as complete.
+  \item \textbf{BIS}, eleven administrative actions, such as asking the schools
+  for beds, requesting buses, ordering an escort, releasing the escorts,
+  submitting the mission report and asking ZKD to stand down.
+  \item \textbf{Scripted agents}, none. They only reply.
+\end{itemize}
+Every action is checked against the set when a step is committed, and every
+message against the address book and the allowed types
+(Section~\ref{sec:ag:runtime}). Every rejected entry is counted. The count is
+one of the evaluation's measures of decision quality
+(Section~\ref{sec:eval:metrics}).
+
+The vocabulary is also one leg of the parity argument. The workflow baseline
+replaces only the two reasoning coordinators, BIS and Hochbahn
+(Table~\ref{tab:val:roster}). The four field agents, meaning the two drivers,
+the police officer and the paramedic, are the same programs in both systems.
+Their action sets are therefore identical by construction, not by audit.
+Chapter~\ref{ch:validity} sets out the full comparison, including the places
+where the two systems do differ.
+
+% =====================================================================
+\section{Chapter Summary}
+\label{sec:ag:summary}
+
+The agentic system is ten small programs on one shared engine, joined only by a
+PostgreSQL database. Six agents reason with a language model, and four are
+scripted. A model call happens only when a message arrives, a step finishes, or
+a timing conflict appears. Everything else, including sending actions to the
+world, runs without the model. The model proposes a step and a plan. The
+runtime owns time, checks every action and message, keeps the real position,
+and writes one audit row per decision into the same event log that the baseline
+uses. Replanning is not a separate module. It is any new step that differs from
+the committed one, handled as an echo, a splice or a supersede, with a limit on
+repeated timing conflicts. Chapter~\ref{ch:workflow} now describes the system
+this design is compared against.

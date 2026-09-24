@@ -1,0 +1,68 @@
+% The baseline's command cycle: one turn of the Fuehrungskreislauf, the three
+% ordered checks at the seam, and the execution model closing the loop.
+% Source: workflow-baseline-README.md sec.4 and sec.4a,
+% DOCTRINE_BASELINE_DESIGN.md sec.2.2 and sec.3.1. Input from
+% inc/workflow_baseline.tex, Section "The Command Cycle and the Seam".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  stage/.style={draw, rounded corners=2pt, fill=blue!6, text width=5.2cm,
+    minimum height=0.66cm, align=center, font=\footnotesize, inner sep=3pt},
+  rung/.style={draw, rounded corners=2pt, fill=yellow!12, text width=5.2cm,
+    minimum height=0.66cm, align=center, font=\footnotesize, inner sep=3pt},
+  seam/.style={draw, thick, dashed, rounded corners=3pt, gray!60!black},
+  ext/.style={draw, rounded corners=2pt, fill=green!6, align=center,
+    font=\footnotesize, inner sep=4pt},
+  db/.style={draw, thick, rounded corners=3pt, fill=orange!8, align=center,
+    font=\footnotesize, inner sep=4pt},
+  flow/.style={-{Stealth[length=1.8mm]}, thick},
+  back/.style={-{Stealth[length=1.8mm]}, thick, dashed, red!55!black},
+  lbl/.style={font=\scriptsize, align=center, text=gray!30!black},
+]
+  % --- the timeline and what feeds it --------------------------------
+  \node[db, text width=5.2cm] (q) {\textbf{Timeline}\\ scenario events and replies,\\ in sim-time order};
+  \node[ext, left=0.9cm of q, text width=1.7cm] (scen) {Scenario file};
+  \draw[flow] (scen) -- (q);
+
+  % --- Lagefeststellung ----------------------------------------------
+  \node[stage, below=0.7cm of q] (lage) {\textbf{Lagefeststellung}\\ read the wake and\\ update the Lage (S2)};
+
+  % --- Planung: the three ordered checks at the seam -----------------
+  \node[rung, below=1.15cm of lage] (r1) {\textbf{1\enspace Contingency check (D8)}\\ does the committed plan still fit?};
+  \node[rung, below=0.6cm of r1] (r2) {\textbf{2\enspace Fallback check (D9)}\\ is the Lage understood at all?};
+  \node[rung, below=0.6cm of r2] (r3) {\textbf{3\enspace Phase ladder (D3)}\\ what is the next phase? (S3, S4)};
+  \node[seam, fit=(r1)(r2)(r3), inner sep=6pt,
+    label={[font=\footnotesize, anchor=south east, inner sep=2pt]north east:\textbf{Planung} (the seam)}] (plan) {};
+
+  % --- Befehlsgebung and the world -----------------------------------
+  \node[stage, below=0.9cm of plan] (bef) {\textbf{Befehlsgebung}\\ shared engine: check, commit,\\ send, write the event log};
+  \node[ext, right=1.2cm of bef, text width=2.9cm] (world) {\textbf{Execution model}\\ and shared agents carry out the orders};
+
+  % --- main path ------------------------------------------------------
+  \draw[flow] (q) -- (lage);
+  \draw[flow] (lage) -- (r1);
+  \draw[flow] (r1) -- node[lbl, right] {plan fits} (r2);
+  \draw[flow] (r2) -- node[lbl, right] {Lage understood} (r3);
+  \draw[flow] (r3) -- node[lbl, right] {next phase, or hold} (bef);
+
+  % --- early exits on the left ---------------------------------------
+  \coordinate (xl) at ($(plan.west)+(-0.7,0)$);
+  \draw[flow, rounded corners] (r1.west) -- (r1.west -| xl) |- (bef.west);
+  \draw[thick] (r2.west) -- (r2.west -| xl);
+  \node[lbl, left] at (r1.west -| xl) {mismatch:\\ corrective\\ order};
+  \node[lbl, left] at (r2.west -| xl) {not understood:\\ holding\\ order};
+
+  % --- orders out, replies back (Kontrolle) --------------------------
+  \draw[flow] (bef) -- node[lbl, above] {orders} (world);
+  \draw[back, rounded corners] (world.north) |- node[lbl, pos=0.3, right]
+    {\textbf{Kontrolle}\\ replies join the\\ timeline when\\ they happen} (q.east);
+\end{tikzpicture}
+\caption[The baseline's command cycle]{One turn of the baseline's command cycle.
+A wake is read into the situation picture (the \emph{Lage}). At the seam,
+three deterministic checks run in a fixed order. A plan that no longer fits is
+corrected first. A situation that is not understood is held next. Only then
+does the phase ladder advance the mission. Everything from Befehlsgebung onward
+is the agentic engine's own code. The execution model carries out the orders
+and its replies re-enter the timeline, which closes the loop.}
+\label{fig:wf:cycle}
+\end{figure}

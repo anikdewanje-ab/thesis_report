@@ -1,52 +1,572 @@
 \chapter{Workflow-Based Baseline}
 \label{ch:workflow}
 
-% The control condition. It must be COMPETENT, not a strawman: a faithful
-% implementation of an established coordination doctrine, frozen before the
-% novel disruptions are revealed. See CONTEXT.md, "Workflow Baseline".
+% Sources: thesis-pack/05-architecture-baseline/workflow-baseline-README.md
+% (authoritative on build status), DOCTRINE_BASELINE_DESIGN.md (the doctrine to
+% code spec), ADR-0002, ADR-0015 (rule 7 is NOT implemented, never cite it as
+% built), ADR-0016. Numbers: 00-start-here/RESULTS.md.
+% Written in prose on purpose, with as few code identifiers as possible.
+% Parity is argued in Chapter validity. Do not repeat it here, point to it.
 
+This chapter describes the control condition of the study, the workflow
+baseline. It is a single scripted Incident Commander (IC) that runs the same
+evacuation as the agentic system. It sees the same scenarios, may use the same
+commands and writes to the same event log. The difference is how it decides.
+The IC follows a written command doctrine step by step, and no language model
+is involved in any of its coordination decisions.
+
+A control condition is only useful if it is competent. If the baseline were
+weak on purpose, beating it would prove nothing. The baseline is therefore not
+designed by taste. It implements an established emergency command doctrine,
+element by element, and every element is traced back to that doctrine. It was
+frozen before the novel disruptions were revealed.
+
+The baseline won the evaluation. It scored the highest survival level on every
+disruption tested (Chapter~\ref{ch:results}). This chapter does not explain
+that result. It only describes how the baseline works. Why it won, and what the
+win does and does not show, is the subject of Section~\ref{sec:crit:gate0}.
+
+% =====================================================================
 \section{Design Rationale}
 \label{sec:wf:rationale}
-% Why a plain Python script and not Camunda/Temporal/Airflow: the engine is not
-% the independent variable. Pre-scripted branching is, see
-% Section~\ref{sec:bg:workflow}.
 
+The baseline is a plain Python program. It does not use a workflow engine such
+as Camunda, Temporal or Airflow. The engine is not what the study compares.
+What the study compares is \emph{pre-scripted branching}: a process in which
+every decision rule is written down before the mission starts
+(Section~\ref{sec:bg:workflow}). A heavy engine would add scheduling,
+persistence and retry logic of its own. That would be a second runtime beside
+the agentic one, and a second place where the two systems could differ.
+
+Instead, the IC is built on the same engine as the ten agents
+(Section~\ref{sec:ag:engine}). It inherits the engine's action checks, its
+commit logic, its message delivery and its event-log rows. It replaces exactly
+one step: the step in which an agent would call its language model. This step
+is called the \emph{seam}. On the agentic side a model fills it. On the
+baseline side three deterministic rules fill it (Section~\ref{sec:wf:cycle}).
+Everything after the seam is the agentic side's own code.
+
+\paragraph{What the IC replaces.} The IC takes over the two coordination agents
+that reason with a model, the command post (BIS) and the transport dispatcher
+(Hochbahn). The four scripted agents and the four field agents stay as they
+are, and both conditions share them unchanged. Section~\ref{sec:val:scope}
+gives the full roster. The IC does not drive. A bus driver still drives the bus
+and still runs a language model to plan the route. Driving from A to B is the
+same act under either architecture, so it stays out of the comparison.
+
+\paragraph{Why one commander.} The two systems stand for two ways of
+organizing the same incident. In the agentic system, several organizations
+each hold local information and coordinate by messages. In the baseline, one
+commander holds the whole situation picture and gives orders from the top down.
+The literature on the Incident Command System describes this contrast as
+\emph{mechanistic} against \emph{organic} organization. It also shows that a
+strongly bureaucratic command structure can still respond in a flexible and
+reliable way~\cite{bigley2001a}. Central command is therefore not a weak design
+chosen to lose. It is the textbook form of command for an incident of this size.
+% TODO(cite: ICS literature review 2017, IJEM 13(1):50-67, for the
+% mechanistic vs organic framing. Not in litDB.bib yet.)
+
+% =====================================================================
 \section{Doctrine Grounding}
 \label{sec:wf:doctrine}
-% DECIDE FIRST: DV 100 or ICS as the single primary anchor. CONTEXT.md still
-% lists both as candidates.
-% Element-by-element mapping table: doctrine element -> baseline component, each
-% row cited. Design criterion is fidelity to the source model, explicitly NOT
-% "fit to our storyline". Combination allowed only where the primary model lacks
-% a coordination step, and each borrowed element sourced.
 
-\section{Sequential Ten-Step Workflow}
+\paragraph{Two doctrines, two roles.} Two command models were candidates. The
+first is the German service regulation DV~100, \emph{Führung und Leitung im
+Einsatz}, which is the doctrine under which the Hamburg fire service and civil
+protection actually work. The second is the American Incident Command System
+(ICS) with its national framework NIMS. The baseline gives each of them a
+different job. DV~100 is the \emph{implementation specification}. The code
+follows its elements one by one. ICS is the \emph{scholarly anchor}. It has a
+peer-reviewed research base, which DV~100 as a service regulation does not. The
+comparative arguments of this thesis therefore cite ICS research. ICS is also
+used as a supplement where DV~100 does not describe a coordination step in
+enough detail. Each such borrowed element is marked as a supplement.
+% TODO(cite: FwDV 100 (1999), AFKzV, and the pinned state edition of DV 100;
+% Plattner 2016 commentary; FEMA ICS-100/-200/-300/-400. None in litDB.bib.)
+
+\paragraph{The command system.} DV~100 describes command as a system of three
+parts. The \emph{command organization} says who leads and how the staff is
+built. The \emph{command process} is the repeating decision cycle. The
+\emph{command means} are the people, the communication links and the
+information systems. In the simulation the command means are the shared
+database and the event log, which both conditions already share. DV~100 also
+defines four command levels, A to D, by the size of the incident. A
+multi-agency evacuation of 100 residents with police, medical cover, transport
+and two shelters is a level C or D incident. At that level one leader runs a
+staff with separate functions. This is the warrant for modelling the baseline
+as one commander with a staff, and not as a flat script.
+
+\paragraph{Staff functions.} The DV~100 staff has six functions, S1 to S6. The
+baseline implements three of them as separate parts of the program. The
+situation function (S2) keeps the situation picture. The operations function
+(S3) plans the mission and chooses the next phase. The logistics function (S4)
+turns a decision into transport, escort and medical orders. The communication
+function (S6) is the shared messaging layer itself. Two functions are left out
+on purpose. Personnel (S1) is static, because every agent is on the roster from
+the start. Public information (S5) has no counterpart, because the roster has
+no media agent. Both omissions are declared, not silent.
+
+\paragraph{The citation matrix.} Table~\ref{tab:wf:doctrine} maps each
+doctrinal element to the part of the baseline that implements it. The matrix
+also exists as data inside the code. A test walks through every public function
+of the baseline and fails if one of them has no row. No part of the program can
+therefore escape the mapping.
+
+\begin{table}[htbp]
+\centering
+\caption{The doctrine behind the baseline. Each row names a doctrinal element
+and the part of the IC that implements it. Rows marked \emph{supplement} are
+borrowed from ICS where DV~100 gives too little detail.}
+\label{tab:wf:doctrine}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+\# & Doctrinal element & Baseline component & Note \\
+\midrule
+D1 & Command process, the command cycle & The IC's control loop & One to one \\
+D2 & Situation assessment, S2 & The situation picture, read off the IC's state & Some fast paths are inherited from the BIS agent, not rewritten \\
+D3 & Planning and decision, S3 & The phase ladder and the allocation rule & \\
+D4 & Logistics, S4 & The run schedule, the dispatch orders, escort and medical & \\
+D5 & Command levels C and D & One central IC & Scale argument; ICS anchor~\cite{bigley2001a} \\
+D6 & ICS ``Planning P'' & Planning in time-boxed phases & Supplement \\
+D7 & ICS span of control & Convoy sizing & Supplement \\
+D8 & Feedback and control, then re-enter the cycle & The anticipated-disruption branches & Road closure answered over destinations (Section~\ref{sec:wf:disruptions}) \\
+D9 & Reconnaissance under an unclear situation; holding order & The generic fallback & Two declared reductions (Section~\ref{sec:wf:fallback}) \\
+S1 & Personnel & Static & Out of case scope \\
+S5 & Press and public information & Omitted & Out of case scope \\
+\bottomrule
+\end{tabularx}
+\end{table}
+% Sources per row: DOCTRINE_BASELINE_DESIGN.md sec.5. The page cells are the
+% open decision A2. Extra-doctrinal rows X1-X5 exist only in the code matrix.
+
+\paragraph{What is not finished.} The mapping from element to code is complete.
+The mapping from element to \emph{page} is not. The matrix has 87 rows, and 42
+of them still carry a marker that says the page reference in the doctrine is
+pending. For those rows the link to DV~100 is asserted by the author, not yet
+cited to a page. This limits one claim only: the claim that the baseline is
+\emph{doctrine-grounded} in every detail. It changes no number in this thesis.
+Chapter~\ref{ch:critique} lists it among the declared limitations.
+% source: thesis-pack/README.md, declared limitations table (42/87
+% SOURCE_PENDING); workflow-baseline-README.md sec.12 item A2.
+
+% =====================================================================
+\section{The Command Cycle and the Seam}
+\label{sec:wf:cycle}
+
+The heart of DV~100 is the \emph{Führungskreislauf}, the command cycle. It has
+four stages, and the baseline uses their German names so that the mapping stays
+visible:
+\begin{enumerate}
+  \item \textbf{Lagefeststellung}, situation assessment. The IC reads what has
+  just arrived and updates its situation picture, the \emph{Lage}.
+  \item \textbf{Planung}, planning. The IC weighs the Lage and reaches a
+  decision, the \emph{Entschluss}.
+  \item \textbf{Befehlsgebung}, issuing orders. The IC sends the orders that
+  carry out the decision.
+  \item \textbf{Kontrolle}, control. The IC watches the execution. Replies and
+  reports come back as new events and start the next cycle.
+\end{enumerate}
+% TODO(cite: FwDV 100 command cycle, pinned edition and page.)
+
+One turn of the cycle runs for every wake. A wake is a scenario event or a
+reply from another agent. The turn does not stop after one decision. If a
+reply closes a phase, the IC plans the next phase within the same turn. It
+keeps going until nothing is left to do. A live scheduler would behave the same
+way, and an offline run has to do it by itself.
+
+\paragraph{Three checks, in a fixed order.} The seam is the Planung stage. On
+the agentic side a model decides here. On the baseline side three checks decide
+instead, one after the other (Figure~\ref{fig:wf:cycle}).
+\begin{enumerate}
+  \item \textbf{Contingency check.} Does the plan the IC has already committed
+  still fit the Lage? If an anticipated disruption has made it wrong, the IC
+  issues a corrective order and stops here (Section~\ref{sec:wf:disruptions}).
+  \item \textbf{Fallback check.} Is the Lage one the IC understands at all? If
+  a report does not fit any known message, or a reply is overdue, the IC issues
+  a holding order and stops here (Section~\ref{sec:wf:fallback}).
+  \item \textbf{Phase ladder.} Only when both checks agree that the plan still
+  fits does the IC ask what the next phase of the mission is
+  (Section~\ref{sec:wf:steps}).
+\end{enumerate}
+
+The order is not a detail of the code. It \emph{is} the doctrine. A plan that
+is known to be wrong must not be pushed forward. A situation that is not
+understood must not be pushed forward either. A known correction is preferred
+over a generic hold, because a prepared contingency plan exists for exactly
+that case. Only a plan that still fits in a situation that is understood may
+advance.
+
+\input{pics/wf-cycle}
+
+\paragraph{After the seam.} The checks produce a list of orders. From that
+point on the agentic engine takes over, with the same code the agents use. It
+checks each order against the allowed commands, commits the new step, sends the
+messages and writes the rows of the event log. The two systems therefore do not
+merely \emph{agree} on what happens after a decision. They run the same
+functions. Chapter~\ref{ch:validity} shows how this is tested.
+
+% =====================================================================
+\section{The Phase Ladder}
 \label{sec:wf:steps}
-% TODO: Walk through each of the ten storyline steps as procedural code.
-% Cross-reference Section~\ref{sec:cs:storyline}.
 
+When both checks pass, the operations function chooses the next phase. It does
+so from the Lage alone. It never looks at which message woke the IC. The same
+situation therefore always leads to the same decision, however it was reached.
+If no phase is ready, the IC does nothing and waits for the next reply. In
+doctrinal terms, that is Kontrolle.
+
+The mission has four phases. Each phase has a \emph{Zeitansatz}, a time budget
+in simulated minutes, and a condition that must hold before it can start.
+Table~\ref{tab:wf:phases} lists them against the ten storyline steps of
+Section~\ref{sec:cs:storyline}.
+
+\begin{table}[htbp]
+\centering
+\caption{The baseline's phase ladder. Each phase starts when its condition
+holds, and must close within its time budget.}
+\label{tab:wf:phases}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}l r >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X c@{}}
+\toprule
+Phase & Budget & Starts when & Orders & Steps \\
+\midrule
+Intake & 20 min & The alarm arrives & Ask the home how many residents; ask both schools for free beds; status update & 1--3 \\
+Transport allocation & 15 min & Resident count and free beds are both known & Status update that states the decision; no transport is ordered yet & 4--5 \\
+Befehlsgebung & 90 min & The allocation gives a pickup time & Order the escort and the medical cover; one dispatch order per bus run; wait for each run to be confirmed & 5--8 \\
+Mission report & 10 min & Residents have actually been set down & Report to ZKD & 10 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Step 9, the arrival and handover, has no phase of its own. It is Kontrolle:
+the IC waits for the drop-off confirmations that the Befehlsgebung phase is
+already waiting for. The messages between BIS and Hochbahn, such as the
+request for buses and the returned transport plan, do not exist in the
+baseline. The two roles are one node, so nobody sends them.
+
+\paragraph{Who does what.} The three staff functions split the work. The
+situation function only \emph{reads}. It answers questions such as how many
+residents are still to be moved, which shelters are reachable and how many beds
+are free. It never builds an order. The other two functions ask it instead of
+reading the state themselves, so the Lage is defined in one place. The
+operations function holds the phase ladder and the allocation rule, which
+decides how many residents go to each shelter. The logistics function turns
+that allocation into means. It builds the run schedule over the fleet, writes
+one dispatch order per run, and stages the escort and the medical cover against
+the pickup times.
+
+\paragraph{Two design choices that look odd but are correct.} Both are easy to
+``fix'' into a defect, so they are explained here.
+
+First, transport, escort and medical cover are one order, not two phases. In an
+earlier version the IC ordered the escort, waited for police and medical
+cover to confirm, and only then dispatched a bus. Nothing re-enters the cycle
+between a commit and its replies, so the two steps ran one after the other. On
+the undisrupted scenario this cost 26 simulated minutes. It pushed the IC's own
+delivery estimate past the flood it was planning against. DV~100 agrees with
+the clock here: issuing orders is one step.
+
+Second, the Befehlsgebung phase has a budget of 90 minutes, not 15. The phase
+waits for every run to be confirmed, so it stays open until the last resident
+is set down. With a budget of 15 minutes it would run out in the middle of a
+transport that is going exactly to plan. The fallback would then read the phase
+as overdue and hold a healthy mission.
+
+\paragraph{The allocation is re-run, never cached.} Each time the IC plans, it
+computes the allocation again from the current Lage. It does not store a plan
+and patch it. This is the doctrine's own habit, and it has a useful effect. A
+correction from the contingency check reaches the schedule without any extra
+branch, because the next allocation simply sees the corrected Lage.
+
+\paragraph{How the fleet is used.} Every scenario declares two buses of 50
+seats, and marks the second one as a reserve. The baseline's run schedule does
+not read that mark. It gives each run to the bus that is free first. For 100
+residents this means that bus~2 leaves at the start, in parallel with bus~1. An
+earlier design decision said that the baseline should use the reserve only for
+sequential runs. \textbf{That rule was never built}, and the baseline was
+frozen without it. The agentic transport agent does read the mark and keeps the
+reserve parked by default. Section~\ref{sec:val:reserve} explains why this is
+treated as a difference in decisions and not as a parity defect. It is a named
+mechanism behind part of the survival gap.
+% source: ADR-0015 status note 2026-09-21 (rule 7 NOT implemented);
+% PARITY reserve-bus note; RESULTS sec.6.6. Never cite rule 7 as built.
+
+% =====================================================================
+\section{The Execution Model}
+\label{sec:wf:world}
+
+An earlier version of the baseline had a serious flaw. Its scenario files
+contained the outcome. They said which shelter received how many residents, and
+at what time. The run replayed these messages whatever the IC had ordered. The
+scorer never read the orders. An IC that sent every resident to a shelter that
+had closed therefore scored full completeness, the same as one that planned
+around the closure. The decision under test and the score were not connected.
+
+The fix is an \emph{execution model}, a shared module that plays the physical
+world. It is not doctrine and it is not an agent. It reads the dispatch orders
+the IC commits, drives them over the real road distance, and reports what each
+shelter admitted when the bus arrived. Its replies enter the same timeline as
+the scenario events, at the simulated time they happen
+(Figure~\ref{fig:wf:cycle}). Three rules close the ways in which a wrong plan
+could still score well:
+\begin{itemize}
+  \item \textbf{A run lands only if it is still under way.} A drop-off is
+  decided when the bus arrives, not when it is dispatched. A bus that was
+  recalled therefore delivers nobody.
+  \item \textbf{A closed or full shelter admits nobody.} The driver reports a
+  drop-off of zero through the normal channel. The residents who were turned
+  away do not go back into the pool. A bus stranded at a closed door with the
+  water rising has lost them.
+  \item \textbf{Nobody boards after the flood arrives.} At 12:00 the flood
+  reaches the zone. This is a physical limit in the world, not only a limit in
+  the scoring.
+\end{itemize}
+A test pins the effect. It runs a shelter-closure scenario twice against the
+same world and changes only whether the IC can notice the closure. Noticing
+scores full survival. Not noticing scores zero.
+
+The same module also measures distance. A leg is charged in bus-kilometres once,
+when the bus begins it. A leg that is replaced before the bus leaves is not
+charged. Without this rule a re-plan was billed for the whole schedule it
+replaced, and the bus-kilometres would have punished re-planning for no
+physical reason.
+
+Only the baseline's scenario files declare such a world. The agentic scenarios
+reach the same effect through live agents. Section~\ref{sec:val:dev7} argues
+that this difference runs \emph{against} the baseline, and why it therefore
+cannot explain the result.
+% source: workflow-baseline-README.md sec.4a and sec.9; ADR-0016.
+
+% =====================================================================
 \section{Branching for Anticipated Disruptions}
 \label{sec:wf:disruptions}
-% The pre-written handlers. Precondition gate: the baseline must pass 100% of
-% the anticipated disruption set before it is allowed to freeze.
 
+Three disruptions were known while the baseline was built. For each one the IC
+has a prepared branch, in doctrinal terms a contingency plan. In workflow terms
+these are \emph{anticipated exceptions}: exceptions with a handler that was
+written at build time.
+% TODO(cite: Reichert & Weber 2012; Adams et al. 2007. Not in litDB.bib.)
+
+\begin{itemize}
+  \item \textbf{Road closure.} A shelter can no longer be reached. The IC drops
+  it and runs the allocation again over the shelters that remain.
+  \item \textbf{Shelter capacity lost.} A shelter reports fewer beds. The IC
+  runs the allocation again against the smaller capacity.
+  \item \textbf{Bus breakdown.} A bus is out of service. The IC states the
+  requirement again and schedules the remaining runs over the buses it still
+  has.
+\end{itemize}
+
+Each branch compares two things: the order the IC has committed (the target,
+\emph{Soll}) and the current Lage (the actual state, \emph{Ist}). If they do
+not match, the branch fires. The corrective order is exactly what makes them
+match again, so the branch clears itself. The IC needs no list of disruptions
+it has already handled and no revision counter. A second, genuinely new
+disruption of the same kind is still caught, because it creates a new mismatch.
+
+\paragraph{A declared deviation.} Doctrine answers a road closure by switching
+to another route. The IC cannot do that. Its command set has no routing
+command, because routing belongs to the transport side and the drivers. Adding
+such a command would give the baseline a verb the agentic coordinators do not
+have, and break the parity that makes the two systems comparable. The IC
+therefore answers the closure where it does have authority, over
+\emph{destinations}. A shelter that cannot be reached leaves the allocation. In
+the evaluated road-closure scenario this lowers what the baseline can deliver
+to 60 of the 100 residents (Section~\ref{sec:cs:disruptions}).
+
+\paragraph{The 100\,\% gate.} The design required that the frozen baseline
+handle every anticipated disruption before it could be used as a control. A
+test checks this. It runs each disruption and, as a control, the undisrupted
+scenario under the same assertion, so a pass cannot come from a weak check. A
+second test confirms that each disruption actually triggered its branch, so a
+pass cannot come from a disruption that did nothing. In the campaign, all 20
+baseline runs on the anticipated arm scored $S = 1.000$. On the road closure
+that score is measured against the reduced ceiling of 60, so the share of the
+full 100 residents is 0.60. The gate was, however, never formally signed off as
+a gate. The evidence exists, but no written record of the sign-off does. This
+is stated here so that it is not found later.
+% source: ADR-0002 status note 2026-09-21; RESULTS sec.3 (road_closure
+% ceiling 60, completeness_vs_nominal 0.60). TODO(verify): "20 runs" from the
+% ADR-0002 note equals 2 anticipated scenarios x 10 runs.
+
+% =====================================================================
+\section{Novel Disruptions: the Generic Fallback}
+\label{sec:wf:fallback}
+
+A novel disruption has no prepared branch. The baseline must not answer it by
+inventing a fresh plan, because that ability is exactly what the treatment
+condition is meant to supply. It does what a command structure bound by
+doctrine does when no standard procedure fits. It re-reads the facts, applies
+the generic rule for an unclear situation, and issues a cautious holding order.
+
+The IC recognizes two forms of ``no procedure fits''. Both are read off the
+Lage, and neither names a particular disruption.
+\begin{itemize}
+  \item \textbf{A report outside the catalogue.} The IC knows which messages
+  it can receive. This \emph{Meldungskatalog} is the declared inbound contract,
+  less the messages that the contingency branches already handle. A report of
+  any other type is unexplained.
+  \item \textbf{An overdue reply.} A decision is waiting for a reply, and its
+  time budget has run out without the reply arriving. This case matters as
+  much as the first. In a real incident a partner that simply goes quiet is a
+  more common failure than a strange message.
+\end{itemize}
+
+One holding order answers both. The IC reports to ZKD, sends a hold advisory to
+the transport side and to the Augustinum, and then waits for a reply. The
+waiting is the hold itself.
+% TODO(verify): the README names the advisory recipients as "Hochbahn and
+% Augustinum", although Hochbahn is absorbed into the IC. Confirm what address
+% the hold-departure advisory actually goes to.
+
+\paragraph{Two declared reductions.} The fallback is simpler than the doctrine
+in two places, and both are written down. First, doctrine also names a
+precondition that can never be met as a trigger. The IC folds this into the
+overdue reply. The only thing that separates ``not yet possible'' from ``never
+possible'' is time, and deciding which case applies would already be planning.
+Second, doctrine says to halt the convoy. The IC has no command that stops a
+bus, because it does not drive. The halt is therefore sent as an advisory. That
+the halt is advisory and not binding \emph{is} the degradation. It is not a gap
+in the program.
+
+\paragraph{The firewall.} The fallback was written blind, before any novel
+disruption existed. It must handle the \emph{class} ``no procedure fits'' and
+never a particular case. This is enforced by a test, not by review. The test
+reads the fallback's own source code. It fails if the code contains any
+message-type name at all, if it addresses anyone beyond the three standing
+roles, or if it grows past a fixed number of branches. A pile of special cases
+for particular disruptions would fail the test suite. The positive form is also
+checked: two unrelated unknown messages produce the identical hold.
+
+\paragraph{The defect it closed.} Before the fallback existed, an unknown
+message was invisible. The phase ladder moved on as if nothing had arrived, and
+the run reported the mission complete with every resident delivered. The
+design record notes that this error ran in the \emph{agentic} side's favour,
+which is why it went unnoticed for a while. It was fixed anyway. Reporting has
+to be honest in both directions, or it is not a discipline.
+% source: workflow-baseline-README.md sec.7, DOCTRINE_BASELINE_DESIGN.md sec.7.1.
+% TODO(verify): the pack states the direction but not the mechanism. Explain
+% how the error favoured the agentic side before the defence, or cut the clause.
+
+% =====================================================================
 \section{Freeze Protocol}
 \label{sec:wf:freeze}
-% The audit trail. Baseline committed and tagged in git BEFORE evaluation-day
-% disruptions are revealed; record commit hash and date here.
-% This is the firewall evidence that the baseline could not have pre-encoded the
-% novel disruptions. Optional co-certification by the domain expert.
-% Artifact recorded in Appendix~\ref{app:frozen}.
 
-\section{Scenario Runner}
+The baseline was committed and tagged in git before the novel disruptions were
+revealed. The commit hash and its date are the proof that it could not have
+encoded them in advance. The planned tag name was never used. The freeze is
+commit \texttt{67a14f8} of 2026-09-10, tagged \code{eval-day-2026-09-10}. The
+baseline logic last changed before that, on 2026-09-05. The novel scenarios
+arrived the same afternoon, several hours after the freeze
+(Section~\ref{sec:eval:firewall}).
+
+One change to the baseline code came after the reveal (\texttt{e9e20cd}). It
+added a single switch that turns re-planning off, which the no-replan control
+needs (Section~\ref{sec:eval:noreplan}). It does not change what the doctrine
+itself does, and the pre-registration discloses it together with the evidence
+of that equivalence (Amendment~6). The design also allowed for the domain
+expert to certify the baseline as realistically competent before the reveal.
+This step was optional. The freeze was also taken while the page references of
+Section~\ref{sec:wf:doctrine} were still open. Appendix~\ref{app:frozen}
+records the frozen artifacts.
+% source: ADR-0002 status note; workflow-baseline-README.md sec.1 and sec.12.
+% TODO(verify): co-certification. The pack lists it as optional and open; confirm
+% it did not happen before writing that it did not.
+
+% =====================================================================
+\section{Scenario Runner and Determinism}
 \label{sec:wf:cli}
-% How a run is launched, and how it reads the same scenario inputs and writes to
-% the same event log as the agentic system.
 
-\section{Expected Failure Mode}
+The baseline is started from a small command-line tool. It has two ways of
+running a scenario.
+\begin{itemize}
+  \item A \textbf{walk} runs the scenario offline, with no database, no model
+  and no network. It is the quickest way to see what the doctrine does.
+  \item A \textbf{run} walks the same scenario into the shared event log, so
+  the scorer can read it.
+\end{itemize}
+Both use the same cycle function, and a test asserts that the orders they
+produce are byte-identical. Both read the same scenario files through the same
+loader as the agentic side. On the undisrupted scenario a walk takes 13 turns
+and issues 13 orders. Only the first wake, the alarm, is written in the
+scenario file. The other twelve are replies that the run earned, because the
+execution model and the shared agents answer the IC's own orders.
+
+The runner can swap the decision rules at the seam. A \emph{stub} emits no
+orders at all. It is used only to test the storage path, and its rows are
+labelled as a stub so they can never be mistaken for the real baseline. The
+\emph{no-replan} variant is the negative control of
+Section~\ref{sec:eval:noreplan}. It is the same doctrine with the contingency
+check switched off, so the first committed plan is the only plan.
+
+\paragraph{Determinism.} A baseline run is a pure function of its scenario
+file. There is no randomness, no waiting on the wall clock, no model and no
+network in the decision path. Two runs of one scenario differ only in their run
+identifier and their wall-clock time stamps. The execution model keeps this
+property. Road distances are cached, and when the routing service is not
+available they fall back to a fixed straight-line estimate, not to a different
+answer. Where two buses reach a shelter in the same minute, a fixed tie-break
+decides which one gets the last bed.
+
+The baseline writes the same kind of decision row the agents write. Token
+counts and latency are recorded as a real zero, not left empty. A scorer that
+compares cost across both systems should see the control condition's true
+cost, which is zero.
+
+% =====================================================================
+\section{What the Baseline Cannot Do}
 \label{sec:wf:limits}
-% NOT a list of weaknesses built in on purpose. State it as a principled property
-% of pre-scripted branching: anticipated exceptions get build-time handlers,
-% unanticipated ones fall back to a generic or degraded response
-% (Reichert & Weber). Note the compensating strengths the baseline is expected to
-% win on: latency, cost, and determinism.
+
+The baseline's limits are not weaknesses built in to make it lose. They follow
+from what pre-scripted branching is. An anticipated exception has a handler
+written at build time. An unanticipated one does not, and the process falls
+back to a generic response. A scripted process cannot write itself a new plan
+at run time, because it has no planning ability beyond its rules. In the
+language of resilience engineering, the baseline is \emph{robust} inside the
+range its authors modelled, and has nothing but a holding order outside
+it~\cite{woods2015a}.
+% TODO(cite: Reichert & Weber 2012 for anticipated vs unanticipated
+% exceptions; Buck, Trainor & Aguirre 2006 for ICS limits under novelty.)
+
+One further limit is structural. Because the IC merges BIS and Hochbahn into
+one node, the link between them disappears. Four commands that only made sense
+on that link cannot be reached, among them the transport side's request for
+more time. The agentic system can negotiate a deadline extension, and the
+baseline cannot. Under central command there is nobody to negotiate with. Any
+measure that rewards such a negotiation measures a link that one architecture
+does not have (Section~\ref{sec:val:table}).
+
+Against these limits the baseline has clear strengths. It is fast, because no
+model is called. It costs nothing to run. It is fully deterministic, so every
+run can be repeated exactly and every decision can be traced to a written rule.
+
+\paragraph{What this means for reading the results.} The original design
+expected the baseline to be at its weakest on novel disruptions, where only the
+holding order is left. The evaluation did not test that expectation. On all
+five novel scenarios the baseline scored $S = 1.000$, and it drove the same
+60.63 bus-kilometres as on the undisrupted run. A controller that ignores every
+disruption commits the same orders and scores the same. The baseline's score
+is therefore the score of doing nothing different. It is not evidence that the
+baseline adapted, and it is not evidence that it could not have.
+Section~\ref{sec:crit:gate0} draws the consequence for the study.
+% source: RESULTS.md headline correction 1 (60.63 bus-km; S = 1.000 is the
+% null policy's score). Never write that the baseline adapted or recovered.
+
+% =====================================================================
+\section{Chapter Summary}
+\label{sec:wf:summary}
+
+The workflow baseline is one scripted Incident Commander. It replaces the two
+coordination agents that use a model, and shares every other agent, the
+scenarios, the command set and the event log with the agentic system. It
+implements the DV~100 command cycle and three of its staff functions, with ICS
+as the scholarly anchor, and a citation matrix that a test keeps complete. At
+the seam, where an agent would call its model, three checks run in a fixed
+order: correct a plan that no longer fits, hold a situation that is not
+understood, and otherwise advance the phase ladder. Three anticipated
+disruptions have prepared branches. Novel ones meet a single generic holding
+order that was written blind and is guarded by a test. An execution model makes
+the outcome a consequence of the orders, and the whole run is deterministic.
+The baseline was frozen before the novel disruptions were revealed.
+Chapter~\ref{ch:data} now describes the database that both systems write to.

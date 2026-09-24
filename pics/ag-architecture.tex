@@ -1,0 +1,67 @@
+% Architecture of the agentic system: ten agents, PostgreSQL as the only
+% channel between them. Source: agentic-core-README.md sec.13 and
+% the casestudy roster. Input from inc/agentic_system.tex,
+% Section "Architecture Overview".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  agent/.style={draw, rounded corners=2pt, fill=blue!6, minimum width=3.1cm,
+    minimum height=0.62cm, align=center, font=\footnotesize},
+  script/.style={draw, rounded corners=2pt, fill=gray!10, minimum width=2.8cm,
+    minimum height=0.62cm, align=center, font=\footnotesize},
+  group/.style={draw, dashed, rounded corners=3pt, inner sep=5pt},
+  db/.style={draw, thick, rounded corners=3pt, fill=orange!8, text width=3.9cm,
+    align=left, font=\footnotesize, inner sep=6pt},
+  ext/.style={draw, rounded corners=2pt, fill=green!6, align=center,
+    font=\footnotesize, inner sep=5pt},
+  link/.style={{Stealth[length=1.8mm]}-{Stealth[length=1.8mm]}, thick, gray!70!black},
+  lbl/.style={font=\scriptsize, align=center, text=gray!30!black},
+]
+  % --- PostgreSQL in the centre -------------------------------------
+  \node[db] (db) {%
+    \textbf{PostgreSQL}\\[1pt]
+    \emph{single source of truth}\\[3pt]
+    agent state (one row each)\\
+    mailboxes\\
+    world events\\
+    prompt records\\
+    event log (append-only)\\[3pt]
+    notifications wake\\ agents and interface};
+
+  % --- reasoning agents, left ---------------------------------------
+  \node[agent, left=2.1cm of db.north west, anchor=north east, yshift=0.3cm] (bis) {BIS};
+  \node[agent, below=0.18cm of bis] (hb)  {Hochbahn};
+  \node[agent, below=0.18cm of hb]  (bd1) {Bus-Driver-1};
+  \node[agent, below=0.18cm of bd1] (bd2) {Bus-Driver-2};
+  \node[agent, below=0.18cm of bd2] (pol) {Polizei};
+  \node[agent, below=0.18cm of pol] (drk) {DRK};
+  \node[group, fit=(bis)(drk), label={[font=\footnotesize\bfseries]above:Reasoning agents}] (rgrp) {};
+
+  % --- scripted agents, right ---------------------------------------
+  \node[script, right=2.1cm of db.north east, anchor=north west, yshift=-0.2cm] (zkd) {ZKD};
+  \node[script, below=0.18cm of zkd] (aug) {Augustinum};
+  \node[script, below=0.18cm of aug] (sc1) {School SC1};
+  \node[script, below=0.18cm of sc1] (sc2) {School SC2};
+  \node[group, fit=(zkd)(sc2), label={[font=\footnotesize\bfseries]above:Scripted agents}] (sgrp) {};
+
+  % --- Ollama, far left ---------------------------------------------
+  \node[ext, below=0.9cm of rgrp] (llm) {Ollama\\ language model};
+
+  % --- world / interface, below -------------------------------------
+  \node[ext, below=1.6cm of db, text width=4.6cm] (ui) {%
+    \textbf{World and observation interface}\\
+    executes commands, reports finished actions;\\
+    headless harness in the evaluation};
+
+  % --- links (every agent link goes through the database) ------------
+  \draw[link] (rgrp.east) -- node[lbl, above] {state,\\ messages,\\ log rows} (db.west |- rgrp.east);
+  \draw[link] (sgrp.west) -- node[lbl, above] {messages,\\ log rows} (db.east |- sgrp.west);
+  \draw[link] (llm) -- node[lbl, right] {one call\\ per wake} (rgrp.south);
+  \draw[link] (ui) -- node[lbl, right, xshift=1pt] {commands out,\\ world events in} (db.south);
+\end{tikzpicture}
+\caption{Architecture of the agentic system. Each agent is its own program on
+one shared engine. Agents never message each other directly: every message,
+state change, world report and decision passes through PostgreSQL, which also
+wakes the recipient. Only the six reasoning agents call the language model.}
+\label{fig:ag:architecture}
+\end{figure}

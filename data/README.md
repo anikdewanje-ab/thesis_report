@@ -24,6 +24,7 @@ Run from the `thesis_report` directory, not from here:
 ```sh
 python data/scripts/plot_forest_rd.py
 python data/scripts/plot_delivery_histogram.py
+python data/scripts/plot_regret.py
 ```
 
 Each script writes its CSV into `data/` and its figure into `../pics/`. Set
@@ -34,13 +35,15 @@ includes the PDF.
 | --- | --- | --- | --- |
 | `plot_forest_rd.py` | `pics/results-forest-rd.pdf` | `novel_risk_differences.csv` | `summary.md` reporting template, checked against `RESULTS.md` §2 |
 | `plot_delivery_histogram.py` | `pics/results-delivery-histogram.pdf` | `delivery_distribution.csv` | `scores.jsonl`, field `sheltered_residents` |
+| `plot_regret.py` | `pics/critique-regret.pdf` | `null_policy_regret.csv` | `v2.json`, key `regret` (exploratory, Protocol v2) |
 
 `scripts/thesis_style.py` holds the shared look: Times serif at 9 pt, the
 160 mm text width, and one model palette separated by lightness as well as hue
 so the figures still read in black and white. Import it from any new script
 rather than restyling by hand.
 
-Both scripts assert their own provenance. `plot_delivery_histogram.py` stops if
+Each script asserts its own provenance. `plot_delivery_histogram.py` stops if
 it does not find exactly 150 agentic novel runs, and `plot_forest_rd.py` stops
-if any of the 15 cells is missing from the summary table. A silent change in
+if any of the 15 cells is missing from the summary table. `plot_regret.py` stops
+if the helped / neutral / harmed totals differ from `EVALUATION_PROTOCOL_V2.md` §11.1. A silent change in
 the pack therefore fails loudly instead of redrawing a wrong figure.

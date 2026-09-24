@@ -1,0 +1,5 @@
+system_model,n,mean_regret,helped,neutral,harmed
+baseline,50,0.000,0,50,0
+qwen3.5,50,-0.100,3,30,17
+glm-5.2,50,-0.160,0,34,16
+deepseek-v4-pro,50,-0.273,0,15,35

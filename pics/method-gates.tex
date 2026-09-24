@@ -1,0 +1,47 @@
+% The three hierarchical gates, where each hypothesis is read, and where the
+% no-replan control sits. Source: EVALUATION_PROTOCOL sec.0, sec.3-5, sec.5.4.
+% Input from inc/evaluation.tex, Section "The Three Gates".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  gate/.style={draw, thick, rounded corners=2pt, fill=blue!6,
+    minimum width=5.0cm, minimum height=1.25cm, align=center, font=\small},
+  side/.style={draw, rounded corners=2pt, fill=gray!8, align=left,
+    font=\footnotesize, text width=3.6cm, inner sep=4pt},
+  ctrl/.style={draw, dashed, rounded corners=2pt, fill=orange!8, align=left,
+    font=\footnotesize, text width=3.6cm, inner sep=4pt},
+  fail/.style={font=\footnotesize, text=red!60!black, align=left},
+  flow/.style={-{Stealth[length=2.2mm]}, thick},
+  link/.style={-{Stealth[length=1.8mm]}, gray!70!black},
+]
+  \node[gate] (g1) {\textbf{Gate 1: Safety}\\ Did the residents survive? \quad $S = V/N$};
+  \node[gate, below=1.1cm of g1] (g2) {\textbf{Gate 2: Speed and Flow}\\ How quickly? \quad $T_{50}, T_{90}, T_{95}, T_{100}$};
+  \node[gate, below=1.1cm of g2] (g3) {\textbf{Gate 3: Adaptability}\\ Does an advantage hold\\ under novel shocks?};
+
+  \draw[flow] (g1) -- node[right, font=\footnotesize] {passed} (g2);
+  \draw[flow] (g2) -- node[right, font=\footnotesize] {passed} (g3);
+
+  \node[fail, left=0.35cm of g1.south west, anchor=north east, yshift=-0.05cm]
+    (f1) {fail: run is a failure,\\ Gate 2 and 3 not read};
+  \draw[link, red!60!black] ([xshift=-0.6cm]g1.south) |- (f1.east);
+
+  \node[side, right=0.6cm of g1] (h1) {\textbf{Anticipated arm} (H1)\\ non-inferiority:\\ $RD > -\delta_{NI}$, \ $\delta_{NI}=0.05$};
+  \node[side, right=0.6cm of g3] (h2) {\textbf{Novel arm} (H2)\\ superiority on $S$, then the\\ effect rule: median shift\\ $\geq \delta_m = 1$ level \emph{and} dominance};
+  \draw[link] (h1.west) -- (g1.east);
+  \draw[link] (h2.west) -- (g3.east);
+  \draw[link] (h2.north west) -- ([yshift=-0.3cm]g1.south east);
+
+  \node[ctrl, left=0.6cm of g3] (nr) {\textbf{No-replan control}\\ campaign gate: must score\\ strictly below the baseline\\ on $\geq 1$ disruption};
+  \draw[link, dashed] (nr.east) -- (g3.west);
+
+  \node[font=\footnotesize, text=gray!50!black, below=0.25cm of g2.south east, anchor=north west, xshift=0.15cm]
+    {$L = 4 \equiv$ Gate 1 $\wedge$ Gate 2};
+\end{tikzpicture}
+\caption[The three gates of the evaluation protocol]{The three gates of the
+evaluation protocol. A gate is read only if every gate above it passed.
+Hypothesis H1 is read at Gate~1 on the anticipated arm. Hypothesis H2 is read
+on the novel arm, first as superiority on survival and then as a minimum effect
+on the level scale. The no-replan control is a negative control on the whole
+campaign, not a third system under test.}
+\label{fig:eval:gates}
+\end{figure}

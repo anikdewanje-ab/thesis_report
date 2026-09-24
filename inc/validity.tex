@@ -4,100 +4,430 @@
 % SOURCE OF TRUTH: thesis-pack/08-validity/PARITY.md (authoritative on every
 % parity claim and every deviation). Bound to workflow_baseline/test_parity.py.
 % Supporting: ADR-0015 (scope of the independent variable), ADR-0016 (the world
-% is an execution model), ADR-0003 (event log as evaluation backbone).
+% is an execution model), ADR-0017 sec.1 (reserve bus), RESULTS sec.6.7-6.8.
 %
-% WHY THIS CHAPTER EXISTS. The whole thesis rests on one comparison. If the two
-% systems do not see the same world or cannot say the same things, the
-% comparison measures the rig and not the architecture. This chapter is what
-% makes the result admissible. Write it BEFORE the results chapter is defended.
-%
-% The claim to make: parity is DEMONSTRATED by a capability table and a
-% conformance test, not asserted. Deviations are declared, not hidden, and each
-% one is reported WITH ITS DIRECTION.
+% RULES FOR THIS CHAPTER:
+%  * Parity is DEMONSTRATED, not asserted. Every deviation is reported WITH ITS
+%    DIRECTION (EVALUATION_PROTOCOL sec.14 item 7).
+%  * Minimal code naming: describe in words. Test names stay in PARITY.md.
+%  * ADR-0015 rule 7 (sequential reserve) is NOT implemented. Never cite it as
+%    built.
 
+The whole thesis rests on one comparison. The agentic system and the workflow
+baseline run the same evacuation, and their results are set side by side. That
+comparison only means something if the two systems work under the same
+conditions. If one of them sees more of the world, can say more to it, or is
+scored in a different way, then the result measures the test rig and not the
+architecture.
+
+This chapter shows that the conditions are the same, and says exactly where
+they are not. Parity is not claimed in prose. It is held by construction and
+checked by an executable test suite. Where the two systems differ on purpose,
+the difference is declared together with the direction in which it pushes the
+result. The chapter comes before the results because it is what makes the
+results admissible.
+
+% =====================================================================
 \section{What Parity Has to Mean Here}
 \label{sec:val:definition}
-% The single independent variable is the coordination strategy: LLM reasoning
-% against pre-scripted branching. Everything else is held identical and audited.
-% Parity is held by reuse by identity, not by subclassing (PARITY sec.0).
+% source: PARITY sec.0, sec.6
 
+The study has one independent variable: \emph{how coordination is produced}.
+On the treatment side, coordination comes from distributed LLM agents, each
+holding local information and negotiating through the shared database. On the
+control side, it comes from one deterministic Incident Commander (IC) that
+follows written doctrine. Everything else has to be the same.
+
+This is not a comparison of ``LLM against no LLM''. Only the two reasoning
+coordination agents are replaced by the IC: the command-post agent (BIS) and
+the transport agent (Hochbahn). The bus drivers and the other field agents
+still run a language model in both conditions. Section~\ref{sec:val:scope}
+gives the full roster.
+
+\paragraph{Parity by identity.} A common way to build a fair control is to
+write a second system that behaves like the first. That approach has a
+weakness. A copy can match today and drift tomorrow, and nobody notices.
+This project uses a stricter rule. The IC is built on the same engine that
+all ten agents run on, and it reuses the absorbed agents' code as the very
+same functions, not as copies.
+
+Every attribute the IC defines must fall into one of three groups. Of the 49
+attributes it defines, 27 are the unmodified functions of the two absorbed
+agents (23 from BIS and 4 from Hochbahn). The other 22 are new, and each one is
+declared with its reason. Some are merged, because both agents defined them
+and the IC needed one version. One is the seam where the independent variable
+itself sits. Some belong to the message link between the two agents, which no
+longer exists once they are one node. Everything else is inherited unchanged
+from the shared engine. The test checks identity, not behaviour. A
+reimplementation that behaves the same fails the test on the day it is
+written. A new method that nobody justified fails it too.
+
+There is one small difference from the design record. The architecture
+decision said the IC state should \emph{contain} the two agents' states. In
+the code it \emph{flattens} them into one state. This was needed so that the
+absorbed functions share one command lifecycle, one inbox and one event log.
+The test checks that every field keeps its name, type and default.
+
+\paragraph{What this costs.} An earlier version of the audit had a more vivid
+result. It ran one scenario twice, once through each side, and found that the
+two event logs differed in one field across 30 rows. That instrument could not
+survive the merge of the two agents into the IC. The IC's vocabulary is a
+superset of one agent's, so a replay through that agent drops the verbs it
+does not know, and the logs would differ for reasons that are not real parity
+breaks. The paired run was therefore retired. Three of the five axes below are
+now checked \emph{structurally}: the test shows that the two sides use the same
+code, not that they behaved alike on one run. Identity is the stronger claim,
+because it holds for every scenario and not only the one that was walked. It
+is also the less vivid one, and that loss is stated here.
+
+% =====================================================================
 \section{The Capability Table}
 \label{sec:val:table}
-% The five axes PARITY audits, one subsection or one table row each:
-%   1. Information horizon  - same world events, same sim-time, same event_log
-%   2. Action vocabulary    - same command set
-%   3. World model          - same map, ORS routing, geocoding, fleet state
-%   4. Scenario inputs      - same loader, paired agentic_/baseline_ files
-%   5. Output substrate     - one shared event_log, one scoring path
-% Note the collapsed edge (ADR-0015 rule 3) and the declared reach gap (2d).
+% source: PARITY sec.1-5
 
+Parity is audited on five axes. Table~\ref{tab:val:capability} summarises
+them. For each axis it names what the two systems share, how the sharing is
+held and checked, and where they differ on purpose.
+
+\begin{table}[htbp]
+\centering
+\caption{The five parity axes. ``Identity'' means the baseline uses the same
+code objects as the agentic side, not copies.}
+\label{tab:val:capability}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}X}
+\toprule
+Axis & What is shared & How it is held & Declared difference \\
+\midrule
+Information horizon & Same inbox, same sensing snapshots, same simulation time. No fact reaches the IC by a route no agent has. & Identity, plus a walk through a scenario & The IC holds the command picture and the fleet picture at once (deviation~5). \\
+Action vocabulary & The union of the two absorbed agents' command sets, minus the verbs of the deleted link. & Equality test against the live agents & Four verbs cannot be reached; the baseline uses 9 of its 13. \\
+World model & Same sensing entry points, same time-resolution pass when an action is committed. & Identity and a source sweep & The IC plans with road distance and duration (deviation~6). \\
+Scenario inputs & The same scenario files through the same loader. & Shared function, tested on every file & Message envelope details (deviations~1, 2); only the baseline files declare a world (deviation~7). \\
+Output substrate & The same row format in the same \code{event_log}, read by the same scorer. & Inheritance, asserted by identity & A different row label and an empty model name (deviations~3, 4). \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Information horizon.} Both sides receive the same messages at the
+same simulation time, and both read the world through the same sensing
+functions. The test walks a scenario and checks three things. The inbox holds
+exactly the messages the turns delivered. Every sender is a known party. Both
+snapshots come from the shared sensing code. There is one real difference.
+On the agentic side, the command picture and the fleet picture live in two
+agents, which must message each other to combine them. The IC holds both at
+once. It sees more \emph{at once}, but it sees nothing \emph{from elsewhere}.
+This is deviation~5 in Section~\ref{sec:val:deviations}.
+
+\paragraph{Action vocabulary.} BIS has 11 coordination verbs and Hochbahn has
+7. They share one, so the union is 17. Merging the two agents deletes the link
+between them, and four verbs named that link only: asking for a deadline
+extension, reporting a finished transport, waiting for transport, and
+requesting buses. Under central command there is nothing to negotiate, because
+the transport section and the commander are the same authority. The IC
+therefore has 13 verbs. This difference is part of what the thesis measures,
+and it is stated in advance: the agentic system can show an extension
+negotiation and the baseline cannot. A metric that rewarded such a negotiation
+would be measuring a link one architecture does not have.
+
+The test asserts \emph{equality} with the union, not only that one set is
+contained in the other. A verb that goes missing from the control is as much a
+capability gap as an extra one. The IC holds no physical verbs. Driving stays
+with the driver agents on both sides.
+
+Availability is equal. What differs is \emph{reach}. The baseline's procedure
+issues 9 of its 13 verbs. The four it never issues are two verbs that end the
+mission, one that stands the escorts down for good, and a free-text message
+channel that a deterministic procedure has no use for. The gap is declared, and
+a test fails if it ever grows. A last check reads the agentic prompts
+themselves. A worked example in a prompt could teach a model a verb the
+baseline lacks. The sweep found none.
+
+\paragraph{World model.} Each absorbed agent has exactly one place where it
+reads the world, and the IC calls those two functions and nothing else. The
+shared sensing back ends are seeded the same way and are not replaced during a
+run. When an action is committed, both sides run the same timing and
+feasibility pass, because it is the same inherited method. One difference is
+new. The IC's run schedule reads real road distance and duration from the
+routing service. The agentic coordinator never sees these numbers; only the
+drivers do. This is deviation~6. It affects the IC's \emph{planning}, not the
+commit step this axis is about. The road data is cached on disk, and a cache
+miss falls back to a fixed straight-line estimate, so baseline runs stay
+reproducible.
+
+\paragraph{Scenario inputs.} Both sides load every scenario file through the
+same function, and the test runs it over all 15 files. Two details of the
+message envelope differ (deviations~1 and~2), and neither ever reaches a
+decision. One paired scenario has a different head-count on purpose. In the
+road-closure scenario, the agentic side can re-route, so the closure costs time
+and distance while both shelters stay reachable, and all 100 residents are
+admissible. The baseline has no routing verb. The only way to express a
+closure to it is as a shelter becoming unreachable. Losing a 60-bed shelter
+would leave 40 residents with no bed, so the baseline file is sized at 60.
+This stays fair because completeness is scored against each scenario's own
+declared population, not a raw head-count. Everything else the two runs are
+scored in, such as the hazard zone, the flood arrival and the fleet, is
+asserted identical. A test pins that this is the only scenario with a
+non-nominal population.
+
+\paragraph{Output substrate.} Both sides write the same seven-field row format
+into the same append-only \code{event_log}, and the rows are written by the
+same inherited code. The event numbering is checked to be dense across a whole
+run. A gap would mean a second writer or a lost row. Two labels differ on
+purpose. A baseline decision row is labelled ``decision'' instead of ``LLM
+response'', and its model name is empty. Logging a model-free decision as an
+LLM response would be exactly the kind of quiet mislabelling the shared log
+exists to prevent. The test shows the label is harmless: relabelling every
+baseline decision row leaves the facts the scorer extracts byte-identical.
+
+% =====================================================================
 \section{Scope of the Independent Variable}
 \label{sec:val:scope}
-% ADR-0015, superseding B1: since ADR-0015 the IC absorbs agent-bis AND
-% agent-hochbahn and authors its own run schedule.
-% CRITICAL: ADR-0015 rule 7 (a sequential baseline reserve) is NOT implemented.
-% The thesis must not cite it as built. See the dated status note on the ADR.
+% source: PARITY sec.6, ADR-0015 and its status note
 
+A baseline run replaces every \emph{reasoning coordination} agent and nothing
+else. Table~\ref{tab:val:roster} shows how the ten agents split.
+
+\begin{table}[htbp]
+\centering
+\caption{Which agents the baseline replaces.}
+\label{tab:val:roster}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}p{3.4cm}}
+\toprule
+Class & Agents & LLM? & In a baseline run \\
+\midrule
+Reasoning coordination & BIS (command post), Hochbahn (transport) & yes & Absorbed into the IC \\
+Scripted coordination & Augustinum, shelter 1, shelter 2, disaster-management staff (ZKD) & no & Unchanged, shared by both \\
+Field execution & bus driver 1, bus driver 2, police, Red Cross & yes & Unchanged, shared by both \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The eight agents that are not absorbed are identical in both conditions by
+construction. That is what puts them outside the comparison. The four scripted
+agents are already deterministic, so moving them would change no variable.
+The four field agents stay out because driving a route is the same act under
+either architecture, and leaving them untouched is a stronger guarantee than
+auditing them.
+
+This has a direct consequence for how the result is read. The independent
+variable is how coordination is produced: one deterministic command cycle that
+holds every coordination function, against distributed LLM agents that hold
+local information. It is not ``LLM against no LLM'' system-wide.
+
+Two further points about scope must be stated. First, since the IC absorbed
+both agents, the baseline plans its own evacuation. It writes a run schedule
+with a passenger split, per-run deadlines and a delivery estimate that can be
+checked. ``The baseline is a competent command system'' is therefore testable,
+not assumed. Second, the design record for this change contains a rule that
+the baseline should use the reserve bus only in sequential runs. \textbf{That
+rule is not implemented}, and this thesis does not claim it as built.
+Section~\ref{sec:val:reserve} describes what the code does instead. Baseline
+runs from before this change behave differently and are not comparable with
+the evaluated ones, so every analysis is scoped by run.
+
+% =====================================================================
 \section{The Seven Declared Deviations}
 \label{sec:val:deviations}
-% Report each one WITH ITS DIRECTION. This is required by
-% EVALUATION_PROTOCOL sec.14 item 7. From RESULTS sec.6.7:
-%   1-4  Inert. Envelope id, envelope to, RESPONSE_KIND, empty model_id.
-%        None can affect a result; each is pinned by a test.
-%   5    The consolidated Lage (one node holds command and fleet pictures).
-%        A REAL ADVANTAGE TO THE CONTROL. Accepted for doctrinal reasons and,
-%        in PARITY's words, "reported rather than corrected".
-%   6    The IC reads ORS road distance and duration for its run schedule.
-%        Also a real advantage to the control. Same treatment.
-%   7    Only the baseline's scenarios declare a world. Still OPEN when the
-%        campaign ran, which gate 4 did not permit.
-%        CLOSED BY RE-ARGUMENT - see the next section.
+% source: PARITY "Declared deviations - the complete list"; RESULTS sec.6.7
 
+The audit names seven deviations and no others. Anything else that shows up as
+a difference between the two logs would be a defect.
+Table~\ref{tab:val:deviations} lists them with their direction.
+
+\begin{table}[htbp]
+\centering
+\caption{The seven declared deviations, each with the direction in which it
+can move the result.}
+\label{tab:val:deviations}
+\small
+\begin{tabularx}{\textwidth}{c>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}}
+\toprule
+\# & Deviation & Axis & Why it exists & Direction \\
+\midrule
+1 & Message ids are numbered by position, not by wall clock & Inputs & Two runs of one scenario must not differ & Inert: the id is never read \\
+2 & The message envelope carries its recipient & Inputs & The offline run has no dispatcher to route it & Inert: nothing reads it \\
+3 & Decision rows are labelled ``decision'', not ``LLM response'' & Output & A model-free run must not be logged as an LLM response & Inert: scored facts byte-identical \\
+4 & The model name is empty & Output & It is the marker of the control condition & Inert: the scorer reads no model name \\
+5 & One node holds the command and fleet pictures at once & Horizon & Central command consolidates at the command post & Favours the baseline \\
+6 & The IC plans with road distance and duration & World model & A schedule in minutes needs travel times & Favours the baseline \\
+7 & Only the baseline scenarios declare a world & Inputs & Removes outcomes that were written into the script & Against the baseline \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The seven are of three different kinds.
+
+\paragraph{Deviations 1 to 4 are inert.} Each one exists for a reason of
+honesty or determinism, and none can reach a decision or a score. Each is
+pinned by its own test. The message id, for example, is replaced by a fresh one
+the moment a message enters an inbox, so the difference never reaches the
+situation picture, a prompt or a decision.
+
+\paragraph{Deviations 5 and 6 are real advantages to the control.} They follow
+from the doctrine. A central commander who could not see what they command
+would be a strawman, and a schedule measured in minutes needs travel times.
+They were accepted for these reasons and, in the audit's own words,
+``reported rather than corrected''. This cuts in the direction that costs the
+thesis its preferred result, and it has to be read both ways. An agentic win
+despite these deviations would have been \emph{stronger}, because distributed
+reasoning would have beaten a commander with a better view. The agentic loss
+that was observed is \emph{weaker} than it looks, because part of the gap may
+come from the wider view and not from the coordination procedure.
+
+\paragraph{Deviation 7 runs the other way.} Only the baseline's scenario files
+declare a world, which a small simulator then plays out. The agentic files do
+not yet use it. This removes an advantage the control used to have rather than
+adding one. It was still open when the evaluation ran, and the next section
+explains why it does not threaten the result.
+
+% =====================================================================
 \section{Deviation 7 and Why It Does Not Threaten the Result}
 \label{sec:val:dev7}
-% EVALUATION_PROTOCOL sec.12 gate 4 requires deviation 7 "closed, or re-argued
-% in writing". PARITY sec.4e IS the written re-argument; it was simply never
-% named as the gate's discharge.
-% The argument: declaring a world on the baseline side removes the last place
-% the control's outcome was written down rather than earned. So the deviation
-% runs AGAINST the baseline.
-% What settles it: the claim being made is that the BASELINE WON. A deviation
-% that disadvantages the baseline cannot explain a baseline win. It could only
-% have understated the margin.
-% Be honest about the shape of this argument: had the agentic side won, this
-% gate would have had to be closed properly first. Say so.
-% Declare it as: an asymmetry that remained open, whose direction is opposed to
-% the result, therefore not a threat to it. (RESULTS sec.6.8 item 1.)
+% source: PARITY sec.4e; RESULTS sec.6.8 item 1; THESIS_SOURCES sec.4 item 3
 
+The evaluation protocol set a gate before any confirmatory claim: deviation~7
+had to be ``closed, or re-argued in writing''. When the campaign ran, it was
+neither. The re-argument did exist, in the parity audit, but it was never
+named as the discharge of this gate. It is named here.
+
+The argument is about what the deviation removes. Before the world was
+declared, the baseline's scenarios injected fixed drop-off confirmations. The
+same messages arrived at the same times and named the same shelters, whatever
+the doctrine had decided. The scorer never read where the residents were
+actually sent. A baseline that sent every resident to a shelter that had
+closed would still have scored full completeness. This was the last place
+where the control's outcome was \emph{written down rather than earned}. The
+agentic side never had this help, because its counterparties are live agents.
+Declaring a world on the baseline side takes the help away. The deviation
+therefore runs \emph{against} the baseline.
+
+That direction settles the question for this thesis. The result is that the
+\textbf{baseline won}. A deviation that disadvantages the baseline cannot
+explain a baseline win. At most it made the baseline's margin look smaller
+than it is.
+
+The shape of this argument should be stated openly. It works only because of
+the direction of the result. Had the agentic side won, the gate would have had
+to be closed properly, by giving the agentic scenarios the same world, before
+that claim could stand. The deviation is therefore declared as \emph{an
+asymmetry that remained open, whose direction is opposed to the result, and
+which is therefore not a threat to it}.
+
+% =====================================================================
 \section{Two Further Asymmetries Outside the Numbered Seven}
 \label{sec:val:extra}
-% Both favour the baseline. Both belong here and in the limitations.
-%   - The bus-km replacement-leg anchor. Where a replacement leg starts differs
-%     between the systems. Declared and deliberately not closed. At most 6 km on
-%     the three scenarios measured (83.1 vs a depot-anchored 89.1 on
-%     baseline_road_closure). No level moves in that band.
-%   - The _PB_FALLBACK mis-framing. agentic/bis/prompts.py::_playbook_for has no
-%     route_update or bus_breakdown branch, so both fall to the fallback
-%     playbook, whose instruction is to assume the resource is not coming.
-%     An AGENTIC-SIDE deficit that makes the S02 comparison unfair IN THE
-%     BASELINE'S FAVOUR. The deadline to fix it passed. Disclosed limitation.
+% source: PARITY sec.3d (residual) and audit item 5; RESULTS sec.6.7
 
+Two more differences are not on the list of seven, but they belong in this
+chapter and in the limitations. Both favour the baseline.
+
+\paragraph{Where a replacement bus leg starts.} Bus kilometres are measured the
+same way on both sides: a leg is charged once, when the bus starts it, from
+where the bus stands. One difference remains. An agentic driver's next leg
+starts from its real position, which the world reports back. The baseline has
+no live position to read, so it moves the bus to the place it was heading for.
+This is the cheaper of the two possible starting points, so the difference
+favours the baseline. It was measured on three scenarios: 83.1\,km against
+89.1\,km on the baseline road closure, 99.2 against 105.2 on shelter capacity,
+and 92.8 against 95.8 on bus breakdown. That is at most 6\,km, and no level
+moves anywhere in that band. Closing it would mean giving the control a
+position model with no runtime to feed it, so it was declared rather than
+tuned away.
+
+\paragraph{A fallback prompt that mis-frames two message types.} The command-post
+agent chooses a short instruction block, a playbook, for each kind of incoming
+message. It has no playbook for a route update or a bus breakdown. Both fall
+to the fallback, which is meant for messages the runtime could not classify.
+Its instruction is to assume that the resource is \emph{not} coming. The
+baseline handles both disruptions with written branches. This is an
+agentic-side deficit, and it makes the comparison on the road-closure scenario
+(S02) unfair \emph{in the baseline's favour}. The fix was due before any
+agentic road-closure run was scored. That deadline passed, and the item now
+stands as a disclosed limitation. One qualification limits its reach. The
+agentic road-closure scenario delivers the closure as a situation update to
+the transport agent, and a situation update has its own playbook. Whether the
+command-post model ever met a route update in a scored run is a question for
+the campaign logs. This audit does not answer it.
+
+\paragraph{What the three non-inert asymmetries have in common.} Deviations~5
+and~6 and these two further items all run in the baseline's favour. Together
+they can explain part of the margin. None of them can turn the result around
+or explain the agentic deficit away. The one asymmetry that runs against the
+baseline, deviation~7, can only have made the margin look smaller.
+
+% =====================================================================
 \section{The Reserve-Bus Mechanism}
 \label{sec:val:reserve}
-% A NAMED MECHANISM, NOT A CONFOUND. This is the author's decision of
-% 2026-09-06, recorded in ADR-0017 sec.1.
-% What happens: every scenario declares bus-2 as role: reserve. The baseline's
-% logistics.run_schedule never reads role, so it assigns greedily to the
-% earliest-free bus and bus-2 flies in parallel from t0. The agentic Hochbahn
-% releases bus-2 only for four named reasons and otherwise runs bus-1 serially.
-% How to report it: under that decision, leaving the reserve parked while
-% residents would drown is a DECISION-QUALITY FAILURE of the agentic side.
-% Report it as a finding and name the mechanism. Do not call it noise.
+% source: PARITY reserve-bus box; ADR-0017 sec.1; THESIS_SOURCES sec.4 item 2
+% A NAMED MECHANISM, NOT A CONFOUND (author decision 2026-09-06).
 
+One difference between the two systems is not a deviation at all, and it is
+named here so that it is not mistaken for one.
+
+Every scenario declares the second bus as a \emph{reserve}, with 50 seats. The
+baseline's scheduler never reads that role. It gives each leg to the bus that
+is free first, so the second leg goes to bus~2 at the start, and the two buses
+run in parallel. The agentic transport agent sees the role and keeps bus~2
+parked by default. It releases it for only four named reasons: a load larger
+than bus~1 can carry, bus~1 being unavailable, the command post naming two
+buses, or a deadline test that fails when the last delivery would land less
+than 30 minutes before the mission deadline. Otherwise it runs bus~1 in
+serial trips.
+
+The reserve role is \emph{soft}. This was the author's decision on
+2026-09-06, and it is recorded with the other decisions taken without a formal
+design record. A reserve is there to be used when residents would otherwise
+drown. Both sides have the same fleet and both may use bus~2. Sending it out
+in parallel and keeping it parked are two \emph{decisions} over one
+capability, and decisions are what the comparison measures. The mechanism is
+therefore not counted among the deviations. Leaving the reserve parked while
+residents are at risk is reported as a \emph{decision-quality failure} of the
+agentic side. It is a named mechanism behind part of the gap, not noise.
+
+% =====================================================================
 \section{How Parity Is Verified}
 \label{sec:val:verification}
-% workflow_baseline/test_parity.py and agentic/core/test_report_contracts.py are
-% the two tests that read the docs. 160 tests collected in workflow_baseline/.
-% Mention the one known inaccuracy in the suite's own bookkeeping (PARITY).
-% Also: the retired instrument and what the thesis loses by its retirement
-% (PARITY sec.0).
+% source: PARITY "On test strength", "Verification"; workflow-baseline-README l.33
+
+Every claim in this chapter is backed by an executable test. The parity suite
+has 17 test functions, which expand to 31 test items. It needs no database and
+no model. The baseline package as a whole carries 160 test items. One test
+closes the loop between the audit and the code: every parity test must be
+cited by a row of the capability table, and every row must cite a test that
+exists. A test that no row cites is a claim nobody made. A row that cites a
+missing test is a stale table.
+
+The suite also carries guards against empty passes. A check such as ``every
+reused function is the original'' passes trivially if nothing is reused. Each
+key assertion is therefore paired with a check that the thing it tests is
+actually there, for example that at least one absorbed function is reached and
+that each prompt module teaches at least five verbs.
+
+Three weaknesses of the verification are disclosed.
+
+\begin{itemize}
+\item \textbf{No mutation testing of the rewritten suite.} The earlier suite
+  was checked by deliberately breaking the code and confirming that a test
+  failed. When the IC absorbed the two agents, most of those tests were
+  rewritten. The same check was planned for the new tests, with a minimum set
+  of nine mutations, but it was not run before the freeze of 2026-09-10.
+\item \textbf{The audit was absent for a short interval.} The design record
+  required the new gate to be written, and to fail, before the engine changed,
+  so that it was never missing. In fact the engine changed first and the gate
+  followed.
+\item \textbf{One small bookkeeping error.} The list of declared new IC code
+  has 23 entries, while 22 are warranted. One entry is in fact reused by
+  identity, so its declaration is redundant. It is harmless, because the test
+  checks reuse first.
+\end{itemize}
+
+\paragraph{What this chapter licenses.} The two systems share their world,
+their inputs, their vocabulary and their output substrate, and most of that
+sharing is shown by identity of code rather than by similar behaviour. Where
+they differ, the difference is declared with its direction. The non-inert
+differences favour the baseline, and the one that does not favour it can only
+have hidden part of its margin. The results in Chapter~\ref{ch:results} can
+therefore be read as a comparison of two ways of coordinating. They cannot be
+read as a clean measure of the coordination procedure alone, because
+deviations~5 and~6 give the control a wider view by design.

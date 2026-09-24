@@ -1,0 +1,76 @@
+% The shared engine: how one agent handles a wake, and the model-free
+% dispatch path beside it. Source: agentic-core-README.md sec.6-10 and
+% agents/bus_driver.md sec.4 and sec.9. Input from inc/agentic_system.tex,
+% Section "The Wake Cycle".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  stage/.style={draw, rounded corners=2pt, fill=blue!6, text width=4.4cm,
+    minimum height=0.66cm, align=center, font=\footnotesize, inner sep=3pt},
+  free/.style={draw, rounded corners=2pt, fill=gray!10, text width=3.3cm,
+    minimum height=0.66cm, align=center, font=\footnotesize, inner sep=3pt},
+  queue/.style={draw, thick, rounded corners=2pt, fill=yellow!12, text width=4.4cm,
+    align=center, font=\footnotesize, inner sep=4pt},
+  ext/.style={draw, rounded corners=2pt, fill=green!6, align=center,
+    font=\footnotesize, inner sep=4pt},
+  db/.style={draw, thick, rounded corners=3pt, fill=orange!8, align=center,
+    font=\footnotesize, inner sep=4pt},
+  dec/.style={draw, diamond, aspect=2.2, fill=gray!10, align=center,
+    font=\footnotesize, inner sep=1pt},
+  flow/.style={-{Stealth[length=1.8mm]}, thick},
+  back/.style={-{Stealth[length=1.8mm]}, thick, dashed, red!55!black},
+  link/.style={-{Stealth[length=1.6mm]}, gray!70!black},
+  lbl/.style={font=\scriptsize, align=center, text=gray!30!black},
+]
+  % --- wake queue and the message source -----------------------------
+  \node[queue] (q) {\textbf{Wake queue}\\ one wake at a time};
+  \node[db, above=0.75cm of q] (mail) {New message in the mailbox};
+  \draw[flow] (mail) -- node[lbl, right] {message} (q);
+
+  % --- the model path (left column) ----------------------------------
+  \node[stage, below=0.55cm of q] (p1) {1.\ Record the event in the log};
+  \node[stage, below=0.28cm of p1] (p2) {2.\ Update state before the model sees it};
+  \node[stage, below=0.28cm of p2] (p3) {3.\ Fingerprint the observation};
+  \node[stage, below=0.28cm of p3] (p4) {4.\ Build the prompt, call the model};
+  \node[stage, below=0.28cm of p4] (p5) {5.\ Check the answer against the rules};
+  \node[stage, below=0.28cm of p5] (p6) {6.\ Commit step and plan\\ \emph{echo, splice or supersede}};
+  \node[stage, below=0.28cm of p6] (p7) {7.\ Send the checked messages};
+  \node[stage, below=0.28cm of p7] (p8) {8.\ Write one decision row};
+  \foreach \a/\b in {q/p1,p1/p2,p2/p3,p3/p4,p4/p5,p5/p6,p6/p7,p7/p8}
+    \draw[flow] (\a) -- (\b);
+
+  % --- the language model --------------------------------------------
+  \node[ext, left=1.0cm of p4] (llm) {Ollama\\ language model};
+  \draw[link, <->] (llm) -- (p4);
+
+  % --- the model-free path (right column) ----------------------------
+  \node[free, right=1.3cm of p2] (r1) {Clock reaches an action's start time};
+  \node[free, below=0.3cm of r1] (r2) {Send the action to the world\\ \emph{no model call}};
+  \node[free, below=0.3cm of r2] (r3) {World carries it out and reports back};
+  \node[free, below=0.3cm of r3] (r4) {Mark the action confirmed, write the real position};
+  \node[dec, below=0.3cm of r4] (r5) {Last action\\ of the step?};
+  \foreach \a/\b in {r1/r2,r2/r3,r3/r4,r4/r5}
+    \draw[flow] (\a) -- (\b);
+  \node[draw, dashed, rounded corners=3pt, inner sep=5pt, fit=(r1)(r5),
+    label={[font=\footnotesize\bfseries]above:Model-free path}] (rgrp) {};
+  \node[lbl, below=0.05cm of r5] {no: wait for the next report};
+
+  % the committed step sets the action times the clock will act on
+  \draw[link, dashed] (p6.east) -- node[lbl, below, pos=0.45] {action\\ times} (p6.east -| rgrp.west);
+
+  % --- loops back into the queue -------------------------------------
+  \draw[back] (r5.east) -- ++(0.55,0) |- node[lbl, above, pos=0.75] {yes: step finished} (q.east);
+  \draw[back] (p6.west) -- ++(-3.9,0) |- node[lbl, above, pos=0.75] {timing conflict} (q.west);
+
+  % --- the database ---------------------------------------------------
+  \node[db, right=1.3cm of p8, yshift=0.45cm] (pg) {PostgreSQL\\ mailboxes, state, event log};
+  \draw[link] (p7.east) -- (pg.west);
+  \draw[link] (p8.east) -- (pg.west);
+\end{tikzpicture}
+\caption{The shared engine that runs every agent. A wake enters the queue and
+passes through eight steps, and only step 4 calls the language model. Actions
+are sent to the world on the right without the model. The model wakes again
+only when a message arrives, when the last action of a step is confirmed, or
+when a newly committed step cannot be finished in time.}
+\label{fig:ag:engine}
+\end{figure}

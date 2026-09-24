@@ -1,0 +1,84 @@
+% The ten-step coordination storyline as message flow between the
+% organisations, plus the conditional stand-down. Current design (ADR-0009 to
+% ADR-0013), not the pre-ADR-0011 bus-driver sequence diagram.
+% Sources: thesis-pack/04-architecture-agentic/agents/bis.md (action table),
+% adr/0011 (transport_plan), adr/0012 (facility cleared), adr/0013 (shelter
+% edge), adr/0009 (stand-down). Input from inc/casestudy.tex.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1.0cm, y=1.0cm,
+  llm/.style={draw, rounded corners=2pt, fill=blue!8, align=center,
+    font=\scriptsize, text width=1.6cm, minimum height=0.9cm, inner sep=2pt},
+  scr/.style={draw, rounded corners=2pt, fill=gray!12, align=center,
+    font=\scriptsize, text width=1.6cm, minimum height=0.9cm, inner sep=2pt},
+  life/.style={densely dashed, gray!60},
+  msg/.style={-{Stealth[length=1.6mm]}, thick},
+  alt/.style={-{Stealth[length=1.6mm]}, dashed, gray!70!black},
+  lbl/.style={above, font=\scriptsize, fill=white, inner sep=1pt, yshift=-1pt},
+  note/.style={draw, rounded corners=2pt, fill=orange!8, align=center,
+    font=\scriptsize, text width=1.7cm, inner sep=2pt},
+]
+  % Lanes: x position, style, header text.
+  \foreach \x/\s/\t in {
+      0/scr/{\textbf{ZKD}\\command},
+      2/llm/{\textbf{BIS}\\coordinator},
+      4/scr/{\textbf{Augustinum}\\nursing home},
+      6/scr/{\textbf{SC1, SC2}\\shelters},
+      8/llm/{\textbf{Hochbahn}\\transport},
+      10/llm/{\textbf{Bus drivers}\\bus-1, bus-2},
+      12/llm/{\textbf{Polizei}\\escort},
+      14/llm/{\textbf{DRK}\\ambulance}} {
+    \node[\s] at (\x,0) {\t};
+    \draw[life] (\x,-0.45) -- (\x,-11.7);
+  }
+
+  % 1 Alarm
+  \draw[msg] (0,-1.0) -- node[lbl] {1 alarm} (2,-1.0);
+  % 2 Assessment
+  \draw[msg] (2,-1.6) -- node[lbl] {2 residents?} (4,-1.6);
+  \draw[msg] (4,-2.1) -- node[lbl] {100, deadline} (2,-2.1);
+  % 3 Resource allocation
+  \draw[msg] (2,-2.7) -- node[lbl, pos=0.3] {3 free beds?} (6,-2.7);
+  \draw[msg] (6,-3.2) -- node[lbl, pos=0.7] {60 + 60} (2,-3.2);
+  % 4 Route planning: done by the drivers, not by a coordinator
+  \node[note] at (10,-3.95) {4 route legs on real roads};
+  % 5 Logistics
+  \draw[msg] (2,-4.7) -- node[lbl, pos=0.35] {5 request buses} (8,-4.7);
+  \draw[msg] (8,-5.2) -- node[lbl, pos=0.65] {transport plan} (2,-5.2);
+  \draw[msg] (8,-5.7) -- node[lbl] {runs} (10,-5.7);
+  % 6 Police escort, 7 medical support
+  \draw[msg] (2,-6.3) -- node[lbl, pos=0.85] {6 escort} (12,-6.3);
+  \draw[msg] (2,-6.8) -- node[lbl, pos=0.9] {7 medical} (14,-6.8);
+  % 8 Execution, repeated per run
+  \draw[msg] (10,-7.4) -- node[lbl] {8 departed, $n$ aboard} (4,-7.4);
+  \draw[msg] (4,-7.9) -- node[lbl] {facility cleared} (2,-7.9);
+  % 9 Arrival and handover, repeated per run
+  \draw[msg] (10,-8.5) -- node[lbl] {9 drop-off} (6,-8.5);
+  \draw[msg] (10,-9.0) -- node[lbl] {drop-off} (8,-9.0);
+  \draw[msg] (8,-9.5) -- node[lbl, pos=0.6] {transport complete} (2,-9.5);
+  % 10 Mission report
+  \draw[msg] (2,-10.1) -- (0,-10.1);
+  \node[font=\scriptsize, anchor=west] at (2.1,-10.1) {10 mission complete};
+  % Conditional stand-down (ADR-0009), exercised by no scenario
+  \draw[alt] (2,-10.8) -- (0,-10.8);
+  \node[font=\scriptsize, anchor=west, text=gray!50!black] at (2.1,-10.8)
+    {stand-down only: request abort};
+  \draw[alt] (0,-11.3) -- (2,-11.3);
+  \node[font=\scriptsize, anchor=west, text=gray!50!black] at (2.1,-11.3)
+    {countersigned, then recall of transport and escorts};
+
+  % Legend
+  \node[llm, text width=0.6cm, minimum height=0.35cm] at (9.6,-12.15) {};
+  \node[font=\scriptsize, anchor=west] at (10.0,-12.15) {LLM-driven};
+  \node[scr, text width=0.6cm, minimum height=0.35cm] at (12.0,-12.15) {};
+  \node[font=\scriptsize, anchor=west] at (12.4,-12.15) {scripted};
+\end{tikzpicture}
+\caption[The coordination storyline]{The coordination storyline as message
+flow between the organisations of the case. Numbers give the storyline step.
+Steps 8 and 9 repeat for every bus run. Step 4 is not a message: each driver
+routes its own legs over real roads. The dashed branch is the conditional
+stand-down, which no evaluated scenario triggered. In the workflow baseline, one
+Incident Commander takes the place of the two coordinator lanes, BIS and
+Hochbahn. All other lanes are shared by both systems.}
+\label{fig:cs:storyline}
+\end{figure}
