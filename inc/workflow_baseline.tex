@@ -18,8 +18,9 @@ is involved in any of its coordination decisions.
 A control condition is only useful if it is competent. If the baseline were
 weak on purpose, beating it would prove nothing. The baseline is therefore not
 designed by taste. It implements an established emergency command doctrine,
-element by element, and every element is traced back to that doctrine. It was
-frozen before the novel disruptions were revealed.
+element by element. Every element is either traced back to that doctrine or
+declared as a design choice of the author. It was frozen before the novel
+disruptions were revealed.
 
 The baseline won the evaluation. It scored the highest survival level on every
 disruption tested (Chapter~\ref{ch:results}). This chapter does not explain
@@ -59,12 +60,11 @@ organizing the same incident. In the agentic system, several organizations
 each hold local information and coordinate by messages. In the baseline, one
 commander holds the whole situation picture and gives orders from the top down.
 The literature on the Incident Command System describes this contrast as
-\emph{mechanistic} against \emph{organic} organization. It also shows that a
-strongly bureaucratic command structure can still respond in a flexible and
-reliable way~\cite{bigley2001a}. Central command is therefore not a weak design
-chosen to lose. It is the textbook form of command for an incident of this size.
-% TODO(cite: ICS literature review 2017, IJEM 13(1):50-67, for the
-% mechanistic vs organic framing. Not in litDB.bib yet.)
+\emph{mechanistic} against \emph{organic} organization~\cite{chang2017}. It
+also shows that a strongly bureaucratic command structure can still respond in
+a flexible and reliable way~\cite{bigley2001a}. Central command is therefore
+not a weak design chosen to lose. It is the textbook form of command for an
+incident of this size.
 
 % =====================================================================
 \section{Doctrine Grounding}
@@ -73,38 +73,49 @@ chosen to lose. It is the textbook form of command for an incident of this size.
 \paragraph{Two doctrines, two roles.} Two command models were candidates. The
 first is the German service regulation DV~100, \emph{Führung und Leitung im
 Einsatz}, which is the doctrine under which the Hamburg fire service and civil
-protection actually work. The second is the American Incident Command System
-(ICS) with its national framework NIMS. The baseline gives each of them a
+protection actually work~\cite{fwdv100}. The second is the American Incident
+Command System (ICS) with its national framework NIMS~\cite{fema2017}. The
+baseline gives each of them a
 different job. DV~100 is the \emph{implementation specification}. The code
 follows its elements one by one. ICS is the \emph{scholarly anchor}. It has a
 peer-reviewed research base, which DV~100 as a service regulation does not. The
 comparative arguments of this thesis therefore cite ICS research. ICS is also
 used as a supplement where DV~100 does not describe a coordination step in
-enough detail. Each such borrowed element is marked as a supplement.
-% TODO(cite: FwDV 100 (1999), AFKzV, and the pinned state edition of DV 100;
-% Plattner 2016 commentary; FEMA ICS-100/-200/-300/-400. None in litDB.bib.)
+enough detail~\cite{fema2015,fema2017}. Each such borrowed element is marked as
+a supplement.
+% The edition cited is the Bavarian print of FwDV 100 (Ausgabe 08/2004, Stand
+% 1999). Its printed page numbers equal the PDF page numbers.
+% No commentary is cited (author decision 2026-09-25). Claims the FwDV 100
+% text does not carry are declared as design choices, not doctrine.
 
 \paragraph{The command system.} DV~100 describes command as a system of three
-parts. The \emph{command organization} says who leads and how the staff is
-built. The \emph{command process} is the repeating decision cycle. The
-\emph{command means} are the people, the communication links and the
+parts~\cite[3]{fwdv100}. The \emph{command organization} says who leads and how
+the staff is built. The \emph{command process} is the repeating decision cycle.
+The \emph{command means} are the people, the communication links and the
 information systems. In the simulation the command means are the shared
 database and the event log, which both conditions already share. DV~100 also
-defines four command levels, A to D, by the size of the incident. A
-multi-agency evacuation of 100 residents with police, medical cover, transport
-and two shelters is a level C or D incident. At that level one leader runs a
-staff with separate functions. This is the warrant for modelling the baseline
-as one commander with a staff, and not as a flat script.
+defines four command levels, A to D, which grow with the size of the
+incident~\cite[23]{fwdv100}. Level C means leading with a command group. Level
+D, for several units at one or more sites, means leading with a command group
+or a full staff. A multi-agency evacuation of 100 residents with police,
+medical cover, transport and two shelters is a level C or D incident. This is
+the warrant for modelling the baseline as one commander with a staff, and not
+as a flat script.
 
-\paragraph{Staff functions.} The DV~100 staff has six functions, S1 to S6. The
-baseline implements three of them as separate parts of the program. The
+\paragraph{Staff functions.} The DV~100 staff is divided into subject areas,
+S1 to S6~\cite[13--14]{fwdv100}. S1 to S4 are the standard ones: personnel,
+situation, operations and supply. S5 (press and media) and S6 (information and
+communication) are added when needed. The organization of such staffs in
+practice is described by \textcite{lamers2022}. The baseline implements three
+of the functions as separate parts of the program. The
 situation function (S2) keeps the situation picture. The operations function
 (S3) plans the mission and chooses the next phase. The logistics function (S4)
 turns a decision into transport, escort and medical orders. The communication
 function (S6) is the shared messaging layer itself. Two functions are left out
 on purpose. Personnel (S1) is static, because every agent is on the roster from
 the start. Public information (S5) has no counterpart, because the roster has
-no media agent. Both omissions are declared, not silent.
+no media agent. The doctrine itself treats S5 as optional. Both omissions are
+declared, not silent.
 
 \paragraph{The citation matrix.} Table~\ref{tab:wf:doctrine} maps each
 doctrinal element to the part of the baseline that implements it. The matrix
@@ -128,10 +139,10 @@ D2 & Situation assessment, S2 & The situation picture, read off the IC's state &
 D3 & Planning and decision, S3 & The phase ladder and the allocation rule & \\
 D4 & Logistics, S4 & The run schedule, the dispatch orders, escort and medical & \\
 D5 & Command levels C and D & One central IC & Scale argument; ICS anchor~\cite{bigley2001a} \\
-D6 & ICS ``Planning P'' & Planning in time-boxed phases & Supplement \\
-D7 & ICS span of control & Convoy sizing & Supplement \\
-D8 & Feedback and control, then re-enter the cycle & The anticipated-disruption branches & Road closure answered over destinations (Section~\ref{sec:wf:disruptions}) \\
-D9 & Reconnaissance under an unclear situation; holding order & The generic fallback & Two declared reductions (Section~\ref{sec:wf:fallback}) \\
+D6 & ICS ``Planning P''~\cite{fema2015} & Planning in time-boxed phases & Supplement \\
+D7 & ICS span of control~\cite[21]{fema2017} & Convoy sizing & Supplement \\
+D8 & Control through repeated situation assessment, then new planning~\cite[24]{fwdv100} & The anticipated-disruption branches & Branches written in advance are a design choice; road closure answered over destinations (Section~\ref{sec:wf:disruptions}) \\
+D9 & Report back when the situation no longer fits the order~\cite[37]{fwdv100} & The generic fallback & The holding order is a design choice (Section~\ref{sec:wf:fallback}) \\
 S1 & Personnel & Static & Out of case scope \\
 S5 & Press and public information & Omitted & Out of case scope \\
 \bottomrule
@@ -144,9 +155,13 @@ S5 & Press and public information & Omitted & Out of case scope \\
 The mapping from element to \emph{page} is not. The matrix has 87 rows, and 42
 of them still carry a marker that says the page reference in the doctrine is
 pending. For those rows the link to DV~100 is asserted by the author, not yet
-cited to a page. This limits one claim only: the claim that the baseline is
-\emph{doctrine-grounded} in every detail. It changes no number in this thesis.
-Chapter~\ref{ch:critique} lists it among the declared limitations.
+cited to a page. Some elements have no source in the DV~100 text at all. These
+are the phases and their time budgets, the fact that the anticipated branches
+are written in advance, and the holding order for novel disruptions. They are
+declared in this chapter as design choices of the author, not as doctrine. This
+limits one claim only: the claim that the baseline is \emph{doctrine-grounded}
+in every detail. It changes no number in this thesis. Chapter~\ref{ch:critique}
+lists it among the declared limitations.
 % source: thesis-pack/README.md, declared limitations table (42/87
 % SOURCE_PENDING); workflow-baseline-README.md sec.12 item A2.
 
@@ -154,20 +169,28 @@ Chapter~\ref{ch:critique} lists it among the declared limitations.
 \section{The Command Cycle and the Seam}
 \label{sec:wf:cycle}
 
-The heart of DV~100 is the \emph{Führungskreislauf}, the command cycle. It has
-four stages, and the baseline uses their German names so that the mapping stays
-visible:
+The heart of DV~100 is the \emph{Führungsvorgang}, the command process. The
+doctrine calls it a goal-directed, repeating and closed cycle of thinking and
+acting, and draws it as a circle~\cite[24--25]{fwdv100}. It has three stages,
+and the baseline uses their German names so that the mapping stays visible:
 \begin{enumerate}
-  \item \textbf{Lagefeststellung}, situation assessment. The IC reads what has
-  just arrived and updates its situation picture, the \emph{Lage}.
+  \item \textbf{Lagefeststellung}, situation assessment. It covers both
+  reconnaissance of the situation and control. The IC reads what has just
+  arrived and updates its situation picture, the \emph{Lage}.
   \item \textbf{Planung}, planning. The IC weighs the Lage and reaches a
   decision, the \emph{Entschluss}.
   \item \textbf{Befehlsgebung}, issuing orders. The IC sends the orders that
   carry out the decision.
-  \item \textbf{Kontrolle}, control. The IC watches the execution. Replies and
-  reports come back as new events and start the next cycle.
 \end{enumerate}
-% TODO(cite: FwDV 100 command cycle, pinned edition and page.)
+One pass is rarely enough. The doctrine says that only the \emph{repeated}
+situation assessment keeps \emph{Kontrolle}, control over whether the orders
+given are being carried out and are still right. If they are not, a new
+round of planning and orders follows~\cite[24]{fwdv100}. In the baseline this
+is how replies close the loop. They come back as new events and start the
+next pass.
+% Earlier drafts and DOCTRINE_BASELINE_DESIGN.md sec.2.2 show Kontrolle as a
+% fourth stage. FwDV 100 p.24 has three stages, with Kontrolle inside the
+% repeated Lagefeststellung. The primary source wins.
 
 One turn of the cycle runs for every wake. A wake is a scenario event or a
 reply from another agent. The turn does not stop after one decision. If a
@@ -190,11 +213,14 @@ instead, one after the other (Figure~\ref{fig:wf:cycle}).
   (Section~\ref{sec:wf:steps}).
 \end{enumerate}
 
-The order is not a detail of the code. It \emph{is} the doctrine. A plan that
-is known to be wrong must not be pushed forward. A situation that is not
-understood must not be pushed forward either. A known correction is preferred
-over a generic hold, because a prepared contingency plan exists for exactly
-that case. Only a plan that still fits in a situation that is understood may
+The order is not a detail of the code. It follows the doctrine. In FwDV~100,
+every repeated situation assessment exists to check whether the orders given
+are still right, and to start a new round of planning if they are
+not~\cite[24]{fwdv100}. A plan that is known to be wrong must therefore not be
+pushed forward. A situation that is not understood must not be pushed forward
+either. Which of the first two checks comes first is the author's choice: a
+specific correction is preferred over a generic hold whenever one was written
+for the case. Only a plan that still fits in a situation that is understood may
 advance.
 
 \input{pics/wf-cycle}
@@ -216,8 +242,10 @@ situation therefore always leads to the same decision, however it was reached.
 If no phase is ready, the IC does nothing and waits for the next reply. In
 doctrinal terms, that is Kontrolle.
 
-The mission has four phases. Each phase has a \emph{Zeitansatz}, a time budget
-in simulated minutes, and a condition that must hold before it can start.
+The mission has four phases. Each phase has a time budget in simulated minutes,
+and a condition that must hold before it can start. The phases and their
+budgets are the author's design. DV~100 fixes the cycle, not the phases of a
+particular mission.
 Table~\ref{tab:wf:phases} lists them against the ten storyline steps of
 Section~\ref{sec:cs:storyline}.
 
@@ -264,8 +292,10 @@ earlier version the IC ordered the escort, waited for police and medical
 cover to confirm, and only then dispatched a bus. Nothing re-enters the cycle
 between a commit and its replies, so the two steps ran one after the other. On
 the undisrupted scenario this cost 26 simulated minutes. It pushed the IC's own
-delivery estimate past the flood it was planning against. DV~100 agrees with
-the clock here: issuing orders is one step.
+delivery estimate past the flood it was planning against. DV~100 supports the
+single order. It describes a joint order (\emph{Gesamtbefehl}) that goes to
+several recipients at the same time and gives them a common basis for
+action~\cite[38]{fwdv100}.
 
 Second, the Befehlsgebung phase has a budget of 90 minutes, not 15. The phase
 waits for every run to be confirmed, so it stays open until the last resident
@@ -275,7 +305,9 @@ as overdue and hold a healthy mission.
 
 \paragraph{The allocation is re-run, never cached.} Each time the IC plans, it
 computes the allocation again from the current Lage. It does not store a plan
-and patch it. This is the doctrine's own habit, and it has a useful effect. A
+and patch it. This matches the doctrine's cycle, in which every pass plans
+afresh from the current situation~\cite[24]{fwdv100}. It also has a useful
+effect. A
 correction from the contingency check reaches the schedule without any extra
 branch, because the next allocation simply sees the corrected Lage.
 
@@ -343,10 +375,14 @@ cannot explain the result.
 \label{sec:wf:disruptions}
 
 Three disruptions were known while the baseline was built. For each one the IC
-has a prepared branch, in doctrinal terms a contingency plan. In workflow terms
-these are \emph{anticipated exceptions}: exceptions with a handler that was
-written at build time.
-% TODO(cite: Reichert & Weber 2012; Adams et al. 2007. Not in litDB.bib.)
+has a prepared branch. The doctrinal basis is the control step: when a repeated
+situation assessment shows that the orders no longer fit, a new round of
+planning follows~\cite[24]{fwdv100}. That the answer is written in advance is a
+design choice. In workflow terms these branches are \emph{anticipated
+exceptions}: exceptions with a handler that was written at build
+time~\cite{reichert2012}. Handlers of this kind are the state
+of the art in workflow exception handling~\cite{adams2007}, so the baseline has
+them.
 
 \begin{itemize}
   \item \textbf{Road closure.} A shelter can no longer be reached. The IC drops
@@ -365,8 +401,8 @@ match again, so the branch clears itself. The IC needs no list of disruptions
 it has already handled and no revision counter. A second, genuinely new
 disruption of the same kind is still caught, because it creates a new mismatch.
 
-\paragraph{A declared deviation.} Doctrine answers a road closure by switching
-to another route. The IC cannot do that. Its command set has no routing
+\paragraph{A declared deviation.} The original design answered a road closure
+by switching to another route. The IC cannot do that. Its command set has no routing
 command, because routing belongs to the transport side and the drivers. Adding
 such a command would give the baseline a verb the agentic coordinators do not
 have, and break the parity that makes the two systems comparable. The IC
@@ -396,21 +432,24 @@ is stated here so that it is not found later.
 
 A novel disruption has no prepared branch. The baseline must not answer it by
 inventing a fresh plan, because that ability is exactly what the treatment
-condition is meant to supply. It does what a command structure bound by
-doctrine does when no standard procedure fits. It re-reads the facts, applies
-the generic rule for an unclear situation, and issues a cautious holding order.
+condition is meant to supply. Instead it re-reads the facts, reports up, and
+issues a cautious holding order. The reporting has a doctrinal basis. FwDV~100
+requires a report back when the situation no longer matches the order, and a
+question back when an intention is unclear~\cite[37]{fwdv100}. The holding
+order itself is not written in DV~100. It is the author's design choice,
+declared as such: the most cautious answer that does not require a new plan.
 
 The IC recognizes two forms of ``no procedure fits''. Both are read off the
 Lage, and neither names a particular disruption.
 \begin{itemize}
   \item \textbf{A report outside the catalogue.} The IC knows which messages
-  it can receive. This \emph{Meldungskatalog} is the declared inbound contract,
-  less the messages that the contingency branches already handle. A report of
-  any other type is unexplained.
+  it can receive. This catalogue of known reports is the declared inbound
+  contract, less the messages that the contingency branches already handle. A
+  report of any other type is unexplained.
   \item \textbf{An overdue reply.} A decision is waiting for a reply, and its
   time budget has run out without the reply arriving. This case matters as
-  much as the first. In a real incident a partner that simply goes quiet is a
-  more common failure than a strange message.
+  much as the first. A partner that simply goes quiet is as real a failure as
+  a strange message.
 \end{itemize}
 
 One holding order answers both. The IC reports to ZKD, sends a hold advisory to
@@ -420,13 +459,13 @@ waiting is the hold itself.
 % Augustinum", although Hochbahn is absorbed into the IC. Confirm what address
 % the hold-departure advisory actually goes to.
 
-\paragraph{Two declared reductions.} The fallback is simpler than the doctrine
-in two places, and both are written down. First, doctrine also names a
-precondition that can never be met as a trigger. The IC folds this into the
-overdue reply. The only thing that separates ``not yet possible'' from ``never
-possible'' is time, and deciding which case applies would already be planning.
-Second, doctrine says to halt the convoy. The IC has no command that stops a
-bus, because it does not drive. The halt is therefore sent as an advisory. That
+\paragraph{Two declared reductions.} The fallback is simpler than its own
+design record in two places, and both are written down. First, the design also
+named a precondition that can never be met as a trigger. The IC folds this into
+the overdue reply. The only thing that separates ``not yet possible'' from
+``never possible'' is time, and deciding which case applies would already be
+planning. Second, the design said to halt the convoy. The IC has no command
+that stops a bus, because it does not drive. The halt is therefore sent as an advisory. That
 the halt is advisory and not binding \emph{is} the degradation. It is not a gap
 in the program.
 
@@ -521,13 +560,16 @@ cost, which is zero.
 The baseline's limits are not weaknesses built in to make it lose. They follow
 from what pre-scripted branching is. An anticipated exception has a handler
 written at build time. An unanticipated one does not, and the process falls
-back to a generic response. A scripted process cannot write itself a new plan
-at run time, because it has no planning ability beyond its rules. In the
-language of resilience engineering, the baseline is \emph{robust} inside the
-range its authors modelled, and has nothing but a holding order outside
-it~\cite{woods2015a}.
-% TODO(cite: Reichert & Weber 2012 for anticipated vs unanticipated
-% exceptions; Buck, Trainor & Aguirre 2006 for ICS limits under novelty.)
+back to a generic response~\cite{reichert2012}. A scripted process cannot write
+itself a new plan at run time, because it has no planning ability beyond its
+rules. In the language of resilience engineering, the baseline is
+\emph{robust} inside the range its authors modelled, and has nothing but a
+holding order outside it~\cite{woods2015a}. Central command also has known
+limits of its own. Research on ICS reports that it struggles with coordination
+across organizations and with responses that emerge during an
+incident~\cite{buck2006}.
+% source for the buck2006 sentence: annotated bibliography sec.8 ("MUST-CITE,
+% ICS critique"). Check it against the paper before the final draft.
 
 One further limit is structural. Because the IC merges BIS and Hochbahn into
 one node, the link between them disappears. Four commands that only made sense

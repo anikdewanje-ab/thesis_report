@@ -171,6 +171,9 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 2026-09-24; source `05-architecture-baseline/`, ADR-0002, 0015, 0016):
 
 - The IC replaces **2** agents (BIS, Hochbahn); the other **8** are shared.
+- The Führungsvorgang has **3** stages in FwDV 100 (p. 24): Lagefeststellung,
+  Planung, Befehlsgebung. Kontrolle is part of the *repeated* Lagefeststellung,
+  not a fourth stage. Say it this way if asked.
 - **4** phases, time budgets **20 / 15 / 90 / 10** min. **3** anticipated
   branches (road closure, capacity lost, bus breakdown). **1** generic hold.
 - Citation matrix: **87** rows, **42** still `SOURCE_PENDING` (page cited on 45).
@@ -452,9 +455,12 @@ matrix. It passed every anticipated disruption and was frozen before the novel
 ones were revealed. And it won.
 
 **Q: How "doctrine-grounded" is it really?**
-A: The element mapping is complete. The page mapping is not: 42 of 87 rows still
-wait for a page reference. That limits the "doctrine-grounded in every detail"
-claim, and changes no number.
+A: The core is cited to FwDV 100 pages: the command system (p. 3), staff
+areas S1 to S6 (pp. 13-14), command levels (p. 23), the command cycle (pp. 24-25),
+report back on deviation (p. 37), joint order (p. 38). Three things are my
+declared design choices, not doctrine: the mission phases and time budgets,
+writing the disruption branches in advance, and the holding order. 42 of 87
+matrix rows still lack a page. None of this changes a number.
 
 **Q: Why does the baseline send the reserve bus out at once?**
 A: Its scheduler gives each run to the first free bus and never reads the
