@@ -207,8 +207,7 @@ Track figures here so the slides reuse the exact same images as the report.
       their fixed order, and the execution model closing the loop.
 - [ ] Main results chart (Chapter 8)
 
-From the results chapter, three figures are flagged as `TODO(figure)` in
-`inc/results.tex` and all three are slide-worthy:
+The results chapter is complete at four figures. All four are slide-worthy:
 
 - [x] **Forest plot of the 15 novel risk differences with CIs** — built,
       `pics/results-forest-rd.pdf`, Figure 10.1. The single clearest picture of
@@ -217,22 +216,36 @@ From the results chapter, three figures are flagged as `TODO(figure)` in
 - [x] **Residents delivered per run** — built,
       `pics/results-delivery-histogram.pdf`, Figure 10.2. The visual proof of
       RQ2: the loss is quantised, not gradual.
-- [ ] Mean `S` per disruption, baseline against the three full models
+- [x] **The sixteen rubric criteria** — built,
+      `pics/results-rubric-split.pdf`, Figure 10.3. The split in reading order:
+      parity 5, baseline ahead 5, baseline also at zero 4, unplaced 2. Use it
+      whenever someone rounds the result to "decision-quality parity".
+- [x] **Plan revisions against delivery** — built,
+      `pics/results-commitment-scatter.pdf`, Figure 10.4. All 150 runs, not the
+      five band means. Shows that the revision floor sits on full delivery
+      while the six-or-more band spreads over the whole range.
+- [x] ~~Mean `S` per disruption~~ — **considered and dropped.** It restates
+      Table 10.4 and duplicates Figure 10.1. If an examiner wants the headline
+      as bars, show Figure 10.1 instead.
 
-From the method chapter, both built as TikZ:
+From the method and critique chapters:
 
 - [x] **The three gates** (`pics/method-gates.tex`, `fig:eval:gates`). Slide 11.
 - [x] **The level ladder** (`pics/method-ladder.tex`, `fig:eval:ladder`). Slide 12
       or a backup slide.
-- [ ] The 16-criteria rubric split, drawn as three bands
 - [x] **Null-policy regret, helped / neutral / harmed** — built,
       `pics/critique-regret.pdf`, `fig:crit:regret`, via
       `python data/scripts/plot_regret.py`. Slide 14c. Pair it with the Gate 0
       table (`tab:crit:gate0`), which is a table on purpose.
-- [ ] Plan revisions against full-delivery rate (90% down to 32%)
 
-Both built figures are regenerated with `python data/scripts/plot_*.py` and use
-one shared style, so anything added later will match them on the slides.
+Every plotted figure regenerates with `python data/scripts/plot_*.py` and shares
+one style, so the slides can reuse the exact files in the report. All of them
+are byte-reproducible, so re-running a script is a no-op in git.
+
+**One caveat for the commitment scatter.** It is the only figure that needs the
+Postgres container, because per-run plan revisions are not in `thesis-pack/`.
+It falls back to `data/commitment_per_run.csv` when the container is down, so
+it still rebuilds on a machine without Docker.
 
 ---
 
@@ -356,6 +369,20 @@ A: Because the scenario design explains why the baseline could not lose, not
 why the agents did. A system that damages a working plan on news it should
 have absorbed has a defect. 68 of 150 runs did exactly that.
 
+**Q: So does the baseline win because it ignores the disruption?**
+A: No, on two counts. It does not ignore it: it issues the holding order, three
+status updates and a `wait_for_reply`. And ignoring is not what produced the
+score. The disruptions never changed the world, so responding and not
+responding scored the same, which is why the baseline's regret is exactly zero
+in all 50 runs. If ignoring were doing the work, the null policy would beat the
+baseline; it ties it.
+
+> **Do not say "the baseline wins by ignoring the disruption."** It invites
+> either "then your baseline is a strawman" or "then you have shown ignoring is
+> optimal", and it contradicts Gate 0, which puts the failure in the scenario
+> rather than in either controller. Say the baseline wins on survival in every
+> disruption tested, and that the win is invariance rather than recovery.
+
 **Q: How do you know it's commitment and not something else?**
 A: Six alternatives were tested and ruled out (`tab:crit:ruledout`): wrong
 population, message layer, too few dispatches, scorer dedup, driver
@@ -473,6 +500,13 @@ A: No. Every disruption was a message that did not change the world, so
 ignoring it still delivered everyone. The baseline's 1.000 is the null policy's
 score. The fallback's quality was never tested, in either direction.
 
+**Q: Does the holding order stop the buses?**
+A: No. The IC has no command that stops a bus. The hold-departure advisory goes
+to the Hochbahn mailbox, which in the baseline is the IC's own, so it reaches
+no driver. The hold stops the IC from issuing new orders; buses already on the
+road keep going. On these scenarios it never mattered, because no novel
+disruption changed the world.
+
 **Q: Why an execution model? Wasn't the scenario enough?**
 A: The old scenario files carried the outcome, so a commander that sent
 everyone to a closed shelter still scored full marks. The execution model makes
@@ -546,3 +580,6 @@ Words that must **not** be spoken, because the data contradict them:
   proposal's expectation and it is the opposite of the result.
 - the baseline "adapted", "recovered" or "replanned better". It was not
   disturbed. Its score is the null policy's score.
+- the baseline "wins because it ignores the disruption". It does respond, and
+  the response is what scores zero regret, not the ignoring. Say the win is
+  invariance rather than recovery.
