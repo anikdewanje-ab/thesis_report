@@ -621,13 +621,28 @@ reports to the authority and holds the residents at the home. That order does
 not reach a bus that is already on the road, so bus-1 set down where the
 original plan had sent it.
 
-The agentic models did ask for medical support, though seldom. Over the twenty
-runs from qwen3.5 and glm-5.2, three issued a medical order. Two of the three
-sent it to the shelter the bus was bound for, and those two scored the
-criterion. The third sent it to the Augustinum, the address the bus had already
-left. Sixteen runs issued no medical order. One could not be judged, because no
-leg of bus-1 was in flight when the report arrived. Across the same twenty
-runs, three did not deliver every resident.
+The agentic models read the report correctly. Across all twenty runs from
+qwen3.5 and glm-5.2 the event log holds between 16 and 43 reasoning entries per
+run that name the emergency, the resident's respiratory distress or the medical
+service. One glm-5.2 run sets out the right action and then does not take it.
+Its reasoning records that the medical team had been staged at the pickup point
+while the emergency was on the moving bus, and it concludes \enquote{I must
+immediately alert DRK to intercept bus-1 or proceed to the SC1 dropoff point}.
+The run then committed a status update to the medical service and to the
+authority. The scorer finds no \code{request_medical} in it.
+
+Three of the twenty runs issued a medical order. Two sent it to the shelter the
+bus was bound for, and those two scored the criterion. The third sent it to the
+Augustinum, the address the bus had already left. Sixteen issued no medical
+order. One could not be judged, because no leg of bus-1 was in flight when the
+report arrived. Across the same twenty runs, three did not deliver every
+resident.
+
+The criterion therefore measures execution rather than comprehension. The
+agents saw what the report meant and named the action it called for, and in
+sixteen of the twenty runs no medical order left the agent at all.
+This is the commitment gap of Section~\ref{sec:res:loss:quantised}, visible in
+a single decision instead of in a delivery count.
 
 \textbf{Decision quality is split, not at parity.} Over the sixteen criteria
 the agentic models match the baseline on five and fall short on five. Parity
