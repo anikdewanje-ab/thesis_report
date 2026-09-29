@@ -254,7 +254,7 @@ Disruption & qwen3.5 & glm-5.2 & deepseek \\
 \caption[Novel-arm risk differences]{The 15 novel-arm risk differences with
 their bootstrap confidence intervals. A superiority result would need the whole
 interval to sit inside the shaded region. None does, and no point estimate is
-positive. Table~\ref{tab:res:rd} gives the same values exactly. Drawn from
+positive. Table~\ref{tab:res:rd} gives the same values. Drawn from
 \texttt{data/novel\_risk\_differences.csv}.}
 \label{fig:res:forest}
 \end{figure}
@@ -300,7 +300,7 @@ No cell is positive. Every novel row reads \code{below_delta_m} with
 dominance assigned to the baseline, so neither of the two conditions holds
 anywhere. The best the agentic system manages is parity of median level on four
 of the five disruptions, and it reaches that parity while still losing
-residents. That is exactly why Gate~1 fails where the median level does not.
+residents. That is why Gate~1 fails where the median level does not.
 
 \subsection{The Registered H2 Primary}
 \label{sec:res:novel:prereg}
@@ -613,6 +613,22 @@ too. They cannot be reported as agentic failures. On
 \code{shelter_set_down_within_beds} the agentic side actually beats the
 baseline, at 2 and 2 against 0.
 
+The zero on \code{medic_sent_to_the_bus_destination} covers two different
+behaviours. On \code{medical_emergency_in_flight} the baseline never asked for
+medical support. The scorer records no \code{request_medical} in any of its ten
+runs. Its answer was the holding order of Section~\ref{sec:wf:fallback}, which
+reports to the authority and holds the residents at the home. That order does
+not reach a bus that is already on the road, so bus-1 set down where the
+original plan had sent it.
+
+The agentic models did ask for medical support, though seldom. Over the twenty
+runs from qwen3.5 and glm-5.2, three issued a medical order. Two of the three
+sent it to the shelter the bus was bound for, and those two scored the
+criterion. The third sent it to the Augustinum, the address the bus had already
+left. Sixteen runs issued no medical order. One could not be judged, because no
+leg of bus-1 was in flight when the report arrived. Across the same twenty
+runs, three did not deliver every resident.
+
 \textbf{Decision quality is split, not at parity.} Over the sixteen criteria
 the agentic models match the baseline on five and fall short on five. Parity
 holds on the criteria about deciding, and fails on the criteria about closing
@@ -630,7 +646,7 @@ per-cell means sit between 815 seconds, for deepseek on
 \code{unverified_persons_report}, and 2\,528 seconds, for glm-5.2 on
 \code{bus1_suspension_capacity_reduction}.
 
-Bus kilometres are comparable only within a system, not between the two,
+Bus kilometres are comparable within a system but not between the two,
 because the systems compose the total differently. The baseline drove 60.63
 bus-km on every novel scenario, and the same 60.63 undisrupted. That single
 fact is one of the reasons Chapter~\ref{ch:critique} exists.
@@ -862,7 +878,7 @@ with the position taken on each, in Chapter~\ref{ch:critique}.
   pending.
 \item \textbf{Reserve-bus confound.} The baseline parallelises the reserve bus
   while the agentic side honours the reserve role and serialises it. This
-  drives part of the gap. It is architectural, not a model effect.
+  drives part of the gap. It is architectural rather than a model effect.
 \item \textbf{One run flagged for possible straight-line routing},
   \texttt{aaae313d}, during a routing-service quota outage.
 \item \textbf{Equity is undefined by declaration.} The resident population is
