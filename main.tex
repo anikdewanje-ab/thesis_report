@@ -38,7 +38,19 @@
 \usepackage[breaklinks,colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
 
 % --- Bibliography (biblatex, bibtex backend so Tectonic runs it) ---
-\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,maxbibnames=99,giveninits=true]{biblatex}
+% Alphabetic labels ([BHG87]) as in the TU Ilmenau template. DOI, ISBN and
+% arXiv fields are not printed. A URL and its visited date are printed only
+% for web material the reader could not otherwise find: never for a journal
+% article, never for anything that has a DOI, and never a visited date with no
+% URL to visit.
+\usepackage[backend=bibtex,style=alphabetic,maxbibnames=99,giveninits=true,
+            doi=false,isbn=false,eprint=false]{biblatex}
+\newcommand{\dropurl}{%
+  \clearfield{url}%
+  \clearfield{urlyear}\clearfield{urlmonth}\clearfield{urlday}}
+\AtEveryBibitem{%
+  \ifentrytype{article}{\dropurl}{\iffieldundef{doi}{}{\dropurl}}%
+  \iffieldundef{url}{\dropurl}{}}
 \addbibresource{bibs/litDB.bib}
 
 \usepackage{cleveref}

@@ -14,6 +14,16 @@ Home Evacuation Coordination in Storm Surge Scenarios".
   are fine.
 - Write in a consistent voice across chapters. Prefer present tense for
   describing the system, past tense for describing what was done in evaluation.
+- **Always write as "we".** Never "the author", never "I". For example: "We
+  chose a holding order because…", not "It is the author's design choice".
+- **No status notes anywhere in the report.** The thesis states what the work
+  is and what it claims. It never says what is unfinished, pending or still
+  open in the project, or how a document evolved. Examples to never write:
+  "what is not finished", "none requires further work before submission",
+  "it is now emitted", "never formally signed off", "stated here so it is not
+  found later", "the bug went unnoticed". Keep the content itself (a
+  limitation, or a methodological disclosure with its amendment number) and
+  drop the meta-commentary. Tell the author about open items in chat instead.
 
 ## Ground truth
 
@@ -181,6 +191,23 @@ not a limit.
 - Draft one chapter or one section per session to keep focus.
 - The author verifies every empirical claim and citation. Flag anything uncertain.
 - Suggest figures as you draft, per the section above. Do not wait to be asked.
+- **After writing or revising any chapter, always check that it does not read
+  as AI-written, and fix it before reporting back.** Reread the chapter for
+  these patterns:
+  1. The "X, not Y" contrast used again and again ("one order, not two
+     phases", "by a test, not by review"). Keep it only where the contrast is
+     the point.
+  2. Punchline endings: a short verdict sentence closing a paragraph for
+     effect ("It is not a gap in the program."), and a colon followed by a neat
+     summary ("declared as such: the most cautious answer…").
+  3. Italics on single words for emphasis ("the halt *is* the degradation").
+  4. The same safe label repeated ("declared", "design choice") instead of
+     varied, natural wording.
+  5. Signposting sentences that announce a point instead of making it ("Two
+     design choices that look odd but are correct.").
+  6. Filler intensifiers: "exactly", "genuinely", "simply", "crucially".
+  Keep every fact, number and citation unchanged; only the phrasing moves. In
+  the reply, say briefly what was changed.
 - After drafting a chapter, update `thesis_doc/defence-prep.md`: add the
   chapter's one key message, any figure worth showing on a slide, numbers worth
   quoting, and any examiner question the chapter invites. Keep it current as we

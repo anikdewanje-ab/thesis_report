@@ -739,12 +739,12 @@ nearly empty. The raw level counts are therefore always printed beside the
 verdict.
 
 \paragraph{Confidence intervals and the paired check.} Every risk difference
-carries a percentile bootstrap interval. The paired differences are resampled
+carries a percentile bootstrap interval \parencite{efron1979}. The paired differences are resampled
 with replacement 10\,000 times at a fixed seed (20260904), and the 2.5th and
 97.5th percentiles of the resampled means form the 95\,\% interval. An empty
 sample gets no interval rather than a meaningless $(0,0)$. A Wilcoxon
-signed-rank test on the same differences is reported beside it as an
-assumption-light check. Zero differences are dropped, as Wilcoxon's rule
+signed-rank test \parencite{wilcoxon1945} on the same differences is
+reported beside it as an assumption-light check. Zero differences are dropped, as Wilcoxon's rule
 requires, but they are \emph{counted}, because a set of pairs that is mostly
 exact ties is a result about the systems. The test is exact for up to 20
 non-zero differences without ties, and uses a normal approximation with tie
@@ -777,9 +777,9 @@ that is a failure, not a double success.
 
 \paragraph{The registered H2 primary, implemented late.} The pre-registration
 also named a primary test for H2: the probability that an agentic run reaches
-at least the baseline's level, with an exact Clopper--Pearson interval over the
-$k$ runs, combined across scenarios by a sign test and corrected with
-Holm--Bonferroni within each arm. None of the three was implemented when the H2
+at least the baseline's level, with an exact Clopper--Pearson interval
+\parencite{clopper1934} over the $k$ runs, combined across scenarios by a sign test and corrected with
+Holm--Bonferroni \parencite{holm1979} within each arm. None of the three was implemented when the H2
 verdict was first written. All three were implemented afterwards and agree with
 the verdict (Amendment~15). Because they were coded after the data were seen,
 that analysis is exploratory. Section~\ref{sec:crit:power} discusses a second
