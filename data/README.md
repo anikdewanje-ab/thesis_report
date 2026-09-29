@@ -35,6 +35,30 @@ includes the PDF.
 | --- | --- | --- | --- |
 | `plot_forest_rd.py` | `pics/results-forest-rd.pdf` | `novel_risk_differences.csv` | `summary.md` reporting template, checked against `RESULTS.md` §2 |
 | `plot_delivery_histogram.py` | `pics/results-delivery-histogram.pdf` | `delivery_distribution.csv` | `scores.jsonl`, field `sheltered_residents` |
+| `plot_rubric_split.py` | `pics/results-rubric-split.pdf` | `rubric_split.csv` | `RESULTS.md` §4, parsed |
+| `plot_commitment_scatter.py` | `pics/results-commitment-scatter.pdf` | `commitment_per_run.csv` | `scores.jsonl` **plus the event log**, see below |
+
+### The one script that needs the database
+
+`plot_commitment_scatter.py` is the exception to "everything comes from the
+pack". Per-run plan revisions are not in `thesis-pack/`: `v2.json` carries only
+the five aggregate bands. They are counted from the event log in the running
+Postgres container, using the rule in `evaluation/v2/thresholds_v2.py`
+(`PLAN_REVISION_MESSAGE_TYPES`) of the RescueSim repository.
+
+Start the container first, from the RescueSim repo:
+
+```sh
+docker compose up -d
+```
+
+The script then writes `commitment_per_run.csv` and plots from it. Later
+rebuilds fall back to that CSV automatically and print that they did, so the
+figure stays reproducible once the container is gone.
+
+It refuses to plot unless banding the result reproduces the published counts
+(61 / 22 / 15 / 11 / 41), which is how a silent change in the event log or in
+the counting rule gets caught.
 | `plot_regret.py` | `pics/critique-regret.pdf` | `null_policy_regret.csv` | `v2.json`, key `regret` (exploratory, Protocol v2) |
 
 `scripts/thesis_style.py` holds the shared look: Times serif at 9 pt, the

@@ -140,8 +140,10 @@ supervisor, held out from development, and revealed on evaluation day. The
 baseline has no written branch for any of them. Hypothesis H2 predicted that
 the agentic system would win here.
 
-% TODO(figure): mean S per disruption, baseline against the three full models.
-% Source: thesis-pack/00-start-here/RESULTS.md sec. 2. Grouped bar chart.
+% A grouped bar chart of mean S per disruption was considered here and dropped.
+% It restates Table~\ref{tab:res:noveldisruption}, whose five rows already read
+% at a glance, and Figure~\ref{fig:res:forest} carries the same comparison with
+% its intervals. Do not re-propose it.
 
 \subsection{Survival}
 \label{sec:res:novel:survival}
@@ -546,8 +548,18 @@ or \texttt{unanswerable}.
 Table~\ref{tab:res:rubric} gives all five novel disruptions and all sixteen
 criteria.
 
-% TODO(figure): the 16-criteria split drawn as three bands (parity on 5,
-% baseline wins 5, scenario-indicting 3). Source: RESULTS.md sec. 4.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{pics/results-rubric-split.pdf}
+\caption[The sixteen rubric criteria]{The sixteen rubric criteria, grouped by
+how the two sides compare. The tick marks the baseline. Parity holds where the
+agentic markers sit on it, and the baseline's lead is the distance to the left
+of it. The bottom group of four is where the baseline itself scores zero. The
+last two are the criteria the source leaves unplaced, drawn apart rather than
+pushed into a group. Table~\ref{tab:res:rubric} gives the counts. Drawn from
+\texttt{data/rubric\_split.csv}.}
+\label{fig:res:rubric}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -588,6 +600,7 @@ Criterion & baseline & qwen3.5 & glm-5.2 & deepseek \\
 \end{table}
 
 Read across all sixteen criteria, the rubric splits three ways.
+Figure~\ref{fig:res:rubric} puts them in that order.
 
 \begin{sloppypar}
 \textbf{Parity on five criteria.} These are \code{authority_informed} on both
@@ -708,8 +721,17 @@ purpose.
 The diagnostic that turned out to matter is the number of plan revisions.
 Table~\ref{tab:res:commitment} bands the 150 agentic novel runs by it.
 
-% TODO(figure): plan revisions against full-delivery rate, 90 % down to 32 %.
-% Source: EVALUATION_PROTOCOL_V2.md sec. 11.4.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{pics/results-commitment-scatter.pdf}
+\caption[Plan revisions against delivery]{Plan revisions against delivery, one
+point per agentic novel run, spread sideways within each band so that runs at
+the same count stay visible. The percentage above each band is the share of its
+runs that delivered all 100 residents, and \texttt{n} is how many runs the band
+holds. Table~\ref{tab:res:commitment} gives the band means. Drawn from
+\texttt{data/commitment\_per\_run.csv}.}
+\label{fig:res:commitment}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -736,6 +758,13 @@ revisions with $S$ is $r = -0.408$, which is the strongest non-definitional
 predictor in the data. Aborts correlate at $r = -0.306$. The number of missions
 dispatched correlates at only $r = -0.070$, so it is not how many missions were
 ordered but how many times the plan was rewritten.
+
+Figure~\ref{fig:res:commitment} shows the runs behind those five rows, and the
+bands turn out to be shaped differently. At the revision floor the runs sit
+almost entirely on full delivery, with a handful at 50. From six revisions up
+they spread over the whole range, including the two runs that delivered nobody.
+The losses stay on the same few values in every band, which is the quantisation
+of Figure~\ref{fig:res:delivery} seen a second way.
 
 The causal direction is not established, and this chapter does not claim it. Of
 108 aborts, 52.8\% are explicit post-failure stand-downs and only 13.0\% are

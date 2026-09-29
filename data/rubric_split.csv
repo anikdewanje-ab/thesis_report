@@ -1,0 +1,17 @@
+group,disruption,criterion,baseline,qwen3.5,glm-5.2,deepseek-v4-pro
+parity,bus1_suspension,reserve_committed,10,10,10,9
+parity,bus1_suspension,whole_population_planned,10,10,10,6
+parity,conflicting_orders,authority_informed,10,10,9,10
+parity,medical_emergency,authority_informed,10,10,10,10
+parity,unverified_persons,stood_down_after_retraction,10,10,10,8
+baseline,conflicting_orders,full_evacuation_kept,10,9,10,5
+baseline,conflicting_orders,facility_answered_in_time,10,0,0,0
+baseline,medical_emergency,in_flight_leg_lands_where_ordered,10,8,6,6
+baseline,unverified_persons,facility_runs_untouched,10,7,8,5
+baseline,sc1_capacity_loss,no_order_raises_shelter_above_beds,10,5,9,8
+zero,bus1_suspension,bus_load_within_cap,0,0,3,2
+zero,medical_emergency,medic_sent_to_the_bus_destination,0,1,1,0
+zero,sc1_capacity_loss,shelter_set_down_within_beds,0,2,2,0
+zero,sc1_capacity_loss,everyone_bedded_at_the_reduced_capacity,0,0,0,0
+unclassified,unverified_persons,verification_requested,10,9,10,10
+unclassified,unverified_persons,reserve_committed_in_time,10,9,10,9
