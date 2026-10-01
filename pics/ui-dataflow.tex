@@ -1,0 +1,71 @@
+% Data flow between the agents, the database, the UI backend and the browser.
+% Source: thesis-pack/07-observation-ui/ui-README.md ("How data moves",
+% "Animation Pipeline", "HTTP Endpoints"). Input from inc/ui.tex,
+% Section "Backend".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  wide/.style={draw, rounded corners=2pt, text width=12.4cm,
+    minimum height=0.9cm, align=center, font=\footnotesize},
+  tab/.style={draw, rounded corners=2pt, fill=orange!8, text width=2.75cm,
+    minimum height=0.7cm, align=center, font=\footnotesize},
+  be/.style={draw, rounded corners=2pt, fill=gray!10, text width=2.75cm,
+    minimum height=0.9cm, align=center, font=\footnotesize},
+  box/.style={draw, dashed, rounded corners=3pt, inner sep=5pt},
+  wr/.style={-{Stealth[length=1.8mm]}, thick, gray!70!black},
+  lbl/.style={font=\scriptsize, align=left, text=gray!30!black},
+  title/.style={font=\scriptsize\bfseries, anchor=south west},
+]
+  % --- agents, top -------------------------------------------------------
+  \node[wide, fill=blue!6] (ag) at (5.1,0) {%
+    \textbf{Ten agent programs}\\
+    {\scriptsize each saves its own state, reads its mail and its world reports}};
+
+  % --- database tables ----------------------------------------------------
+  \node[tab] (st) at (0,-2.4)   {\texttt{states}};
+  \node[tab] (ms) at (3.4,-2.4) {\texttt{messages}};
+  \node[tab] (we) at (6.8,-2.4) {\texttt{world\_events}};
+  \node[tab] (ts) at (10.2,-2.4){\texttt{tick\_sidecars}};
+  \node[box, fit=(st)(ts)] (db) {};
+  \node[title] at (db.north west) {PostgreSQL};
+
+  % --- UI backend ------------------------------------------------------------
+  \node[be] (wa) at (0,-4.9)   {ten watchers\\{\scriptsize diff, send changes}};
+  \node[be] (di) at (3.4,-4.9) {scenario\\dispatcher};
+  \node[be] (ac) at (6.8,-4.9) {acknowledgement\\endpoint};
+  \node[be] (ti) at (10.2,-4.9){tick record\\endpoint};
+  \node[box, fit=(wa)(ti)] (bk) {};
+  \node[title] at (bk.north west) {UI backend};
+
+  % --- browser, bottom --------------------------------------------------------
+  \node[wide, fill=green!6] (br) at (5.1,-7.4) {%
+    \textbf{Browser}\\
+    {\scriptsize map with vehicle animations, agent panel, tick drawer}};
+
+  % --- column 1: state out ------------------------------------------------------
+  \draw[wr] (ag.south -| st) -- node[lbl, right] {save,\\then NOTIFY} (st.north);
+  \draw[wr] (st.south) -- node[lbl, right] {wake,\\read} (wa.north);
+  \draw[wr] (wa.south) -- node[lbl, right] {WebSocket:\\snapshots, changes,\\routed commands} (br.north -| wa);
+
+  % --- column 2: scenario in -------------------------------------------------------
+  \draw[wr] (di.north) -- node[lbl, right] {scenario\\events} (ms.south);
+  \draw[wr] (ms.north) -- node[lbl, right] {NOTIFY,\\wake} (ag.south -| ms);
+
+  % --- column 3: acknowledgements back ---------------------------------------------
+  \draw[wr] (br.north -| ac) -- node[lbl, right] {\texttt{task\_complete},\\real position} (ac.south);
+  \draw[wr] (ac.north) -- node[lbl, right] {append} (we.south);
+  \draw[wr] (we.north) -- node[lbl, right] {NOTIFY,\\close leg} (ag.south -| we);
+
+  % --- column 4: prompt records ------------------------------------------------------
+  \draw[wr] (ag.south -| ts) -- node[lbl, right] {prompt and\\answer} (ts.north);
+  \draw[wr] (ts.south) -- (ti.north);
+  \draw[wr] (ti.south) -- node[lbl, right] {on demand,\\over HTTP} (br.north -| ti);
+\end{tikzpicture}
+\caption{How data moves through the observation interface. Each column is one
+path. State goes out from the agents to the browser. Scenario events go into
+the agents' mailboxes. Acknowledgements come back from the browser's animations
+and become the agents' world reports. Prompt records are fetched only when a
+tick is opened. Every path passes through the database, and the interface never
+writes an agent's state.}
+\label{fig:ui:dataflow}
+\end{figure}

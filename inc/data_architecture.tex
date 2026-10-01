@@ -1,60 +1,445 @@
 \chapter{Data Architecture}
 \label{ch:data}
 
-% Answers RQ sub-questions 1 (data modeling) and 3 (persistent runtime structures
-% for control AND evaluation). Contribution 2 lives in this chapter.
+% Sources: thesis-pack/06-data-layer/DATABASE_IMPLEMENTATION.md (sec.3 schema,
+% sec.4 phases 3-5, sec.6 guardrails), adr/0003, adr/0005,
+% 04-architecture-agentic/agentic-core-README.md sec.13-14,
+% 10-instrument/evaluation-README.md. Written as built: PostgreSQL only.
+% Identifiers: table names and event kinds only, no code names.
 
-% OPEN QUESTION before drafting: the target design is PostgreSQL with
-% LISTEN/NOTIFY; the current runtime is file-backed JSON (.<agent>/state.json,
-% .<agent>/world_events.jsonl) and shared/models/ is empty. Decide whether this
-% chapter is written as-built, as-designed, or as both with a migration section.
-% See thesis_doc/notes/README.md.
+Chapter~\ref{ch:agentic} showed that the ten agents never talk to each other
+directly and that every message, state change and decision passes through one
+PostgreSQL database (Figure~\ref{fig:ag:architecture}). In this chapter we
+describe that database. We show how it stores the actors, their states, the
+events between them and the resources they use. We also show how the same
+structures serve two purposes at once: they run the simulation, and they are
+the record that the evaluation scores.
 
+% =====================================================================
 \section{Design Principles}
 \label{sec:data:principles}
-% Single source of truth, shared by workflow baseline and agentic system.
-% Why "centric" and not "supported": the DB is the truth store, the message
-% broker, AND the scoring backbone. See CONTEXT.md, "Database-Centric".
+% Source: ADR-0003 (Decision, Explicitly NOT claimed), ADR-0005 (Decision,
+% Consequences).
 
-\section{Conceptual Model}
+The database has three jobs in the system.
+\begin{enumerate}
+  \item It is the \textbf{state store}. The current state of every agent lives
+  in the database and nowhere else. An agent that restarts reads its state back
+  from there.
+  \item It is the \textbf{message broker}. A message from one agent to another
+  is a row in a table. The database tells the recipient that the row has
+  arrived.
+  \item It is the \textbf{scoring backbone}. Every agent, and the workflow
+  baseline as well, writes what it received and what it decided into one
+  append-only log. The evaluation computes every score from that log and from
+  nothing else.
+\end{enumerate}
+This is what we mean by \emph{database-centric}. The database is the single
+source of truth, and all three jobs read and write the same store. There is no
+second copy of any state in a file or in memory that could drift away from it.
+
+We keep one limit clear from the start. Using a shared store to coordinate
+independent programs is an old idea. Blackboard systems \parencite{nii1986}
+and tuple spaces \parencite{gelernter1985} did so decades before this work
+(Section~\ref{sec:bg:dbcentric}).
+We therefore do not claim a shared database as a new way for agents to
+coordinate. What we do claim concerns evaluation. One append-only log is shared
+by both systems under test and by the scoring code. This makes the comparison
+fair, checkable and repeatable. Section~\ref{sec:data:evalbackbone} makes this
+argument in full. The log follows the idea of event sourcing, where the history
+of events is stored and every later view is derived from it
+\parencite{overeem2021}.
+
+A single source of truth has a clear cost. If the database is down, the whole
+simulation is down, because no agent can load its state or receive a message.
+We accept this. Before the runtime starts the ten agent programs, it checks
+that the database answers, and it refuses to start if it does not.
+
+% =====================================================================
+\section{Data Model}
 \label{sec:data:conceptual}
-% Actors, states, events, dependencies, resources, scenarios.
-% Human-organizational agents are actors; vehicles are passive fleet rows.
+% Source: DATABASE_IMPLEMENTATION.md sec.3 (12 tables as built).
 
-\section{Relational Schema}
+The model has four kinds of thing: actors, their states, the events between
+them, and the physical resources they use. The ten agents are the actors.
+Vehicles are not actors. A bus, the patrol car and the ambulance are rows in a
+fleet table that a person drives (Section~\ref{sec:ag:overview}). Scenarios are
+not stored in the database. They are files that a dispatcher reads and turns
+into messages at the right simulated time.
+
+The database holds twelve tables. We group them by the job they do
+(Table~\ref{tab:data:tables} and Figure~\ref{fig:data:tables}).
+
+\begin{description}
+  \item[Runtime tables.] Five tables keep the simulation running: the agent
+  states, the mailboxes, the world reports, the prompt records and the timers.
+  They are cleared between two runs.
+  \item[The audit table.] The event log is the only table that is never
+  changed or cleared. It holds the history of every run.
+  \item[Sensing tables.] Six small tables hold the facts that some agents
+  perceive rather than hear about in a message. Examples are an active flood
+  alert, the remaining beds of a shelter, a road closure and the status of each
+  vehicle. The sensing step of BIS, Hochbahn, the police officer and the
+  paramedic reads them.
+\end{description}
+
+\input{pics/data-tables}
+
+\subsection{Tables}
 \label{sec:data:schema}
-% TODO: ER diagram + key tables. DDL in Appendix~\ref{app:ddl}.
 
+\begin{table}[htbp]
+\centering
+\caption{The twelve tables, grouped by job.}
+\label{tab:data:tables}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.7cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+Table & What one row holds & Life cycle \\
+\midrule
+\multicolumn{3}{l}{\emph{Runtime}} \\
+\texttt{states} & The full state of one agent, as one document & Overwritten on every save \\
+\texttt{messages} & One message: sender, recipient, type, body, and the times it arrived and was read & Marked as read, never deleted during a run \\
+\texttt{world\_events} & One report from the world that an action has finished or a vehicle has stopped & Marked as read \\
+\texttt{tick\_sidecars} & The full prompt and the full answer of one model call & Written before and after the call \\
+\texttt{cronjobs} & One timer an agent has set & Record only \\
+\midrule
+\multicolumn{3}{l}{\emph{Audit}} \\
+\texttt{event\_log} & One thing an agent received or decided & Append-only, never cleared \\
+\midrule
+\multicolumn{3}{l}{\emph{Sensing}} \\
+\texttt{flood\_alert} & An alert for a facility, with the number of people to evacuate & Read by sensing \\
+\texttt{weather\_alert} & A weather warning & Read by sensing \\
+\texttt{shelter\_capacity} & The remaining beds of one shelter & Read by sensing \\
+\texttt{fleet} & One vehicle: its driver, type, status, mission, position and arrival time & Read by sensing \\
+\texttt{road\_closure} & A closed road & Read by sensing \\
+\texttt{medical\_incident} & A medical incident and whether it is resolved & Read by sensing \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{One document per agent.} The \texttt{states} table has one row per
+agent. The row holds the agent's whole state as one JSON document: its inbox,
+its current step, its remaining plan, its history of finished steps, its view
+of the fleet and its outgoing messages. Every save replaces the whole row. The
+row also carries the run identifier and the model name, so that a state can
+always be tied to the run and the model that produced it.
+
+We did not split this document into separate tables. The runtime always loads
+and saves an agent's state as a whole, so it gains nothing from a finer
+structure. The evaluation does not read this document either. It reads the
+event log (Section~\ref{sec:data:eventlog}), which records every change to the
+step and the plan as it happens. A normalised state would add joins and
+migration work without serving a single measurement.
+
+\paragraph{One fleet table for three kinds of vehicle.} The \texttt{fleet}
+table carries both a bus number and a vehicle number. Hochbahn's sensing looks
+up buses by the first, and the police officer and the paramedic look up their
+cars by the second. One table serves all three readers.
+
+% =====================================================================
 \section{Append-Only Event Log}
 \label{sec:data:eventlog}
-% TODO: Event schema, ordering, append-only guarantee, replay semantics.
+% Source: agentic-core-README.md sec.14 (envelope, kinds, KPI fields);
+% DATABASE_IMPLEMENTATION.md sec.3 (unique key, trigger, pk ordering) and
+% Phase 3 (reset excludes event_log); evaluation-README.md (manifest rows).
 
+The event log is the record of what happened in a run. Every agent writes to
+it, and no one may change what has been written.
+
+\paragraph{The row.} Each row has the same seven fields:
+\begin{itemize}
+  \item an \textbf{identifier} that counts up within one agent's log
+  (\texttt{evt-0}, \texttt{evt-1}, and so on);
+  \item the \textbf{wall-clock time} and the \textbf{simulated time} of the
+  entry;
+  \item a \textbf{kind} and a \textbf{subkind}, which say what sort of entry it
+  is;
+  \item a one-line \textbf{summary} for a human reader;
+  \item a \textbf{details} document with everything else.
+\end{itemize}
+Three more columns place the row: the \textbf{run}, the \textbf{agent} and the
+\textbf{model}. With them, one table holds every run of every agent, and any
+single run or agent can be selected from it.
+
+\paragraph{The kinds of entry.} Five kinds cover everything the systems write.
+\begin{description}
+  \item[\texttt{event\_received}] An event woke the agent: a message, a
+  finished step or a timing conflict. The details hold the event as it arrived.
+  \item[\texttt{llm\_response}] The agent made a decision with its model. The
+  details hold the reasoning, the committed step, the remaining plan, the
+  outgoing messages, the token counts and the latency. A dispatch by the clock
+  that needs no model uses the same kind, with the subkind \texttt{cron\_fire}
+  and zero tokens.
+  \item[\texttt{world\_ack}] The world confirmed that an action had finished.
+  The details hold the vehicle and its real position.
+  \item[\texttt{decision}] The workflow baseline made a decision. This is the
+  baseline's counterpart to \texttt{llm\_response}
+  (Section~\ref{sec:data:evalbackbone}).
+  \item[\texttt{run\_manifest}, \texttt{run\_outcome}] The evaluation harness
+  recorded how a run was set up and how it ended
+  (Section~\ref{sec:data:replay}).
+\end{description}
+
+\paragraph{Measurement fields.} Every decision row carries the same five
+fields for the evaluation, whether or not anything went wrong. They are the
+list of rule violations the answer tried, their count, a fingerprint of what
+the model saw, the retry count and a failure code. Because the fields are
+always present, a zero means that we measured zero. It does not mean that the
+value is missing. The fingerprint is a hash over the agent's observable
+situation, taken before the model call. It lets the evaluation see whether two
+decisions were made from the same observation (Section~\ref{sec:ag:engine}).
+
+\paragraph{Three guarantees.} The database, not a convention in the code,
+enforces how the log behaves.
+\begin{enumerate}
+  \item \textbf{Append-only.} A trigger rejects every update and every delete
+  on the table. Once a row is written, it stays as it is. A run cannot be
+  quietly edited or removed after the fact.
+  \item \textbf{Written once.} The run, the agent and the row identifier
+  together form a unique key. An agent saves its whole in-memory log each time
+  it saves its state, and rows that are already stored are skipped. Saving
+  twice therefore never creates a duplicate.
+  \item \textbf{Read in order.} Each row also gets a sequence number when it is
+  inserted, and the log is read back in that order. Sorting by the identifier
+  would put \texttt{evt-10} before \texttt{evt-2}.
+\end{enumerate}
+
+Between two runs, the runtime clears the runtime tables so that no agent
+starts with the state or the unread mail of the run before. The event log is
+left out of this reset on purpose. It is divided by run, so old runs do not
+disturb a new one, and the trigger would reject the delete in any case.
+
+% =====================================================================
 \section{The Event Log as Evaluation Backbone}
 \label{sec:data:evalbackbone}
-% CONTRIBUTION 2. The methodological claim: one shared append-only log used by
-% BOTH systems-under-test AND the scoring harness is what makes the comparison
-% fair, auditable, deterministically scored, and replayable.
-% State plainly what is NOT claimed: a shared DB as novel coordination substrate
-% (blackboards and tuple spaces predate it, see Section~\ref{sec:bg:dbcentric}).
-% The scorer that consumes this log is specified in Section~\ref{sec:eval:scorer}.
+% Source: ADR-0003 (Decision), agentic-core-README.md sec.14 (decision kind),
+% evaluation-README.md sec.5b (harness invisible to scorer, facts.py test).
+% This is contribution 4 in sec:intro:contributions.
 
+The event log is shared by three parties: the agentic system, the workflow
+baseline and the code that scores them. Figure~\ref{fig:data:backbone} shows
+this arrangement. It is the methodological contribution of the data layer.
+
+\input{pics/data-backbone}
+
+\paragraph{Both systems write the same rows.} The agentic agents write their
+rows through the shared engine. The workflow baseline has no agent state and
+no model, so it uses a small writer of its own. That writer produces the same
+row format, with the same numbering and the same fields, into the same table.
+There is one difference, and we made it on purpose. The baseline's decision
+rows have the kind \texttt{decision} and an empty model name, and their token
+counts and latency are zero. We did not label them \texttt{llm\_response},
+because no model was called, and that label would misreport the control
+condition. The baseline computes its observation fingerprint by the same rule
+as the agents.
+
+\paragraph{One reader for both.} The scorer reads the log through one
+function, and that function runs in the same way for both systems. It does not
+know which system wrote a row. It sees only rows, their kinds and their
+details. The rubric and the no-replan check (Section~\ref{sec:eval:noreplan})
+read the same rows.
+
+\paragraph{The harness cannot change a score.} The harness writes its own rows
+into the log, to record how each run was set up. Their content sits one level
+deeper inside the details than the fields the scorer reads. A manifest that
+carried a route length at the top level, for example, would add kilometres to
+the run it describes. A test checks that scoring a run with its manifest rows
+gives the same result as scoring it without them.
+
+\paragraph{What the shared log gives the evaluation.}
+\begin{itemize}
+  \item \textbf{Deterministic scoring.} Every outcome is a fixed function of
+  the log (Section~\ref{sec:eval:scorer}). No human judges a run, and no model
+  judges one either. The same log always gets the same score.
+  \item \textbf{Checkable parity.} Because both systems write the same rows
+  into the same table, the claim that they are comparable can be tested
+  against shared code instead of stated. Chapter~\ref{ch:validity} does this
+  and lists the seven places where the two systems still differ.
+  \item \textbf{Re-scoring.} The log keeps every run. When a scoring rule
+  changes, every run can be scored again from its rows, without running it
+  again. Because the log is append-only, a run that is dropped from an
+  analysis still leaves its rows behind.
+\end{itemize}
+
+We repeat the limit from Section~\ref{sec:data:principles}. The contribution is
+the log as the shared backbone of a comparison and its scoring. The shared
+database as a coordination medium is not new, and we do not present it as new.
+
+% =====================================================================
 \section{Runtime State and Message Passing}
 \label{sec:data:runtime}
-% Queryable agent state, inbox/messages, cronjobs, tasklists.
-% Describe the current file-backed realisation and the Postgres target.
+% Source: DATABASE_IMPLEMENTATION.md Phase 2-3 (drain marks consumed_at, FOR
+% UPDATE SKIP LOCKED, alias folding, dead letters, reset), ADR-0005 (audit
+% namespace, no run_id on messages/world_events), agentic-core-README.md sec.13
+% (sidecars twice per wake).
 
+\paragraph{Saving state.} An agent saves its state after every wake. In one
+transaction, the save replaces the agent's row in \texttt{states} and appends
+any new rows of its log to \texttt{event\_log}. After the transaction has
+committed, the agent announces the change (Section~\ref{sec:data:notify}).
+
+\paragraph{Sending and reading messages.} To send a message, an agent inserts a
+row with the recipient's key into the \texttt{messages} table. To read its mail, the
+recipient selects its unread rows and marks them as read. It does not delete
+them. The mailbox therefore keeps a full record of every message and of when it
+was read. The rows are locked while they are taken, and rows locked by another
+reader are skipped, so no message is ever read twice.
+
+\paragraph{One address per agent.} Some senders name a recipient by a short
+alias, such as a vehicle call sign, rather than by the recipient's key. All
+messages pass through one insert step, and that step maps every alias onto the
+recipient's key. If a recipient cannot be resolved, the message is logged as
+undeliverable instead of being lost. Since every message passes this one
+point, a test follows every alias from sender to recipient.
+
+\paragraph{Messages that are recorded but not delivered.} Each sender has a
+routing table. For some recipients it marks a message as \emph{audit}, meaning
+that it should be kept for the record but not delivered. Such a message is
+stored under a separate key space that no agent reads. It stays available to
+the evaluation and never wakes an agent.
+
+\paragraph{World reports.} When a vehicle arrives, or stops half-way because
+its plan changed, the world writes a row to \texttt{world\_events}. In a live
+run the source is the map in the browser. In the evaluation it is the headless
+world client (Section~\ref{sec:eval:harness}). The agent reads these rows in
+the same way as its mail and takes its real position from them
+(Section~\ref{sec:ag:runtime}).
+
+\paragraph{Prompt records and timers.} Each model call writes one row to
+\texttt{tick\_sidecars} before the call and updates it after. The first write
+lets the interface show that a call is in progress. The second adds the
+model's full answer. Token counts and latency are not stored here. They are in
+the decision row of the event log. The \texttt{cronjobs} table records the
+timers that an agent sets, but it does not run them. The clock that fires the
+timers stays inside each agent program. Moving it into the database would
+change how and when an agent acts, and that behaviour is part of what we
+measure.
+
+\paragraph{Separation between runs.} The \texttt{messages} and
+\texttt{world\_events} tables have no run column. What keeps one run's mail
+out of the next run is the reset that clears these tables before every run.
+The harness performs this reset at the start of each cell. A run started
+without it would inherit unread mail from the run before. We record this as a
+limitation of the schema. The event log is not affected, because it carries
+the run on every row.
+
+% =====================================================================
 \section{Live Notifications}
 \label{sec:data:notify}
-% Waking agents without polling; the UI bridge. LISTEN/NOTIFY in the target
-% design, file tailing in the current prototype.
+% Source: DATABASE_IMPLEMENTATION.md Phase 5 (three channels, application-side
+% NOTIFY after commit, NOTIFY_FALLBACK_POLL_S = 5 s default, SelectorEventLoop
+% thread on Windows, error backoff unchanged).
 
+An agent should wake as soon as mail arrives, without asking the database
+again and again. PostgreSQL offers a publish-and-subscribe mechanism for this,
+called LISTEN and NOTIFY. A program listens on a named channel, and any other
+program can send a short notification on that channel.
+
+Each agent has three channels: one for its state, one for its mailbox and one
+for its world reports. Whoever writes a message, a world report or a state
+sends a notification on the matching channel. The notification is sent from
+the writing program after its transaction has been committed, not from a
+trigger inside the database. By the time the recipient wakes and reads, the
+new row is therefore visible to it. Every writer goes through the same insert
+functions, so no writer can forget to notify.
+
+A notification can still be lost, for example when a connection drops. We
+therefore kept a slow poll as a safety net. An agent waits for a notification
+or for five seconds, whichever comes first, and then looks at its mailbox.
+A lost notification makes an agent slower, but it never leaves the agent
+stuck. No part of the system depends on a notification arriving to be correct.
+
+The listener runs on its own thread with its own event loop. The database
+driver cannot listen asynchronously on the event loop that Python uses by
+default on Windows, and the agents need that default loop for other reasons.
+The same code path runs on every operating system.
+
+The observation interface uses the same mechanism. It listens on the state
+channel of every agent and redraws the map when a state changes
+(Chapter~\ref{ch:ui}).
+
+% =====================================================================
 \section{External Data Sources}
 \label{sec:data:external}
-% OpenRouteService routing, geocoding and the on-disk caches.
-% Hamburg seed data: Augustinum, candidate schools, depots.
+% Source: ADR-0005 decision 5 (working directories keep the caches),
+% evaluation-README.md (route_km recorded at dispatch on both sides; route
+% cache is one file), agentic_system.tex sec:ag:crons (fallback).
 
+Two kinds of data come from outside the database. Addresses are turned into
+coordinates by a geocoder, and drives are routed over real Hamburg roads with
+OpenRouteService. The places themselves, meaning the Augustinum, the two
+schools and the depots, are part of the case (Chapter~\ref{ch:casestudy}).
+
+Both services are called through caches on disk. Each agent keeps these caches
+in its own working directory, together with its program log. No state is kept
+there. The caches serve two ends. They keep the number of calls to the routing
+service low, and a repeated query returns the stored route. If
+routing fails, the runtime falls back to a straight-line estimate and marks
+the action as degraded, as Section~\ref{sec:ag:crons} describes.
+
+The route length also enters the evaluation. When a bus is dispatched, both
+systems record the kilometres of its route, measured along the same routed
+path. The scorer reads this value from the log for both sides in the same way.
+
+% =====================================================================
 \section{Determinism and Replay}
 \label{sec:data:replay}
-% What must be recorded for a run to be replayable and re-scorable: sim clock,
-% SIM_TIME_SCALE as a logged constant, model identity pinned by digest, seeds,
-% cached routes. This is what the evaluation harness depends on.
+% Source: evaluation-README.md (RESCUESIM_RUN_ID pin, manifest rows, seeded not
+% reproducible, :cloud tags, serial sweep reasons), ADR-0014 (scale 8.4 only).
+
+A run can be scored again at any time if its log is complete. Running it
+again gives a similar run, but not the same one. We record the following so
+that re-scoring is always possible.
+
+\paragraph{One run identifier.} All ten agent programs of one run share one run
+identifier. The runtime sets it when a run starts and passes it to every agent.
+Every row of the event log carries it, so the ten agents' rows of one run can
+be joined into a single history.
+
+\paragraph{The manifest inside the log.} At the start of each run the harness
+writes a manifest row into the event log. It names the system, the model and
+its digest, the scenario and its hash, the time scale, the seed, the code
+version and the hash of the scoring thresholds. Section~\ref{sec:eval:harness}
+lists the full content. Because the manifest sits in the append-only log,
+the setup of a run cannot be separated from the run.
+
+\paragraph{Seeded, but not reproducible.} Every model call receives a seed that
+is derived from the scenario, the time scale and the replicate number. The seed
+is logged. A seeded call to a language model is still only close to
+deterministic, because batching and cache state inside the inference server
+change the sampling. We therefore claim that runs are seeded and logged, not
+that they can be reproduced at the level of each model answer. This is also why
+every cell is repeated (Section~\ref{sec:eval:analysis}). Models served from a
+hosted endpoint cannot be pinned to one version. For them, the model's details
+are captured with every run, so that a change of model would at least be
+visible.
+
+\paragraph{The time scale.} The ratio of simulated to wall-clock time is a
+logged constant of each run. Every scored run used the value 8.4. The log
+records it so that a run could be priced again at another scale, but this
+thesis makes no claim about other scales (Section~\ref{sec:eval:responsetime}).
+
+\paragraph{Why runs cannot run in parallel.} The data layer sets one practical
+limit on the evaluation. The \texttt{states} table has one row per agent key,
+and the agent keys are fixed names. Two runs on one database would overwrite
+each other's state. The agents' working directories are fixed paths as well,
+and the route cache is a single file. The evaluation therefore runs its cells
+one after another (Section~\ref{sec:eval:harness}).
+
+% =====================================================================
+\section{Chapter Summary}
+\label{sec:data:summary}
+
+One PostgreSQL database is the state store, the message broker and the scoring
+backbone of the whole system. Twelve tables serve these jobs. Five runtime
+tables keep agent states, mailboxes, world reports, prompt records and timers,
+and they are cleared between runs. Six sensing tables hold what agents
+perceive. The event log is append-only, enforced by a trigger, and every row
+names its run, agent and model. Both the agentic system and the workflow
+baseline write the same rows into it, and one scorer reads them for both.
+Notifications wake agents without polling, and a five-second fallback keeps a
+lost notification from stalling anything. We do not claim the shared database
+as a new coordination medium. We claim the shared log as the backbone of a
+fair, checkable and repeatable comparison. Chapter~\ref{ch:ui} describes the
+interface that watches this database during a live run.

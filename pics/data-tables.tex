@@ -1,0 +1,64 @@
+% The twelve tables in three groups, and who writes and reads each group.
+% Source: thesis-pack/06-data-layer/DATABASE_IMPLEMENTATION.md sec.3.
+% Input from inc/data_architecture.tex, Section "Data Model".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  tbl/.style={draw, rounded corners=2pt, fill=orange!8, minimum width=3.1cm,
+    minimum height=0.5cm, align=center, font=\footnotesize\ttfamily},
+  audit/.style={draw, thick, rounded corners=2pt, fill=orange!20, minimum width=3.1cm,
+    minimum height=0.6cm, align=center, font=\footnotesize\ttfamily},
+  head/.style={align=center, font=\footnotesize\bfseries, minimum height=0.8cm},
+  actor/.style={draw, rounded corners=2pt, fill=blue!6, text width=3.1cm,
+    minimum height=0.8cm, align=center, font=\footnotesize},
+  group/.style={draw, dashed, rounded corners=3pt, inner sep=4pt},
+  wr/.style={-{Stealth[length=1.8mm]}, thick, gray!70!black},
+  lbl/.style={font=\scriptsize, align=center, text=gray!30!black},
+]
+  % --- runtime column ---------------------------------------------------
+  \node[head] (hrt) at (0,0) {Runtime\\[-1pt]{\scriptsize\normalfont cleared before each run}};
+  \node[tbl, below=0.1cm of hrt] (states) {states};
+  \node[tbl, below=0.12cm of states] (msg) {messages};
+  \node[tbl, below=0.12cm of msg] (world) {world\_events};
+  \node[tbl, below=0.12cm of world] (side) {tick\_sidecars};
+  \node[tbl, below=0.12cm of side] (cron) {cronjobs};
+  \node[group, fit=(hrt)(cron)] (rt) {};
+
+  % --- audit column -----------------------------------------------------
+  \node[head] (hau) at (4.4,0) {Audit\\[-1pt]{\scriptsize\normalfont never cleared}};
+  \node[audit, below=0.1cm of hau] (log) {event\_log};
+  \node[lbl, below=0.1cm of log] (loglbl) {append-only,\\enforced by a trigger;\\every row names its\\run, agent and model};
+  \node[group, fit=(hau)(loglbl)] (au) {};
+
+  % --- sensing column ---------------------------------------------------
+  \node[head] (hse) at (8.8,0) {Sensing\\[-1pt]{\scriptsize\normalfont read by the agents' sensing step}};
+  \node[tbl, below=0.1cm of hse] (flood) {flood\_alert};
+  \node[tbl, below=0.12cm of flood] (weather) {weather\_alert};
+  \node[tbl, below=0.12cm of weather] (shelter) {shelter\_capacity};
+  \node[tbl, below=0.12cm of shelter] (fleet) {fleet};
+  \node[tbl, below=0.12cm of fleet] (road) {road\_closure};
+  \node[tbl, below=0.12cm of road] (med) {medical\_incident};
+  \node[group, fit=(hse)(med)] (se) {};
+
+  % --- writers, top -----------------------------------------------------
+  \node[actor, above=1.0cm of rt.north] (agents) {Ten agents};
+  \node[actor, above=1.0cm of au.north] (base) {Workflow baseline};
+  \draw[wr, <->] (agents.south) -- node[lbl, left] {read, write} (rt.north);
+  \draw[wr] (agents.south east) -- node[lbl, above, sloped, pos=0.45] {write} (au.north west);
+  \draw[wr] (base.south) -- node[lbl, right] {write} (au.north);
+  \draw[wr] (se.north) |- ([yshift=0.45cm]agents.north)
+    node[lbl, above, pos=0.75] {read sensing tables} -- (agents.north);
+
+  % --- other parties, bottom -------------------------------------------
+  \node[actor, below=1.0cm of rt.south] (ui) {Interface and\\world client};
+  \node[actor, below=1.0cm of au.south -| log, xshift=-0.2cm] (harness) {Evaluation harness};
+  \node[actor, below=1.0cm of se.south] (score) {Scorer, rubric,\\no-replan check};
+  \draw[wr, <->] (ui.north) -- node[lbl, left] {watch states,\\write world reports} (rt.south);
+  \draw[wr] (harness.north) -- node[lbl, right] {manifest} (harness.north |- au.south);
+  \draw[wr] (au.south east) -- node[lbl, above, sloped] {read} (score.north west);
+\end{tikzpicture}
+\caption{The twelve tables of the database, grouped by job. The runtime tables
+are cleared before each run. The event log is append-only and holds every run.
+Both systems write to it, and the scoring code reads only from it.}
+\label{fig:data:tables}
+\end{figure}

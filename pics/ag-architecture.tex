@@ -51,7 +51,7 @@
   \node[ext, below=1.6cm of db, text width=4.6cm] (ui) {%
     \textbf{World and observation interface}\\
     executes commands, reports finished actions;\\
-    headless harness in the evaluation};
+    headless world client in the evaluation};
 
   % --- links (every agent link goes through the database) ------------
   \draw[link] (rgrp.east) -- node[lbl, above] {state,\\ messages,\\ log rows} (db.west |- rgrp.east);
@@ -60,7 +60,7 @@
   \draw[link] (ui) -- node[lbl, right, xshift=1pt] {commands out,\\ world events in} (db.south);
 \end{tikzpicture}
 \caption{Architecture of the agentic system. Each agent is its own program on
-one shared engine. Agents never message each other directly: every message,
+one shared engine. Agents never message each other directly. Every message,
 state change, world report and decision passes through PostgreSQL, which also
 wakes the recipient. Only the six reasoning agents call the language model.}
 \label{fig:ag:architecture}

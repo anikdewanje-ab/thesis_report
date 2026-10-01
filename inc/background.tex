@@ -1,68 +1,181 @@
 \chapter{Background and Related Work}
 \label{ch:background}
 
-\section{Evacuation Coordination and Command Doctrine}
-\label{sec:bg:evacuation}
-% Domain background: disaster response, evacuation planning, vulnerable groups.
-% Established command models the workflow baseline is grounded in:
-% DV 100 / FwDV 100 (German civil protection) and ICS / NIMS.
-% Cite: bigley2001a (ICS as high-reliability organizing), FwDV 100, Plattner,
-% Buck/Trainor/Aguirre (critical evaluation of ICS), Moynihan (network governance).
-% This section is what makes the baseline "doctrine-grounded" rather than invented.
+This thesis compares two ways of coordinating an evacuation. One is a script
+written in advance. The other is a group of language-model agents that reason
+over a shared database. Four lines of research meet here. The first is work on
+scripted processes and how they handle events nobody planned for. The second is
+work on agents built from large language models (LLMs). The third is a critical
+line of work that tests how well such models plan. The fourth is older work on
+programs that coordinate through a shared store. We close with the systems that
+come closest to ours and the gap this thesis fills.
 
-\section{Multi-Agent Systems}
-\label{sec:bg:mas}
-% Classical MAS, BDI (Rao & Georgeff), organizational agents, computational
-% organization theory (Carley). Positions the "human-organizational agent" choice.
-
-\section{Workflow Flexibility and Unanticipated Exceptions}
+% =====================================================================
+\section{Scripted Coordination and Unanticipated Events}
 \label{sec:bg:workflow}
-% BACKBONE SECTION for the baseline's known limits.
-% Reichert & Weber (2012): PAIS flexibility, the anticipated-vs-unanticipated
-% exception distinction, adaptive workflow (ADEPT/AristaFlow).
-% van der Aalst et al. (2009): imperative vs. declarative processes.
-% Adams et al. (2007); Marrella SmartPM; Casati; Klein & Dellarocas.
-% Also: why heavy engines (Camunda/Temporal/Airflow) are out of scope and a
-% plain Python script is the right control condition.
 
+Emergency services coordinate large incidents through fixed command
+structures. The best-studied example is the American Incident Command System
+(ICS). Research on ICS describes a tension between two kinds of organization.
+A mechanistic organization works by rules and a clear hierarchy. An organic one
+adapts its structure to the situation \parencite{chang2017}. ICS sits on the
+mechanistic side. Still, \textcite{bigley2001a} show that such a
+bureaucratic system can respond in a flexible and reliable way when the
+situation keeps changing. The system also has known weak points.
+\textcite{buck2006} find that ICS works less well when many independent
+organizations must cooperate, and that it has trouble absorbing help that was
+not part of the plan. German fire services and civil protection follow a
+comparable doctrine, DV~100 \parencite{fwdv100}. Chapter~\ref{ch:workflow}
+describes how our baseline implements it.
+
+Research on business processes asks the same question from a software angle.
+\textcite{reichert2012} separate two kinds of exceptions. An anticipated
+exception is one the designer foresaw, so the process can carry a handler for
+it from the start. An unanticipated exception is one nobody foresaw. It needs a
+change to the running process, and a fixed script cannot make that change by
+itself. Build-time handlers are the state of the art for the first kind.
+Worklets, for example, select a prepared sub-process that fits the current
+context \parencite{adams2007}.
+% TODO(cite): van der Aalst, Pesic & Schonenberg (2009), declarative workflows,
+% for the imperative vs declarative contrast. Not yet in litDB.bib.
+% TODO(cite): Marrella, Mecella & Sardina, SmartPM (automated planning for
+% unanticipated exceptions). Not yet in litDB.bib.
+
+Resilience engineering draws a similar line. \textcite{woods2015a} separates
+robustness from graceful extensibility. Robustness means handling
+disruptions that were modelled in advance. Graceful extensibility means
+stretching to meet a surprise that falls outside the model. These terms give
+the comparison in this thesis its vocabulary. A scripted baseline can be robust
+against anticipated disruptions. Whether an agentic system extends further when
+the disruption is new is an empirical question, and Chapter~\ref{ch:eval}
+describes how we test it.
+
+% =====================================================================
 \section{LLM-Driven Agents}
 \label{sec:bg:agentic}
-% Reasoning-and-acting loops and multi-agent frameworks.
-% Cite: yao2023 (ReAct), shinn2023 (Reflexion), park2023 (Generative Agents),
-% wu2023 (AutoGen), hong2024 (MetaGPT), li2023 (CAMEL), qian2024 (ChatDev),
-% tran2025 + zhuLLMBasedMultiAgentOrchestration2026a (surveys).
-% NOTE: no LangGraph section. Frameworks are surveyed here only as context; the
-% built system is Ollama + a custom asyncio engine, see Chapter~\ref{ch:agentic}.
 
+An LLM agent is a language model placed in a loop. It observes its
+environment, reasons about what to do, acts, and observes the result. ReAct
+interleaves written reasoning steps with actions. The authors argue that the
+reasoning helps the model track and update its plan and deal with exceptions
+\parencite{yao2023}. Reflexion adds a step in which the agent writes a short
+reflection on its own performance and keeps it in memory for the next attempt
+\parencite{shinn2023}. The authors also note that this works best when the
+agent receives a clear signal about what went wrong. Our agents run a similar
+loop of sensing, reasoning, acting and reflecting.
+
+A second line of work gives agents human roles. Generative Agents places 25
+agents with memory, reflection and planning in a small simulated town, and
+human raters find their social behaviour believable \parencite{park2023}. That
+study measures believability. It does not score how well the agents perform a
+task under pressure. CAMEL assigns roles through prompts and studies how two
+role-playing agents cooperate on a task \parencite{li2023}. Our ten agents
+follow the same idea. Each one plays a person in a role at one of eight
+organizations.
+
+Several frameworks let many such agents work together. AutoGen builds
+applications from agents that talk to each other, to tools and to humans
+\parencite{wu2023}. ChatDev splits software development into phases and gives
+each phase to agents in fixed roles \parencite{qian2024}. MetaGPT writes human
+standard operating procedures into the prompts of role-specialized agents and
+passes work along an assembly line \parencite{hong2024}. MetaGPT is
+interesting for this thesis because it mixes the two ideas we keep apart. Its
+agents reason, but their order of work comes from a script. Recent surveys
+group these systems by how they coordinate: through a central controller, in a
+hierarchy, or as peers \parencite{tran2025,zhuLLMBasedMultiAgentOrchestration2026a}.
+
+We use none of these frameworks. Our system runs its models through Ollama
+inside an engine we wrote in plain asynchronous Python.
+Chapter~\ref{ch:agentic} explains why.
+
+% =====================================================================
 \section{Limits of LLM Planning}
 \label{sec:bg:llmlimits}
-% The honest counterweight to the thesis claim. If LLMs plan poorly, the claim
-% must be about graceful degradation, not about planning superiority.
-% Cite: kambhampati2024, valmeekam2024, stechly2024, huang2024,
-% tran2026 (single- vs multi-agent under equal token budgets),
-% wang2024 (are multi-agent discussions the key?), cemri2025 (why MAS fail).
 
-\section{Event Sourcing and Database-Centric Architectures}
+A strong critical literature questions whether LLMs can plan at all.
+\textcite{kambhampati2024} argue that an LLM on its own can neither plan
+reliably nor check its own plans. In their view, it should propose plans and
+leave the checking to a sound external verifier. Benchmark results support
+this. Planning performance is weak and uneven across models, and newer
+reasoning models improve it without solving it \parencite{valmeekam2024}.
+
+Self-correction is a related concern, because it is how a replanning agent is
+supposed to recover. \textcite{huang2024} find that when a model corrects its
+own reasoning without outside feedback, the result often gets worse.
+\textcite{stechly2024} report the same pattern for planning tasks. Performance
+drops when the model criticizes its own answers and rises when a correct
+external checker gives the feedback.
+
+Multi-agent systems add failure modes of their own. \textcite{cemri2025} study
+execution traces from several popular frameworks and build a taxonomy of how
+they fail. The failures fall into three groups: poor system design, poor
+alignment between agents, and poor checking of whether the task is done.
+Other work doubts that several agents help much. A strong single agent
+with good prompts can match a multi-agent discussion \parencite{wang2024}.
+When both get the same budget of reasoning tokens, a single agent can match or
+beat a multi-agent system \parencite{tran2026}.
+
+For this thesis, the literature predicts that agents may understand a
+situation and still fail to act on it well. It also suggests that an LLM
+should not judge its own success. Our evaluation therefore
+scores every run with deterministic code over the event log, and not with a
+model. Chapter~\ref{ch:results} comes back to these failure types when it asks
+where the agentic deficit comes from.
+
+% =====================================================================
+\section{Shared-State Coordination}
 \label{sec:bg:dbcentric}
-% Append-only logs, single source of truth, replay. Cite: overeem2021, Fowler.
-% Blackboard and tuple-space lineage: Erman et al. (Hearsay-II), Nii,
-% Gelernter (Linda), Omicini & Zambonelli (TuCSoN), stigmergy.
-% IMPORTANT: this is where the thesis explicitly does NOT claim a shared database
-% as a novel coordination substrate. See CONTEXT.md, contribution 2.
 
-\section{Resilience and Graceful Degradation}
-\label{sec:bg:resilience}
-% Gives "degrades more gracefully" a formal meaning.
-% Cite: woods2015a (four concepts for resilience), Woods (2018) graceful
-% extensibility, Bruneau et al. 2003 (resilience triangle, Q(t), robustness +
-% rapidity), Cimellaro 2010, Zobel 2010.
-% The rubric's departure from area-under-curve scoring is argued in
-% Section~\ref{sec:eval:rubric}, not here.
+Our agents do not call each other directly. They read and write one shared
+database, and every change is recorded in an append-only log. The idea of
+coordinating through shared state is old. In a blackboard system, independent
+knowledge sources watch a common data structure and add to it when they can
+contribute \parencite{nii1986}. In the Linda model, processes communicate by
+placing tuples in a shared space and taking them out again, without knowing
+each other \parencite{gelernter1985}. Event sourcing, a pattern from software
+engineering, keeps the full history of changes as the source of truth. Any
+past state can then be rebuilt by replaying the log. An industry study finds
+this useful for audits and replay but notes that it makes schema changes harder
+\parencite{overeem2021}.
+% TODO(cite): Erman et al. (1980), Hearsay-II, the canonical blackboard system.
+% TODO(cite): Fowler (2005), Event Sourcing.
+% TODO(cite): Omicini & Zambonelli, TuCSoN, and Cabri et al., MARS (reactive
+% tuple spaces, the closest analogue to LISTEN/NOTIFY). None is in litDB.bib yet.
 
-\section{Related Work}
+We therefore do not claim shared-state coordination as new. Our claim is
+narrower and concerns evaluation. Section~\ref{sec:data:evalbackbone} states it.
+
+% =====================================================================
+\section{Related Work and the Gap}
 \label{sec:bg:related}
-% Prior systems for evacuation simulation and agentic emergency response.
-% Cite: sultimov2026 (RESPOND), lee2025, li2026, wang2026, alqahtani2025a,
-% yin2024, Haghpanah (ED evacuation ABM).
-% Close with the gap: no prior work evaluates LLM-agent vs. workflow coordination
-% for evacuation logistics under blind, externally supplied novel disruption.
+
+A small number of recent systems apply LLM agents to disasters. RESPOND couples
+a flood forecast with an agent-based model of the population. LLM-driven
+agents decide how residents evacuate, look for resources and communicate
+\parencite{sultimov2026}. It is a short demonstration paper and does not report
+a controlled comparison. \textcite{lee2025} give LLM agents synthetic personas
+built from mobility and demographic data, and ask how well they predict real
+evacuation decisions. Both works model the people who evacuate. In our system
+the residents make no decisions. The agents are the organizations that move
+them.
+
+DORA is a benchmark for disaster response. It gives LLM agents operational
+tasks that need geospatial tools and scores them against expert-verified
+solutions that can be replayed \parencite{wang2026}. Its scoring is close to
+ours in spirit. It evaluates models on single tasks, however, and does not
+compare an agentic system with a scripted one. \textcite{li2026} ran a long
+design study with emergency-preparedness practitioners. They conclude that LLM
+agent simulations are more useful for shaping procedures and training than for
+predicting outcomes. This matches the purpose of our simulation, which studies
+a coordination mechanism and does not forecast a real evacuation.
+
+Evacuation research without LLMs is large. It includes optimization of
+citywide transfers of elderly people and agent-based models of people with
+reduced mobility. Chapter~\ref{ch:casestudy} cites the studies that bear on our
+case.
+
+To our knowledge, no prior work puts LLM agents in the role of the
+organizations that coordinate an evacuation and compares them with a
+doctrine-grounded scripted baseline on a scored outcome. This thesis makes that
+comparison. It holds the world model, the action set and the scoring fixed, and
+changes only the way decisions are made (Chapter~\ref{ch:validity}).

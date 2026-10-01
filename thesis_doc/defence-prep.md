@@ -30,13 +30,14 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 1 | Title | Who I am, title, supervisors | TU logo | draft |
 | 2 | Motivation | Evacuation coordination is hard and current tooling is rigid | Hamburg flood map | todo |
 | 3 | Problem and research question | Can the agentic architecture beat the scripted baseline, and if not, why? | RQ box | todo |
+| 3b | Related work and gap | LLM agents have played evacuees and solved single tasks, but nobody had set them, as the coordinating organizations, against a doctrine-grounded script on a scored outcome | Positioning table (RESPOND, DORA, Lee 2025, Li 2026, this thesis), if built | draft |
 | 4 | Case study | 100 residents, 2 buses of 50, 2 shelters of 60: tight on purpose, so the allocation is a real decision | Storyline swimlane (Fig. `fig:cs:storyline`) | draft |
 | 5 | The agents | Every agent is a person in a real agency; only agents that decide get a model | Roster table (`tab:cs:roster`) | draft |
 | 6 | Architecture | Ten agents on one engine, and every message, state change and decision goes through one PostgreSQL database | Architecture diagram (Fig. `fig:ag:architecture`) | draft |
-| 7 | Data architecture | Append-only event log makes fair scoring possible | Schema / event-log figure | todo |
+| 7 | Data architecture | One database is state store, message broker and scoring backbone; the novelty is the shared append-only log, not the shared database | Event-log backbone (Fig. `fig:data:backbone`); table overview (Fig. `fig:data:tables`) as backup | draft |
 | 8 | Workflow baseline | One scripted commander walks the DV 100 command cycle; at the seam where an agent would call its model, three checks run in a fixed order: correct, hold, advance | Command cycle (Fig. `fig:wf:cycle`) | draft |
 | 9 | Agentic system | The model proposes a step and a plan; the runtime owns time, validation and the audit row. Replanning is any rewrite of the step (echo, splice, supersede), not a separate module | Bus-Driver-1 walkthrough, or the replanning cases as a small table | draft |
-| 10 | Live UI | We can watch both systems run on the map | UI screenshot | todo |
+| 10 | Observation interface | We can watch a live agentic run on the map and open the full prompt and answer behind any single decision (the baseline has no live view) | UI screenshot (Fig. `fig:ui:main`); tick drawer (Fig. `fig:ui:tick`) as backup | draft |
 | 11 | Evaluation method | Three gates read in order: a system that loses residents has lost, however fast it was | Three-gates diagram (Fig. `fig:eval:gates`) | draft |
 | 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (Fig. `fig:eval:ladder`) | draft |
 | 12b | Validity | Parity is shown by shared code, not claimed; every non-inert difference favours the baseline, so none explains the loss away | Deviations table (`tab:val:deviations`) | draft |
@@ -167,6 +168,21 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - The back-pressure origin run: **8** timing-conflict wakes, gap 8, 3, 6, 12,
   7, 23, 16, 23 min, **869k** prompt tokens, **3.4x** its decision budget.
 
+**From the data architecture chapter** (`inc/data_architecture.tex`, drafted
+2026-09-29; source `06-data-layer/DATABASE_IMPLEMENTATION.md`, ADR-0003, 0005):
+
+- **12** tables: **5** runtime (cleared before each run), **1** audit
+  (`event_log`, never cleared), **6** sensing.
+- Every `event_log` row: **7** fields (id, wall time, sim time, kind, subkind,
+  summary, details) plus run, agent, model.
+- **5** kinds of entry: `event_received`, `llm_response` (incl. `cron_fire`),
+  `world_ack`, `decision` (baseline), `run_manifest` / `run_outcome`.
+- **3** guarantees, all enforced by the database: trigger rejects UPDATE and
+  DELETE; unique key (run, agent, id) makes a re-save harmless; read in
+  insertion order.
+- **3** notification channels per agent (state, inbox, world); fallback poll
+  **5 s**, so a lost notification slows an agent and never stalls it.
+
 **From the baseline chapter** (`inc/workflow_baseline.tex`, drafted
 2026-09-24; source `05-architecture-baseline/`, ADR-0002, 0015, 0016):
 
@@ -206,6 +222,16 @@ Track figures here so the slides reuse the exact same images as the report.
       `fig:wf:cycle`, Chapter 5). Slide 8. The three checks at the seam in
       their fixed order, and the execution model closing the loop.
 - [ ] Main results chart (Chapter 8)
+- [x] **Observation interface screenshot** (`pics/ui-main.png`,
+      `fig:ui:main`, Chapter 7). Slide 10. Map with the two buses, escort car
+      and ambulance; agent tabs; Bus-Driver-2's plan and tick list.
+- [x] **Tick drawer screenshot** (`pics/ui-tick-drawer.png`, `fig:ui:tick`).
+      Backup for slide 10. BIS woken by the ZKD storm surge alarm: prompt on
+      the left, raw model output and parsed plan on the right. Good answer to
+      "how do you know what the model was thinking?".
+- [x] **UI data flow**, built in TikZ (`pics/ui-dataflow.tex`,
+      `fig:ui:dataflow`). Probably not a slide; four columns, each one path
+      through Postgres (state out, scenario in, ACK back, prompt records).
 
 The results chapter is complete at four figures. All four are slide-worthy:
 
@@ -227,6 +253,14 @@ The results chapter is complete at four figures. All four are slide-worthy:
 - [x] ~~Mean `S` per disruption~~ — **considered and dropped.** It restates
       Table 10.4 and duplicates Figure 10.1. If an examiner wants the headline
       as bars, show Figure 10.1 instead.
+
+From the data architecture chapter:
+
+- [x] **Event log as backbone** (`pics/data-backbone.tex`, `fig:data:backbone`).
+      Slide 7. Both systems write, one scorer reads; the harness manifest is
+      nested so it cannot change a score.
+- [x] **Table overview** (`pics/data-tables.tex`, `fig:data:tables`). Backup
+      slide, if asked what is in the database.
 
 From the method and critique chapters:
 
@@ -390,6 +424,30 @@ over-claiming, running out of clock. Then the positive evidence: whole
 bus-loads lost, and full delivery 90 % to 32 % as plan revisions rise. The
 causal direction is still open.
 
+### Questions the background chapter invites
+
+Key message: the critical planning literature (Kambhampati, Huang, Stechly,
+Cemri) predicted what we found. Agents can understand a situation and still
+fail to act on it. That is why the scorer is deterministic code over the event
+log and never a model.
+
+**Q: RESPOND and DORA look close to this. What is different?**
+A: RESPOND models the population that evacuates, and it is a short demo with no
+controlled comparison. DORA scores single models on single geospatial tasks. In
+our system the residents decide nothing. The agents are the organizations, and
+we compare them with a scripted baseline under parity.
+
+**Q: The literature already says LLMs cannot plan. Why build this at all?**
+A: The literature tests planning puzzles and reasoning benchmarks. Nobody had
+measured it on a multi-organization evacuation against a competent scripted
+opponent. Our result agrees with the critics, and we say where the failure sits:
+commitment, not comprehension.
+
+**Q: Is a shared database as coordination medium new?**
+A: No. Blackboards and Linda tuple spaces did it decades ago, and we say so in
+Chapter 2 and in the data chapter. Our claim is the shared log as the backbone
+of both systems and of the scorer.
+
 ### Questions the case study invites
 
 **Q: Why only two buses and two shelters?**
@@ -512,6 +570,56 @@ A: The old scenario files carried the outcome, so a commander that sent
 everyone to a closed shelter still scored full marks. The execution model makes
 the score a consequence of the orders. A test shows noticing a closure scores
 1.0 and missing it scores 0.
+
+### Questions the data architecture chapter invites
+
+**Q: Isn't a shared database for agents just a blackboard or a tuple space?**
+A: Yes, and I say so in the chapter. I do not claim the shared database as a
+new coordination medium. The claim is methodological: one append-only log that
+both systems write and the scorer reads, so scoring is deterministic, parity is
+testable and every run can be re-scored.
+
+**Q: What stops you from deleting a bad run?**
+A: The database. A trigger rejects every UPDATE and DELETE on `event_log`, and
+reset between runs clears only the runtime tables. A dropped run still leaves
+its rows behind.
+
+**Q: Is a run reproducible?**
+A: Re-scorable, yes, from its rows. Re-runnable only approximately. Every model
+call is seeded and the seed is logged, but inference is only near-deterministic
+(batching, cache state). That is why every cell has k = 10 repetitions.
+
+**Q: Why store the agent state as one JSON document and not normalise it?**
+A: The runtime always loads and saves it whole, and no measurement reads it.
+Everything the evaluation needs is in the event log, written as it happens.
+
+**Q: Why no file fallback if the database goes down?**
+A: A fallback nobody runs drifts silently into a second implementation. With
+one backend, an outage stops the simulation, and start-up checks the database
+first.
+
+**Q: Can two runs leak into each other?**
+A: The event log cannot, since every row carries the run. `messages` and
+`world_events` have no run column, so separation relies on the reset the
+harness performs before every cell. That is a stated limitation of the schema.
+
+### Questions the observation interface chapter invites
+
+**Q: Could the UI have influenced the results?**
+A: Only through one channel: the browser's animation sends the `task_complete`
+acknowledgement that closes a drive. In the evaluation no browser is open; a
+headless client sends the same acknowledgements. A cell refuses to start if
+any browser tab is connected, because two sources would count every drive
+twice. Otherwise the UI only reads, and it never writes an agent's state.
+
+**Q: Why not let the engine acknowledge its own drives?**
+A: That would remove the handshake with the world that the agent must
+complete, so the architecture would be scored on a property it does not have.
+
+**Q: Can I see the UI for the baseline too?**
+A: No. The baseline runs from its command-line tool and its execution model
+moves the vehicles, so it needs no map. Its runs are read from the same event
+log as the agentic ones.
 
 ### Questions the method chapter invites
 

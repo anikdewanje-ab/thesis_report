@@ -1,0 +1,67 @@
+% The event log as the evaluation backbone: both systems write the same rows,
+% one scorer reads them, harness rows are nested so they cannot change a score.
+% Source: thesis-pack/adr/0003, agentic-core-README.md sec.14,
+% 10-instrument/evaluation-README.md. Input from inc/data_architecture.tex,
+% Section "The Event Log as Evaluation Backbone".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  sys/.style={draw, rounded corners=2pt, fill=blue!6, text width=3.0cm,
+    minimum height=1.1cm, align=center, font=\footnotesize},
+  base/.style={draw, rounded corners=2pt, fill=gray!10, text width=3.0cm,
+    minimum height=1.1cm, align=center, font=\footnotesize},
+  db/.style={draw, thick, rounded corners=3pt, fill=orange!8, text width=4.1cm,
+    align=left, font=\footnotesize, inner sep=6pt},
+  read/.style={draw, rounded corners=2pt, fill=green!6, text width=2.7cm,
+    minimum height=0.62cm, align=center, font=\footnotesize},
+  wr/.style={-{Stealth[length=1.8mm]}, thick, gray!70!black},
+  lbl/.style={font=\scriptsize, align=center, text=gray!30!black},
+]
+  % --- the log in the centre ------------------------------------------
+  \node[db] (log) {%
+    \textbf{\texttt{event\_log}}\\[1pt]
+    \emph{append-only, one table}\\[3pt]
+    same seven fields per row\\
+    plus run, agent, model\\[3pt]
+    \texttt{event\_received}\\
+    \texttt{llm\_response}\\
+    \texttt{world\_ack}\\
+    \texttt{decision}\\
+    \texttt{run\_manifest}, \texttt{run\_outcome}};
+
+  % --- writers, left ----------------------------------------------------
+  \node[sys, left=1.1cm of log.north west, anchor=north east] (ag) {%
+    \textbf{Agentic system}\\ten agents, shared engine\\[2pt]
+    {\scriptsize writes \texttt{llm\_response}}};
+  \node[base, left=1.1cm of log.south west, anchor=south east] (wf) {%
+    \textbf{Workflow baseline}\\one incident commander\\[2pt]
+    {\scriptsize writes \texttt{decision}}};
+  \draw[wr] (ag.east) -- (log.west |- ag.east);
+  \draw[wr] (wf.east) -- (log.west |- wf.east);
+
+  % --- harness, top -----------------------------------------------------
+  \node[base, above=0.9cm of log, text width=3.6cm, minimum height=0.8cm] (h) {%
+    \textbf{Evaluation harness}};
+  \draw[wr] (h.south) -- node[lbl, right] {manifest, nested one\\level down in details} (log.north);
+
+  % --- readers, right ---------------------------------------------------
+  \node[read, right=1.1cm of log.north east, anchor=north west] (sc) {Deterministic scorer};
+  \node[read, below=0.35cm of sc] (ru) {Held-out rubric};
+  \node[read, below=0.35cm of ru] (g0) {No-replan check};
+  \node[lbl, below=0.2cm of g0] (one) {one reader function,\\blind to the system};
+  \foreach \r in {sc, ru, g0} {
+    \draw[wr] (log.east |- \r.west) -- (\r.west);
+  }
+
+  % --- guarantees, bottom ------------------------------------------------
+  \node[lbl, below=0.35cm of log, text width=6.5cm] {a trigger rejects every update and
+    delete; a unique key on run, agent and row makes a second save harmless};
+\end{tikzpicture}
+\caption{The event log as the backbone of the evaluation. Both systems write
+rows of the same format into one append-only table. The baseline's decision
+rows carry their own kind because no model was called. The harness records
+each run's setup in the same log, one level deeper than any field the scorer
+reads. The scorer, the rubric and the no-replan check read the same rows for
+both systems.}
+\label{fig:data:backbone}
+\end{figure}

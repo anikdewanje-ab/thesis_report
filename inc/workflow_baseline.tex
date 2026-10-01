@@ -395,11 +395,15 @@ disruption, and runs the undisrupted scenario under the same assertion as a
 control, so a weak check cannot produce a pass. A second test confirms that
 each disruption triggered its branch, so a disruption that did nothing cannot
 produce a pass either. In the campaign, all 20 baseline runs on the anticipated
-arm scored $S = 1.000$. On the road closure that score is measured against the
-reduced ceiling of 60, so the share of the full 100 residents is 0.60.
+arm, 10 on each of the two scenarios, scored $S = 1.000$. On the road closure
+that score is measured against the reduced ceiling of 60, so the share of the
+full 100 residents is 0.60.
 % source: ADR-0002 status note 2026-09-21; RESULTS sec.3 (road_closure
-% ceiling 60, completeness_vs_nominal 0.60). TODO(verify): "20 runs" from the
-% ADR-0002 note equals 2 anticipated scenarios x 10 runs.
+% ceiling 60, completeness_vs_nominal 0.60). Verified by the author 2026-09-29
+% in scores.jsonl: baseline_closed_loop 10 runs (replicates 1000-1009, S 1.0,
+% ceiling 100) and baseline_road_closure 10 runs (S 1.0, ceiling 60,
+% completeness_vs_nominal 0.60), all completed, none censored. The other 50
+% baseline rows are the five novel scenarios x 10.
 
 % =====================================================================
 \section{Novel Disruptions: the Generic Fallback}
@@ -427,12 +431,13 @@ situation picture, and neither names a particular disruption.
   much as the first.
 \end{itemize}
 
-One holding order answers both. The IC reports to ZKD, sends a hold advisory to
-the transport side and to the Augustinum, and then waits for a reply. This
-waiting is the hold.
-% TODO(verify): the README names the advisory recipients as "Hochbahn and
-% Augustinum", although Hochbahn is absorbed into the IC. Confirm what address
-% the hold-departure advisory actually goes to.
+One holding order answers both. The IC reports to ZKD, tells the Augustinum to
+hold the residents, and sends a hold-departure advisory to the transport
+dispatcher's mailbox. It then waits for a reply, and this waiting is the hold.
+In the baseline, the transport dispatcher's mailbox belongs to the IC itself,
+because the IC took over Hochbahn, so the IC sends this advisory to itself.
+% Confirmed by the author 2026-09-29: the advisory is addressed to
+% agent-hochbahn, which is one of the IC's own mailboxes under ADR-0015.
 
 \paragraph{Two simplifications.} In two places the fallback is simpler than our
 original design. First, the design also listed a precondition that can never
@@ -440,8 +445,9 @@ be met as a trigger. The IC treats this case as an overdue reply. Only time
 separates ``not yet possible'' from ``never possible'', and deciding between
 the two would already be planning. Second, the design said to halt the convoy.
 The IC has no command that stops a bus, because it does not drive, so it sends
-the halt as an advisory. A hold that the IC cannot enforce is part of what
-makes the fallback weaker than a new plan.
+the halt as an advisory to the transport side. Since that address is the IC's
+own, the halt reaches no driver. The hold stops the IC from issuing new orders,
+but it does not stop a bus that is already on the road.
 
 \paragraph{The firewall.} We wrote the fallback before any novel disruption
 existed, without knowing what they would be. It must handle the general case

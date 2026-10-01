@@ -6,15 +6,15 @@
 % Stack: Ollama + a custom asyncio engine + PostgreSQL. No LangGraph, no
 % PostgresSaver. Written in pure prose on purpose: no code identifiers.
 
-This chapter describes the agentic system: how a single agent is built, how it
-wakes, what it sees, what it may answer, and what the runtime does with that
-answer. Chapter~\ref{ch:casestudy} already introduced \emph{who} the agents are
-(Table~\ref{tab:cs:roster}) and \emph{what} they must do together
-(Figure~\ref{fig:cs:storyline}). This chapter does not repeat that. It explains
-\emph{how} each agent works.
+In this chapter we describe the agentic system: how a single agent is built,
+how it wakes, what it sees, what it may answer, and what the runtime does with
+that answer. Chapter~\ref{ch:casestudy} introduced the agents
+(Table~\ref{tab:cs:roster}) and the task they share
+(Figure~\ref{fig:cs:storyline}), so we do not repeat them here. We focus on how
+each agent works inside.
 
-The chapter describes the design as it was built and evaluated. Whether the
-design helped is a question for Chapter~\ref{ch:results}.
+We describe the design as we built and evaluated it. Whether the design helped
+is the subject of Chapter~\ref{ch:results}.
 
 % =====================================================================
 \section{Architecture Overview}
@@ -31,7 +31,7 @@ Every agent is its own small program. It runs its own loop, keeps its own state
 and has its own mailbox. All ten programs are built on one shared engine, so
 they wake, reason, commit and log in the same way. What differs between them
 is the persona, the set of actions they may take, and a few role-specific
-rules. Section~\ref{sec:ag:template} lists exactly what differs.
+rules. Section~\ref{sec:ag:template} lists these differences.
 
 The agents never talk to each other directly. The only channel between them is
 a PostgreSQL database, which is also the single source of truth for the whole
@@ -41,7 +41,7 @@ simulation. The database holds five kinds of record:
   \item the \emph{mailboxes}, where every message between agents is stored;
   \item the \emph{world events}, which report that a physical action has
   finished, for example that a bus has arrived;
-  \item the \emph{prompt records}, which keep the exact prompt and the exact
+  \item the \emph{prompt records}, which keep the full prompt and the full
   answer of every model call;
   \item the \emph{event log}, an append-only audit trail of everything each
   agent received and decided.
@@ -50,41 +50,40 @@ When one agent sends a message, it writes a row to the recipient's mailbox. The
 database then notifies the recipient, which wakes up and reads it. The same
 notification mechanism tells the observation interface that a state has
 changed. Figure~\ref{fig:ag:architecture} shows this structure. Every arrow in
-it passes through the database. This is what the word \emph{database-centric}
-in the title of this thesis refers to. Chapter~\ref{ch:data} describes the
-data layer in detail.
+it passes through the database, and this is what we mean by
+\emph{database-centric} in the title of this thesis. Chapter~\ref{ch:data}
+describes the data layer in detail.
 
 \input{pics/ag-architecture}
 
 Vehicles are not agents. A bus, the patrol car and the ambulance are passive
-resources that a person drives. The physical world is an
-execution model, not a decision maker. It carries out the commands
-the agents send, for example ``drive to this address'', and reports back when
+resources that a person drives. The physical world makes no decisions either.
+It carries out the commands the agents send, for example ``drive to this address'', and reports back when
 each one is done. During a live run the observation interface animates this on
-a map. In the evaluation a headless harness plays the same role.
-% TODO(verify): "headless harness" wording, from the evaluation decision notes via the
-% roster summary. Check against 10-instrument/ before the final draft.
+a map. In the evaluation, where no browser is open, a headless world client
+plays the vehicles instead and sends the same reports
+(Section~\ref{sec:eval:harness}).
+% Source: 10-instrument/evaluation-README.md sec.8 (headless_client.py).
 
-Inference runs through Ollama. The engine around it is custom and written in
-plain asynchronous Python. No agent framework is used. Section~\ref{sec:bg:agentic}
-surveys such frameworks. The reason for a custom engine is that the runtime has
-to own three things a general framework would not give it: time, validation and
-the audit trail. Time must be owned because the agents act in a simulated clock
-that keeps running while they think (Section~\ref{sec:ag:crons}). Validation
-must be owned because an agent may not send a command or a message that its
-role does not allow (Section~\ref{sec:ag:runtime}). The audit trail must be
-owned because the evaluation reads every score from it, and the workflow
-baseline has to write the very same rows. A framework that hides
-these three behind its own abstractions would make the comparison in
-Chapter~\ref{ch:eval} much harder to defend.
+Inference runs through Ollama. We wrote the engine around it ourselves, in
+plain asynchronous Python, and use no agent framework.
+Section~\ref{sec:bg:agentic} surveys such frameworks. We chose a custom engine
+because the runtime has to control three things that a general framework would
+keep for itself. The first is time, since the agents act in a simulated clock
+that keeps running while they think (Section~\ref{sec:ag:crons}). The second is
+validation, since an agent may not send a command or a message that its role
+does not allow (Section~\ref{sec:ag:runtime}). The third is the audit trail.
+The evaluation reads every score from it, and the workflow baseline has to
+write the same rows. If a framework hid these three behind its own
+abstractions, the comparison in Chapter~\ref{ch:eval} would be much harder to
+defend.
 
 % =====================================================================
 \section{The Agent Specification Template}
 \label{sec:ag:template}
 
-Every agent, in both systems, is specified along the same nine facets. The
-template was fixed early in the project so that no agent is described in more
-or less detail than another.
+We specify every agent, in both systems, along the same nine facets. Using one
+template means that no agent is described in more or less detail than another.
 
 \begin{enumerate}
   \item \textbf{Context and role.} Who the agent is, where it sits, and who
@@ -101,14 +100,14 @@ or less detail than another.
   \item \textbf{Instructions.} The instruction types it accepts, with example
   content.
   \item \textbf{Reasoning loop.} How it turns an instruction into a plan and a
-  plan into actions. The key rule here is that there are \emph{no hard-coded
-  subtasks}. The agent derives its own plan from its goal.
+  plan into actions. There are no hard-coded subtasks. The agent derives its
+  own plan from its goal.
 \end{enumerate}
 
-The original template described scheduling as wake-ups that the agent sets for
-itself. The built engine does this differently. The agent says only whether an
-action should start now or as late as possible before a deadline, and the
-runtime works out the exact time. Section~\ref{sec:ag:crons} explains this.
+In our engine the agent does not set its own wake-up times. For scheduling, it
+says only whether an action should start now or as late as possible before a
+deadline, and the runtime works out the clock time. Section~\ref{sec:ag:crons}
+explains how.
 
 The shared engine gives every agent the whole wake cycle for free. This covers
 the model call, the checking of the answer, the commit of a new step, the
@@ -125,8 +124,8 @@ things:
   \item whether it holds a step that cannot be done in time, or lets it run
   late.
 \end{itemize}
-This division is deliberate. Everything that could bias the comparison between
-agents, or between the two systems, lives in the shared part.
+We drew the line here on purpose. Anything that could bias the comparison
+between agents, or between the two systems, sits in the shared part.
 
 % =====================================================================
 \section{The Wake Cycle}
@@ -141,15 +140,15 @@ language model:
   \item a \textbf{timing conflict} is found, because the step the agent just
   committed cannot be finished by its deadline.
 \end{itemize}
-Each of these wakes leads to exactly one model call. The answer to that call
-is one decision.
+Each of these wakes leads to one model call, and the answer to that call is
+one decision.
 
 \paragraph{One wake, in order.} The engine handles every wake in the same
 sequence. Figure~\ref{fig:ag:engine} shows the steps, and the path beside them
 that needs no model.
 \begin{enumerate}
   \item It writes the incoming event to the event log.
-  \item It updates the state \emph{before} the model sees it. A new message is
+  \item It updates the state before the model sees it. A new message is
   put into the inbox. A finished step is moved to the history, and the next
   leg of the plan is taken from the front of the remaining plan.
   \item It takes a fingerprint of everything the model is about to see. This
@@ -173,20 +172,21 @@ wake the model at all. When the time for a committed action comes, the clock
 sends it out to the world directly. This dispatch path makes no model call. It
 only marks the action as sent and logs it. When the world reports that an
 action is done, the engine marks it as confirmed and writes the vehicle's real
-position back into the state. Only when the \emph{last} action of a step is
-confirmed does the agent wake, with the step-finished event. Some agents also
+position back into the state. The agent wakes only when the last action of a
+step is confirmed, with the step-finished event. Some agents also
 answer certain routine messages without the model, for example a plain
 acknowledgement or a position update. These \emph{fast paths} are opt-in for
 each agent, because whether a message is purely informational depends on the
 role that receives it. Each fast path still writes a decision row, with zero
 tokens, so the event log stays complete.
 
-\paragraph{No second chances.} The model runs at a low temperature of 0.2. If
+\paragraph{Malformed answers.} The model runs at a low temperature of 0.2. If
 it returns an answer that is not valid JSON, the engine does not ask again. It
-records the failure and moves on. A retry would give a weak model a second
-attempt that a strong model never needed, and it would hide a real difference
-between models. The cost is that one bad answer can lose one decision. This is
-declared in the evaluation protocol (Chapter~\ref{ch:eval}).
+records the failure and moves on. We decided against retries because a retry
+gives a weak model a second attempt that a strong model never needed, and that
+would hide a real difference between models. The cost is that one bad answer
+can lose one decision. The evaluation protocol lists this among its limitations
+(Chapter~\ref{ch:eval}).
 
 % =====================================================================
 \section{Prompt Structure}
@@ -202,7 +202,7 @@ it must act. The user prompt says what the situation is right now.
   the person may send. This is the only block that is different for every
   agent.
   \item The \textbf{contract} says how the agent acts. It explains the wake
-  types, the exact format of the answer, the allowed actions, how an address
+  types, the format of the answer, the allowed actions, how an address
   must be written, and the handover rules at the nursing home and at the
   school. The three driving agents share one contract shape. The two
   coordinators each have their own.
@@ -243,19 +243,18 @@ from one wake to the next.
   body;
   \item optionally, an \textbf{abort} with a reason.
 \end{itemize}
-The rule about the remaining plan matters for the evaluation. Because leaving
-it out means ``no change'', every plan the model does write is a deliberate
-revision. Appendix~\ref{app:prompts} gives the full prompts of the reference
+Since leaving the remaining plan out means ``no change'', every plan the model
+does write counts as a deliberate revision. The evaluation relies on this. Appendix~\ref{app:prompts} gives the full prompts of the reference
 agent.
 
 % =====================================================================
 \section{Runtime Ownership and Ground Truth}
 \label{sec:ag:runtime}
 
-The model proposes. The runtime decides what actually happens. Some state is
-owned by the runtime and cannot be changed by anything the model writes. These
-rules are correctness mechanisms. They are also part of the comparison, because
-they limit what the agentic system can do, so they are listed here in full.
+The model proposes a step, and the runtime decides what happens with it. Some
+state belongs to the runtime, and nothing the model writes can change it. We
+list these rules in full. They keep the simulation correct, and they also limit
+what the agentic system can do, which makes them part of the comparison.
 
 \begin{enumerate}
   \item \textbf{The runtime sets every action time.} Any time the model writes
@@ -279,19 +278,18 @@ they limit what the agentic system can do, so they are listed here in full.
   twice is recognised and ignored.
 \end{enumerate}
 
-\paragraph{Ground truth from the world.} The agent's position comes from the
-world, not from the model. Each report of a finished drive carries the
-vehicle's real coordinates, and the runtime writes them into the state. If a
-drive is stopped half-way, for example because the agent changed its plan, the
-world reports where the vehicle halted. The next prompt therefore shows where
-the vehicle really is, not where the model assumed it would be. The next route
-is also computed from that real position.
+\paragraph{Ground truth from the world.} The agent's position always comes from
+the world. Each report of a finished drive carries the vehicle's real
+coordinates, and the runtime writes them into the state. If a drive is stopped
+half-way, for example because the agent changed its plan, the world reports
+where the vehicle halted. The next prompt then shows the vehicle's true
+position instead of the one the model assumed, and the next route starts from
+there.
 
-These rules are not an advantage for the agentic side. Several of them exist
-because an earlier version failed without them. They also do not do the
-agent's reasoning for it. The runtime never chooses a destination, a split of
-residents or a message. It only refuses what the role does not allow, and it
-keeps the record honest.
+These rules give the agentic side no advantage, and they do not reason for the
+agent. The runtime never chooses a destination, a split of residents or a
+message. It refuses what the role does not allow and keeps the record
+complete.
 
 % =====================================================================
 \section{Time and the Simulation Clock}
@@ -313,27 +311,27 @@ estimate and marks the action as degraded. It never blocks the step. Then it
 sets the times. A \emph{now} action starts as soon as the previous action ends.
 A \emph{by the deadline} action starts as late as possible so that the whole
 step still finishes on its deadline. The coordinators' actions are
-administrative and take no time, so for them every action simply falls on the
+administrative and take no time, so every one of their actions falls on the
 deadline.
 
 \paragraph{Timing conflicts.} After a step is committed, the runtime checks
 whether any action that has not yet been sent would have had to start in the
 past. A slack of 60 seconds is allowed, because the model itself takes time to
 answer. If the check fails, the agent is woken with a timing conflict, together
-with the size of the gap. Actions that are already sent are not checked again,
-because they are facts, not plans. Changing their times on paper would not
-change when they happen. Section~\ref{sec:ag:replan} describes what happens
+with the size of the gap. Actions that are already sent are not checked again.
+They have already happened, and changing their times on paper would change
+nothing. Section~\ref{sec:ag:replan} describes what happens
 when the conflicts repeat.
 
 \paragraph{The clock during a model call.} A model call takes real seconds. If
 the clock kept running at full speed, one slow call could move simulated time by
 many minutes, and the step being planned would already be late when it arrived.
-If the clock stopped completely, thinking would be free. The engine does
-something in between. During a call the clock keeps running for a limited grace
-window, and then freezes until the answer arrives. The window is exactly the
-simulated time that the slowest allowed call can take, which is the client
-timeout of 120 seconds multiplied by the time scale. Thinking therefore costs
-simulated time, as it would for a real person, but the cost has an upper bound.
+If the clock stopped completely, thinking would be free. We chose a middle
+way. During a call the clock keeps running for a limited grace window, and then
+freezes until the answer arrives. The window equals the simulated time that the
+slowest allowed call can take, which is the client timeout of 120 seconds
+multiplied by the time scale. Thinking costs simulated time, as it would for a
+real person, and this cost has an upper bound.
 
 % =====================================================================
 \section{Agent Roster}
@@ -345,11 +343,11 @@ the shared engine is used differently by each class of agent.
 \paragraph{The bus drivers.} Both drivers use the same engine and the same
 prompts. Only their identity is different. They have the richest action set:
 walk, board a vehicle, leave a vehicle, drive, drive via a detour, stop, and
-inform the escorts. They are the only agents that \emph{hold} a step that
-cannot be done in time. A held step is not sent to the world, so the bus does
-not leave while the driver negotiates. A driver who runs more than one trip
-returns to the nursing home after each run, not to the depot, until the last
-run is done.
+inform the escorts. They are the only agents that hold a step that cannot be
+done in time. A held step is not sent to the world, so the bus does not leave
+while the driver negotiates. A driver who runs more than one trip goes back to
+the nursing home after each run, and returns to the depot only after the last
+one.
 
 \paragraph{The escorts.} The police officer and the paramedic each drive their
 own vehicle as part of the convoy. The police car leads, the bus follows, and
@@ -418,7 +416,7 @@ running while he waits.
 
 The system has no separate replanning module. There is no special branch that
 runs ``when something goes wrong''. Instead, the model may write a new step or a
-new plan on \emph{any} wake. Replanning is simply what happens when that new
+new plan on any wake. Replanning is what happens when that new
 step differs from the one already committed. The playbook for the wake steers
 it. The timing-conflict playbook, for example, asks the model to recover from a
 missed deadline. BIS has its own playbooks for a refusal and for a request for
@@ -431,34 +429,33 @@ committed. There are four cases.
   \item[Echo.] The model repeats the same step, with the same label, deadline
   and actions. Nothing changes. The step is not archived and not renumbered.
   \item[Splice.] The new step keeps every action that has already been sent to
-  the world, and changes only the ones still waiting. The sent actions are kept
-  exactly as they are. The waiting tail is replaced and timed again. For
+  the world, and changes only the ones still waiting. The sent actions stay as
+  they are. The waiting tail is replaced and timed again. For
   example, a driver who has boarded and is already driving may add a message at
   the end of the step without disturbing the drive.
   \item[Supersede.] The new step tries to change an action that has already
   been sent. That cannot be undone, so the old step is archived as aborted, and
-  the new step starts from the beginning. A supersede is a change of course, not
-  an edit.
+  the new step starts from the beginning. In effect the agent changes course.
   \item[Back-pressure.] Each timing conflict wakes the model again, and the
   model may answer with another late step. Without a limit, this can loop. So
   the engine stops raising timing conflicts once the reported gap no longer
   shrinks from one attempt to the next, or after three attempts in a row. The
-  plan is then released to run late. A late delivery still scores, while a plan
-  parked forever would not.
+  plan is then released to run late. We prefer this because a late delivery
+  still scores, while a plan parked forever does not.
 \end{description}
 
-The last rule came from a real run. In one evaluation rerun, Bus-Driver-1 spent
+A run from the evaluation shows why the limit is needed. In one rerun,
+Bus-Driver-1 spent
 eight timing-conflict wakes across six steps. The reported gap moved from 8 to
 3, 6, 12, 7, 23, 16 and 23 minutes. The run used 869 thousand prompt tokens,
-3.4 times its decision budget, and the gap never closed. Holding the step made it
-worse. A held step never moves the bus, so every new step was routed again from
+3.4 times its decision budget, and the gap never closed. Holding the step made
+things worse. A held step never moves the bus, so every new step was routed again from
 the same depot, and the gap kept growing.
 
-Two points about this mechanism matter for the rest of the thesis. First, the
-number of supersedes is a \emph{diagnostic}. It shows how often an agent
-changed course. It is not a measure of success, and the evaluation does not
-score it as one (Section~\ref{sec:eval:rubric}). Second, the ability to rewrite
-the plan on any wake is the capability this architecture was built to offer.
+We count supersedes, but only as a diagnostic of how often an agent changed
+course. The evaluation does not score the count as a measure of success
+(Section~\ref{sec:eval:rubric}). Rewriting the plan on any wake is the main
+capability we built this architecture to offer.
 Chapter~\ref{ch:results} reports how often the agents used it and what
 followed. On the tested scenarios, runs that revised their plan more often
 delivered everyone less often (Table~\ref{tab:res:commitment}). Whether the
@@ -493,9 +490,9 @@ The vocabulary is also one leg of the parity argument. The workflow baseline
 replaces only the two reasoning coordinators, BIS and Hochbahn
 (Table~\ref{tab:val:roster}). The four field agents, meaning the two drivers,
 the police officer and the paramedic, are the same programs in both systems.
-Their action sets are therefore identical by construction, not by audit.
-Chapter~\ref{ch:validity} sets out the full comparison, including the places
-where the two systems do differ.
+Their action sets are therefore identical by construction, and no audit is
+needed to show it. Chapter~\ref{ch:validity} sets out the full comparison,
+including the places where the two systems differ.
 
 % =====================================================================
 \section{Chapter Summary}
@@ -508,7 +505,7 @@ a timing conflict appears. Everything else, including sending actions to the
 world, runs without the model. The model proposes a step and a plan. The
 runtime owns time, checks every action and message, keeps the real position,
 and writes one audit row per decision into the same event log that the baseline
-uses. Replanning is not a separate module. It is any new step that differs from
-the committed one, handled as an echo, a splice or a supersede, with a limit on
-repeated timing conflicts. Chapter~\ref{ch:workflow} now describes the system
-this design is compared against.
+uses. Replanning has no module of its own. Any new step that differs from the
+committed one is handled as an echo, a splice or a supersede, with a limit on
+repeated timing conflicts. Chapter~\ref{ch:workflow} describes the baseline
+that we compare this design against.
