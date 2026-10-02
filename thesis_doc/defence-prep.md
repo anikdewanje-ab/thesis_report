@@ -11,13 +11,24 @@ then questions.
 
 ## 1. The one-sentence pitch
 
-> (Fill this in once the introduction is written. One plain sentence a
-> non-expert examiner understands: what problem, what you built, what you found.)
+> We built LLM agents that play the eight organizations evacuating a Hamburg
+> nursing home and scored them, on one shared event log, against a scripted
+> DV 100 baseline: the script saved every resident, the agents lost whole
+> bus-loads because they kept rewriting plans they had already committed to.
 
-Draft: We compare a plain workflow script against LLM-driven agents for
-coordinating a nursing-home evacuation, using a shared event log so the two can
-be scored the same way, and we test which one holds up better when a new,
-unexpected disruption hits.
+Short form for slide 3: "Can the agents beat the script? No. Why not? They
+understood the problem but did not carry their plans through."
+
+The introduction (`inc/intro.tex`, drafted 2026-10-02) is the wording the
+conclusion and abstract should mirror: three RQs, four contributions (artefact,
+negative comparison, diagnosis, method), RQ1 boundary stated next to RQ1.
+
+The abstract (`inc/abstract.tex`, drafted 2026-10-02) is the 60-second
+spoken version of the talk. Its four paragraphs follow the opening slides in
+order: problem, what we built, what we found (26 of 27 cells, 0.894, 93.8 %
+of 1,932 handshakes closed, loss in whole bus-loads, rubric 5 / 5), and what a
+designer should change. If asked for "the thesis in one minute", say the
+abstract.
 
 ---
 
@@ -28,8 +39,8 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | # | Slide | Key message (one sentence) | Visual to show | Status |
 |---|-------|----------------------------|----------------|--------|
 | 1 | Title | Who I am, title, supervisors | TU logo | draft |
-| 2 | Motivation | Evacuation coordination is hard and current tooling is rigid | Hamburg flood map | todo |
-| 3 | Problem and research question | Can the agentic architecture beat the scripted baseline, and if not, why? | RQ box | todo |
+| 2 | Motivation | Moving a nursing home before a surge needs eight organizations to agree, and a script only covers the disruptions its author foresaw | Hamburg flood map | draft |
+| 3 | Problem and research questions | RQ1 can the agents beat the script, RQ2 why not, RQ3 what should change; RQ1 is answered for these scenarios only | RQ box with the RQ1 boundary under it | draft |
 | 3b | Related work and gap | LLM agents have played evacuees and solved single tasks, but nobody had set them, as the coordinating organizations, against a doctrine-grounded script on a scored outcome | Positioning table (RESPOND, DORA, Lee 2025, Li 2026, this thesis), if built | draft |
 | 4 | Case study | 100 residents, 2 buses of 50, 2 shelters of 60: tight on purpose, so the allocation is a real decision | Storyline swimlane (Fig. `fig:cs:storyline`) | draft |
 | 5 | The agents | Every agent is a person in a real agency; only agents that decide get a model | Roster table (`tab:cs:roster`) | draft |
@@ -39,15 +50,16 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 9 | Agentic system | The model proposes a step and a plan; the runtime owns time, validation and the audit row. Replanning is any rewrite of the step (echo, splice, supersede), not a separate module | Bus-Driver-1 walkthrough, or the replanning cases as a small table | draft |
 | 10 | Observation interface | We can watch a live agentic run on the map and open the full prompt and answer behind any single decision (the baseline has no live view) | UI screenshot (Fig. `fig:ui:main`); tick drawer (Fig. `fig:ui:tick`) as backup | draft |
 | 11 | Evaluation method | Three gates read in order: a system that loses residents has lost, however fast it was | Three-gates diagram (Fig. `fig:eval:gates`) | draft |
-| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (Fig. `fig:eval:ladder`) | draft |
-| 12b | Validity | Parity is shown by shared code, not claimed; every non-inert difference favours the baseline, so none explains the loss away | Deviations table (`tab:val:deviations`) | draft |
+| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (`pics/method-ladder.tex`, slide only, no longer in the thesis) | draft |
+| 12b | Validity (backup only) | Chapter dropped from the report on 2026-10-02. Keep the parity points below as backup answers; in the text they now live in Sec. `sec:wf:fleet`, `sec:wf:world` and `sec:crit:limitations` | none | dropped |
 | 13 | Results: anticipated | H1 is rejected: non-inferiority holds in 1 of 8 anticipated cells | Anticipated-arm table | todo |
 | 14 | Results: novel disruption | H2 is rejected outright: the baseline wins survival in every novel cell | Forest plot of the 15 risk differences | todo |
 | 14b | Why it lost | A commitment failure, not a comprehension failure | Quantised delivery histogram | todo |
 | 14c | The test could not be lost | Ignoring the disruption scored the ceiling, so the baseline's 1.000 is the null policy's score, and the agentic system lost to doing nothing | Gate 0 table (`tab:crit:gate0`) + regret bars (`fig:crit:regret`) | draft |
 | 15 | Trade-offs | Baseline wins on speed and cost, and it also won the primary outcome | Coordination-surface table | todo |
+| 15b | Design considerations (RQ3) | Commit before re-planning, confirm delivery, make the disruption change the world, and run Gate 0 before the campaign | Four-line list, each with its number (90 % to 32 %; 93.8 % closure; byte-identical control); reuse the plan-revision figure | draft |
 | 16 | Contributions and limits | Two contributions, honest scope | Bullet list | todo |
-| 17 | Conclusion | What it means and what comes next | Summary | todo |
+| 17 | Conclusion | The agents read the situation correctly but did not keep a plan once it was moving; the next experiment is the commitment-constrained variant | Three RQ answers in one box, then the ranked future-work list (variant first) | draft |
 
 ---
 
@@ -108,7 +120,11 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - Flood at **12:00**. 7 scenarios: 2 anticipated, 5 novel, revealed
   2026-09-10 after the freeze. S03 is retired.
 
-**Method (from `inc/evaluation.tex`, drafted 2026-09-23)**
+**Method (from `inc/evaluation.tex`, drafted 2026-09-23, cut to ~5,600 words 2026-10-02)**
+
+- The chapter now carries the parity points itself (validity chapter dropped).
+  Commit hashes, replicate blocks and the headless client moved to the
+  appendices `app:frozen` and `app:repro`.
 
 - Key message: the method fixed every threshold and margin before the runs,
   and it says openly where the execution departed from the plan.
@@ -139,7 +155,8 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - Sign-test floor: **0.0625** at five scenarios, **0.250** with two ties.
   qwen3.5 and glm-5.2 sit exactly on it.
 
-**From the validity chapter** (`inc/validity.tex`, drafted 2026-09-23; source
+**From the validity chapter** (`inc/validity.tex`, drafted 2026-09-23, dropped
+from the report 2026-10-02; kept as backup material for parity questions; source
 `thesis-pack/08-validity/PARITY.md`)
 
 - Key message: parity is held by *shared code*, not by a look-alike copy. Every
@@ -265,8 +282,8 @@ From the data architecture chapter:
 From the method and critique chapters:
 
 - [x] **The three gates** (`pics/method-gates.tex`, `fig:eval:gates`). Slide 11.
-- [x] **The level ladder** (`pics/method-ladder.tex`, `fig:eval:ladder`). Slide 12
-      or a backup slide.
+- [x] **The level ladder** (`pics/method-ladder.tex`). Cut from the thesis on
+      2026-10-02 (it restated the equation), still good for slide 12.
 - [x] **Null-policy regret, helped / neutral / harmed** — built,
       `pics/critique-regret.pdf`, `fig:crit:regret`, via
       `python data/scripts/plot_regret.py`. Slide 14c. Pair it with the Gate 0
@@ -423,6 +440,62 @@ population, message layer, too few dispatches, scorer dedup, driver
 over-claiming, running out of clock. Then the positive evidence: whole
 bus-loads lost, and full delivery 90 % to 32 % as plan revisions rise. The
 causal direction is still open.
+
+### Questions the discussion chapter invites
+
+Key message: the agents understood the disruption and then did not carry their
+plan through. The architecture's main feature, re-planning, is where it lost,
+on scenarios where the right number of re-plans was zero. No new figure; reuse
+the delivery histogram and the plan-revision scatter on one slide.
+
+Numbers to quote: 68 of 150 runs worse than doing nothing; full delivery 90 %
+to 32 % as plan revisions rise; 16 of 20 medical-emergency runs named the right
+action and issued no medical order; 9 to 10x messages per resident delivered.
+
+**Q: Could a stronger model close the gap?**
+A: The deficit narrows with capability (-0.27, -0.16, -0.10). deepseek is last
+on all five disruptions; qwen3.5 leads glm-5.2 on four (on sc1 glm -0.19 vs
+qwen -0.22). But no model reaches zero, and the design does not
+support extrapolating past qwen3.5. A stronger model is a guess; a commitment
+boundary is a testable design change.
+
+**Q: Does your finding contradict the agent literature or confirm it?**
+A: It is consistent with the critical side: Kambhampati (no self-verification),
+Huang and Stechly (self-correction without external feedback gets worse),
+Cemri et al. (failure to check task completion). I say "consistent with", not
+"confirms", because my data cannot show the mechanism is the same.
+
+**Q: Why would anyone build this, given the cost?**
+A: On these scenarios they should not: 9 to 10x the messages and about 800k
+tokens bought nothing. Whether it pays off when adaptation is really needed is
+untested. What transfers today is the method (shared event log, Gate 0, regret
+against a null policy) and the diagnosis, not a performance claim.
+
+### Questions the design considerations chapter invites
+
+Key message: four groups of advice, each earned by one measurement here. Agent
+architecture: a commitment boundary on legs in flight and an explicit delivery
+confirmation per leg. Scenario design: binding resources, disruptions that
+change the declared world, declared meanings (the reserve role) fixed for both
+sides. Evaluation design: Gate 0 first, size the design, fix and pin models,
+treat retries as a factor. Cost: plan it from the start. Chapter is short on
+purpose (about 1,150 words) and points back to the evidence. No new figure.
+
+Numbers to quote: full delivery 90 % at 2 revisions vs 32 % at 6+;
+r(revisions, S) = -0.408 vs r(missions, S) = -0.070; 93.8 % closure over 1,932
+requests; 53 % of 108 aborts are post-failure stand-downs, 13 % churn-initiated;
+sign test floor p = 0.0625 at k = 10; 140 of 150 novel runs over budget.
+
+**Q: These come from one case. Why should anyone take them as general?**
+A: I do not claim they are general. They are the considerations this one
+evaluation earned, each with its number and its limit. The chapter ends by
+saying they should be tested on the next design before being generalised. The
+evaluation-design points (Gate 0, sizing the design) depend least on the case.
+
+**Q: Isn't the commitment boundary just your guess at the cause?**
+A: It rests on a strong correlation, and I say the causal direction is open.
+The commitment-constrained variant is one campaign on the same scenarios and
+would settle it. That is why it leads the future work.
 
 ### Questions the background chapter invites
 
@@ -658,6 +731,56 @@ anything that depends on prose is listed as not judged.
 **Q: Why not just use LangGraph / why Ollama?** (Resolve once the framework
 story in Chapter 6 is settled.)
 A: (TODO)
+
+### Questions the conclusion invites
+
+Key message: three answers and one next step. RQ1 no (and the boundary in
+the same breath), RQ2 commitment rather than comprehension, RQ3 the four
+groups from the design chapter. The four contributions mirror the intro. The
+future work is ranked: commitment-constrained variant, Gate-0-passing
+scenarios, a design sized to detect an effect, a broader case. No new numbers
+and no figure; everything quoted already appears in Results or Critique.
+
+Numbers to quote: 26 of 27 cells; 0.894 best capped mean vs 1.000; 68 of 150
+worse than the null policy; 93.8 % closure over 1,932 requests; 102 / 19 / 18;
+90 % to 32 %; p floor 0.0625 at k = 10.
+
+**Q: If you could run one more experiment, which and why?**
+A: The commitment-constrained variant: cap re-plans or forbid cancelling a leg
+in flight, same scenarios, same models. One campaign, no new scenarios, and it
+settles the causal direction. If constrained runs deliver more, churn causes
+the loss; if not, churn is a symptom of runs already failing.
+
+**Q: Why not lead the future work with better scenarios instead?**
+A: Gate-0-passing scenarios answer RQ1's open half ("can it ever win"), but
+they need new scenario authoring and a new campaign. The variant reuses
+everything and tests the diagnosis this thesis actually made, so it comes first.
+
+**Q: What carries over beyond this case?**
+A: The method (one shared event log, regret against a null policy, Gate 0) and
+the diagnosis (look at the step where a new message may cancel a leg in
+flight). The design considerations themselves still need testing on another
+case.
+
+### Questions the introduction invites
+
+**Q: If no scenario required adaptation, why run the comparison at all?**
+A: We did not know that before the runs. The scenarios were supplied blind by
+a domain expert and looked like disruptions. The no-replan control showed
+afterwards that ignoring them scored the ceiling. That is why RQ1 is answered
+as "did it win here", and why Gate 0 is a contribution: it would have caught
+this before the campaign.
+
+**Q: Your RQ1 answer is "no". Isn't the thesis then a failure?**
+A: It is a design-and-evaluation study, so a negative answer is a result. And
+the agents did not just lose to the script, they lost to doing nothing (68 of
+150 runs), which is what made the diagnosis in RQ2 possible.
+
+**Q: Why four contributions when one of them is a negative result?**
+A: Each stands on its own evidence. The artefact runs, the comparison is
+pre-registered and scored, the diagnosis is measured (0.938 closure, quantised
+losses, 90 % to 32 %), and the event log plus Gate 0 is reusable whatever the
+outcome.
 
 ---
 

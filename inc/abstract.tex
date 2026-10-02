@@ -1,9 +1,58 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-% TODO: 1 page. State problem, approach, contributions, key results.
+Nursing homes near the coast have to move their residents before a storm surge
+arrives. Such an evacuation needs several organizations to work together, and
+the plan often changes while it runs. Simulations of this task are usually
+scripts that follow written doctrine. They cover only the disruptions their
+authors expected. Agents built from large language models (LLMs) could, in
+principle, also respond to disruptions that nobody scripted.
+
+In this thesis we design a database-centric agentic architecture and evaluate
+it against a scripted baseline. The case is the evacuation of the Augustinum
+nursing home in Hamburg, with 100 residents, two buses with 50 seats each and
+two school shelters with 60 beds each. Ten LLM agents represent people at eight
+organizations. They coordinate through one PostgreSQL database, which holds all
+state and wakes each agent when it has work. The baseline follows the German
+DV~100 doctrine and uses no language model. Both systems write to one shared
+append-only event log, and one deterministic scorer reads it. We compared them
+on seven scenarios under a pre-registered protocol.
+
+Both pre-registered hypotheses failed. The baseline sheltered every resident in
+all 50 novel runs, and the test on resident survival failed in 26 of 27 cells.
+The best agentic configuration reached a mean survival of 0.894. The agentic
+system also did worse than a null policy that ignores every disruption. No
+scenario required adaptation, however, so the baseline's perfect score says
+nothing about its ability to adapt. The agents read the disruptions correctly,
+and 93.8\% of 1,932 requests between them ended in a closed handshake. The loss
+came from residents who were never dispatched. It arrived in whole bus-loads
+and grew with the number of plan revisions. We therefore describe it as a
+failure of commitment rather than of comprehension. Decision quality is split.
+Over 16 rubric criteria the agentic models match the baseline on five and fall
+short on five.
+
+From these results we derive design considerations for agentic emergency
+simulation. A leg that is already on the road should stay committed, every
+delivery should be confirmed, and scenarios should let a disruption change the
+world that is scored. The next experiment is an agentic variant with a
+commitment boundary, run on the same scenarios.
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
 
-% TODO: Optional.
+I would like to thank Prof. Dr.-Ing. habil. Kai-Uwe Sattler for the chance to
+write this thesis in the Databases and Information Systems Group, and for the
+guidance along the way. I am also grateful to M.\,Sc. Saba Zamankhani for the
+supervision, the time given to this work and the helpful feedback on the design
+and the evaluation.
+
+This thesis was written at Absolute Software GmbH in Hamburg, as part of the
+company's work in the RESCUE-MATE project. RESCUE-MATE is a research project
+funded under the German programme Research for Civil Security. It studies how
+rescue forces can be supported in complex crisis situations, and its main
+scenario is a severe storm surge in Hamburg that requires large evacuations
+near the Elbe. This scenario gave my thesis its case. I thank Absolute
+Software GmbH for the opportunity to work on this topic within the project,
+and for the support I received during the whole thesis. My special thanks go
+to my company supervisor, Mr. Rüdiger Höfert, for the trust, the
+encouragement and the many helpful discussions along the way.

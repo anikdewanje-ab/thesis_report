@@ -1,69 +1,143 @@
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion}
 
-% ===========================================================================
-% WARNING. The original skeleton claimed contribution 1 as "EMPIRICAL:
-% LLM-agent coordination degrades more gracefully than a doctrine-grounded
-% workflow baseline under novel disruption." THAT IS THE OPPOSITE OF THE
-% RESULT. It was the proposal's expectation. It has been replaced below.
-% ===========================================================================
+In this thesis we designed a database-centric agentic architecture for the
+evacuation of a nursing home before a storm surge. Next to it we built a
+workflow baseline that follows the DV~100 doctrine. Both systems ran seven
+scenarios, wrote to one shared append-only event log and were scored by one
+deterministic scorer. We set the work up as a design-and-evaluation study.
+The aim was to learn what such an architecture can do on a scored task, and to
+report the answer in whichever direction it fell.
 
 \section{Summary}
 \label{sec:concl:summary}
-% Restate the four research questions and answer each in two or three
-% sentences. No new evidence here, and no hedging.
-%   RQ1 Can it beat the scripted baseline? No, and it also loses to a null
-%       policy. Chapters~\ref{ch:results} and \ref{ch:critique}.
-%   RQ2 Why not? A commitment failure, not a comprehension failure.
-%       Chapter~\ref{ch:discussion}.
-%   RQ3 What would have to change? Constrain commitment; test on scenarios
-%       that discriminate. Section~\ref{sec:concl:future}.
-%   RQ4 What should a designer consider? Chapter~\ref{ch:design}.
-% Then the four engineering sub-questions, one line each, pointing at
-% Chapters~\ref{ch:data}, \ref{ch:agentic}, \ref{ch:eval} and \ref{ch:results}.
+
+\paragraph{RQ1: Can the agentic architecture beat the scripted baseline?}
+On our scenarios it could not. Both pre-registered hypotheses failed. Gate~1,
+the test on resident survival, failed in 26 of 27 cells. The baseline
+sheltered every resident in all 50 novel runs. The best agentic configuration
+reached a capped mean survival of 0.894 (Chapter~\ref{ch:results}). The
+agentic system also lost to a null policy that ignores every disruption. Its
+regret against that policy was negative in all 15 novel cells, and 68 of 150
+runs ended worse than doing nothing (Chapter~\ref{ch:critique}). The answer
+holds for these scenarios only. No scenario in this thesis required
+adaptation, because a controller that ignores the disruption already reaches
+the top score (Section~\ref{sec:crit:gate0}). The baseline's perfect score is
+therefore the null policy's score, and it says nothing about adaptability. We
+answer RQ1 as ``did the agentic architecture win here''. Whether it can ever
+win remains open.
+
+\paragraph{RQ2: Why did it lose?}
+The agents read the disruptions correctly, and the coordination between them
+worked. Of 1,932 addressed requests, 93.8\% ended in a closed handshake. Most
+of the lost residents were never dispatched at all, so the loss comes in whole
+bus-loads. Of the 150 novel runs, 102 delivered everyone, 19 delivered exactly
+50 and 18 delivered exactly 90 (Section~\ref{sec:res:loss}). The more often a
+run revised its plan, the less it delivered. Full delivery fell from 90\% at
+the minimum number of plan revisions to 32\% at six or more, and the number of
+revisions correlates with survival at $r = -0.408$. This is why we speak of a
+failure of commitment rather than of comprehension
+(Chapter~\ref{ch:discussion}). The link is a strong association. Its causal
+direction stays open, since a run that is already failing may re-plan as a
+result (Section~\ref{sec:crit:mechanism}).
+
+\paragraph{RQ3: What must change, and what should a designer consider?}
+Chapter~\ref{ch:design} answers with four groups of considerations, each tied
+to a measurement in this study. The agent architecture should keep a leg
+committed once it is on the road and confirm every delivery. The scenario
+design should let a disruption change the world that is scored. The
+evaluation should pass Gate~0 and be sized before the first run. The cost of
+the agentic approach should be planned from the start.
+
+\paragraph{The engineering questions.} The four supporting questions are
+answered in the chapters that describe what we built. The actors, states,
+events and dependencies of the evacuation are modelled in one PostgreSQL
+schema (Chapter~\ref{ch:data}). Agents from different organizations are
+integrated through one asynchronous engine, and the database also acts as the
+broker that wakes them (Chapter~\ref{ch:agentic}). The append-only event log
+serves runtime control and evaluation at the same time
+(Sections~\ref{sec:data:eventlog} and~\ref{sec:data:evalbackbone}). The
+comparison of the two systems is set out in Chapter~\ref{ch:eval} and
+reported in Chapter~\ref{ch:results}.
 
 \section{Contributions Revisited}
 \label{sec:concl:contributions}
-% The four contributions from Section~\ref{sec:intro:contributions}, restated
-% against the evidence that was actually produced:
-%
-%  1. ARTEFACT. Built and running: 10 agents across 8 organisations, Postgres
-%     as single source of truth and active broker, plus a doctrine-grounded
-%     baseline at audited parity (Chapter~\ref{ch:validity}).
-%
-%  2. EMPIRICAL, AND NEGATIVE. 310 scored runs over 7 scenarios. The agentic
-%     architecture does not outperform the scripted baseline on resident
-%     survival, and underperforms a null policy. This is a result, and it is
-%     reported as one.
-%
-%  3. DIAGNOSTIC. The deficit is located and measured: commitment, not
-%     comprehension. This is the part a future builder can act on.
-%
-%  4. METHODOLOGICAL. The shared append-only event log as the backbone of a
-%     fair, auditable, replayable comparison; and Gate 0, the treatment-
-%     validity check that catches a non-discriminating disruption before it is
-%     scored. A protocol that found its own primary arm degenerate and
-%     specified the gate that would have caught it.
+
+The introduction promised four contributions
+(Section~\ref{sec:intro:contributions}). Here we say what each one offers
+beyond this study.
+
+\paragraph{An agentic architecture and its baseline.} The two systems form a
+matched pair. They differ only in how decisions are made, so a later study can
+change one side and keep the other fixed (Chapters~\ref{ch:agentic},
+\ref{ch:workflow} and~\ref{ch:data}). The agentic side shows one way to let
+agents of different organizations coordinate through a database that holds
+all state and wakes each agent when it has work.
+
+\paragraph{A scored comparison with a negative result.} The comparison is
+pre-registered and deterministic, so its answer can be checked and reproduced
+from the stored runs. To our knowledge it is the first head-to-head comparison
+of the two approaches on a common evacuation case. It also reports decision
+quality next to survival, and the two measures do not tell the same story
+(Section~\ref{sec:res:quality}).
+
+\paragraph{A diagnosis of the loss.} The diagnosis gives a future builder
+something to act on. It points to one place in the architecture, the step
+where a new message may cancel a leg that is already moving. It also warns
+against reading healthy messaging as a sign of success.
+
+\paragraph{A method for a fair comparison.} The method can be reused without
+our architecture. A shared append-only log keeps the comparison fair, and new
+measures can be computed from it long after the runs have ended. The regret
+against a null policy shows whether a system does better than doing nothing. Gate~0 tests a scenario before any campaign is spent on it. Our own
+novel arm fails this gate, and that failure is how we learned the gate is
+needed.
 
 \section{Future Work}
 \label{sec:concl:future}
-% RQ3 lives here. Lead with the one experiment that matters and rank the rest.
-%
-% 1. THE COMMITMENT-CONSTRAINED VARIANT. The highest-value follow-up this
-%    analysis produces. Cap re-plans, or forbid cancelling a leg already in
-%    flight; run against the same scenarios under the same models. One
-%    campaign, no new scenario authoring. It is also the experiment that would
-%    settle the causal direction this thesis explicitly leaves open.
-%
-% 2. SCENARIOS THAT PASS GATE 0. Author disruptions where a no-replan control
-%    demonstrably fails, so adaptation has something to prove. Until that runs,
-%    "can an agentic architecture ever beat a scripted one" is open, not
-%    answered.
-%
-% 3. A DESIGN THE EVALUATION COULD SEE. A larger k (10 could not detect a
-%    moderate effect), more than one SIM_TIME_SCALE (H4 was never tested), and
-%    a model set fixed before the arm runs.
-%
-% 4. Longer-horizon: resident-level agents, an equity dimension in the rubric,
-%    compound and cascading disruptions, multi-case replication beyond a single
-%    facility, other cities and hazards.
+
+We rank the follow-up work by how much each item would change what we know.
+
+\paragraph{1. A commitment-constrained variant.} The next experiment is a
+version of the agentic system with a commitment boundary. It caps the number
+of re-plans, or it forbids cancelling a leg that is already in flight. It
+should run on the same scenarios under the same models. This needs one
+campaign and no new scenarios. It is also the experiment that would settle
+the causal direction that this thesis leaves open. If constrained runs deliver
+more residents, plan churn is a cause of the loss. If they deliver the same,
+churn is a symptom of runs that were already failing.
+
+\paragraph{2. Scenarios that pass Gate~0.} A test of adaptability needs a
+disruption that punishes a plan which ignores it. In our scenarios every
+disruption arrived as a message and left the declared world unchanged. A
+future scenario should change the state the scorer reads. When a shelter
+reports fewer beds, it should really hold fewer people, and a no-replan
+control should then lose residents. Only on such scenarios can the question
+behind RQ1, whether an agentic architecture can ever beat a scripted one, be
+answered.
+
+\paragraph{3. An evaluation that can detect an effect.} With $k = 10$
+replicates over five scenarios, the registered sign test could not return a
+$p$-value below 0.0625, whatever the data (Section~\ref{sec:crit:power}). A
+follow-up should size $k$ for the smallest effect it wants to detect. It
+should also run more than one simulation time scale, because hypothesis~H4
+was not tested at the single \code{SIM_TIME_SCALE} of 8.4. The model set
+should be fixed and its versions pinned before the first run.
+
+\paragraph{4. A broader case.} In our case the residents are a passive count
+of 100. Modelling them individually, for example with different mobility
+needs, would make it possible to ask about equity, which this study had to
+leave undefined. Beyond that, the architecture and the method should be
+tried on more facilities, other cities and other hazards. Only then can the
+design considerations in Chapter~\ref{ch:design} be tested beyond the one case
+they come from.
+
+\section{Closing Remarks}
+\label{sec:concl:closing}
+
+We expected LLM agents to handle disruptions that a script did not foresee.
+On the scenarios we had, the script delivered every resident and the agents
+did not, although they read the situation correctly. This result does not
+tell us how the agents would do where adaptation is really required. The
+first two items of the future work, a commitment boundary and scenarios that
+pass Gate~0, are the most direct way to find out.

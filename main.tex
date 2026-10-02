@@ -105,9 +105,10 @@
 % --- Main matter ---------------------------------------------------
 \pagenumbering{arabic}
 
-% Chapter order follows thesis-pack/README.md. Two chapters were added on
-% 2026-09-22: validity (from 08-validity/PARITY.md) and the methods critique
-% (from 09-method/EVALUATION_PROTOCOL_V2.md). The instrument implementation
+% Chapter order follows thesis-pack/README.md. The methods critique was added
+% on 2026-09-22 (from 09-method/EVALUATION_PROTOCOL_V2.md). The validity
+% chapter (08-validity/PARITY.md) was dropped on 2026-10-02; its key points sit
+% in the baseline, evaluation and methods-critique chapters. The instrument implementation
 % (10-instrument) folds into the evaluation chapter, which already covers the
 % scorer and the harness.
 
@@ -122,9 +123,6 @@
 \input{inc/data_architecture}
 \input{inc/ui}
 
-% Validity comes before the method: it establishes that the comparison the
-% method then specifies is admissible at all.
-\input{inc/validity}
 \input{inc/evaluation}
 \input{inc/results}
 
@@ -133,7 +131,7 @@
 \input{inc/methods_critique}
 \input{inc/discussion}
 
-% RQ4: the generalisable deliverable. Follows the discussion because it
+% RQ3: the generalisable deliverable. Follows the discussion because it
 % generalises from it, and precedes the conclusion because the conclusion
 % points back at it.
 \input{inc/design_considerations}

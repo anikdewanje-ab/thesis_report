@@ -101,7 +101,7 @@ sequential runs and bus-2 stands by for a breakdown. The two systems read this
 declaration differently. The baseline sends bus-2 out in parallel from its first
 schedule. The agentic transport dispatcher holds it back unless one of four
 named reasons releases it. Both sides have the same fleet, so this is a
-difference in decisions and not in capability. Section~\ref{sec:val:reserve}
+difference in decisions and not in capability. Section~\ref{sec:wf:fleet}
 describes the mechanism.
 
 % =====================================================================
@@ -262,7 +262,8 @@ Incident Commander has no routing command. In its version of the scenario the
 closure is therefore written as a school becoming unreachable, and the
 commander has to re-allocate. The two versions therefore test different things,
 and the baseline version ends with a lower feasibility ceiling, 60 instead of
-100. Chapter~\ref{ch:validity} discusses what this does to the comparison.
+100. We score completeness against each scenario's own declared population,
+so the lower ceiling does not count against the baseline.
 
 \paragraph{S04, medical emergency in flight.} A resident collapses on a bus that
 is already moving. A good response keeps the bus on its way, sends the

@@ -16,18 +16,13 @@
 %  * Do not soften the deficit. Do not apologise for it either.
 
 This chapter reports what the evaluation measured. It follows the design frozen
-in Chapter~\ref{ch:eval} and changes nothing in it. The order is the order of
-the gates: what was run, how the two systems did on the anticipated
-disruptions, how they did on the novel ones, what the losses were made of, and
-what the secondary measures add. Interpretation is held back for
-Chapter~\ref{ch:discussion}. The criticism of the method itself is
+in Chapter~\ref{ch:eval} and changes nothing in it. Interpretation is held back
+for Chapter~\ref{ch:discussion}, and the criticism of the method itself is in
 Chapter~\ref{ch:critique}.
 
-One result carries the chapter. The workflow baseline beats the
-database-centric agentic system on resident survival in every disruption that
-was tested. Both pre-registered hypotheses fail. Gate~1 fails in 26 of its 27
-cells. That is the finding, and the rest of the chapter is the detail behind
-it.
+The workflow baseline beats the database-centric agentic system on resident
+survival in every disruption that was tested. Both pre-registered hypotheses
+fail, and Gate~1 fails in 26 of its 27 cells.
 
 \section{Execution Summary}
 \label{sec:res:summary}
@@ -69,8 +64,7 @@ zero undelivered world commands, and every scenario hash stayed stable for the
 whole arm. The threshold file hash \texttt{d08c1e35} is identical across all
 310 runs, so every run was scored against the same frozen thresholds.
 
-Two things about the run set have to be said here, because they change how a
-reader should treat some of the tables that follow.
+Two properties of the run set affect how some of the later tables are read.
 
 \textbf{28 of 168 agentic novel runs did not quiesce.} They are marked
 ``stopped without quiescence: the final turn may be missing''. This is 17\% of
@@ -114,9 +108,6 @@ and fails in the other 7. The one pass is glm-5.2 on \code{closed_loop},
 where the risk difference is exactly 0.000. That cell is the undisrupted
 scenario, and it is the only place in the whole evaluation where the agentic
 system is demonstrably not worse than the baseline.
-
-Two footnotes to Table~\ref{tab:res:anticipated} matter more than footnotes
-usually do.
 
 \textsuperscript{*} On \code{road_closure} the baseline's feasibility ceiling
 fell to 60 for all 10 runs, because the shelters it heard from declared fewer
@@ -218,12 +209,9 @@ Novel & superiority, paired CI excluding zero & H2 & 19 & 0 \\
 \end{tabular}
 \end{table}
 
-\textbf{Gate~1 fails in 26 of 27 cells.} The single pass anywhere in the
-evaluation is glm-5.2 on \code{closed_loop}. That pass is a non-inferiority
-result on the anticipated arm. It is not a superiority result, and Gate~1 as a
-whole is not a superiority test. The novel-arm failures also belong to H2, not
-to H1. H2 is the hypothesis that predicted an agentic win where the baseline
-had no written branch.
+\textbf{Gate~1 fails in 26 of 27 cells.} The single pass is glm-5.2 on
+\code{closed_loop}, which is a non-inferiority result on the anticipated arm.
+All 19 novel-arm failures belong to H2.
 
 The risk difference is $RD = S_{\text{agentic}} - S_{\text{baseline}}$,
 computed paired, with a positive value favouring the agentic system.
@@ -256,20 +244,16 @@ Disruption & qwen3.5 & glm-5.2 & deepseek \\
 \caption[Novel-arm risk differences]{The 15 novel-arm risk differences with
 their bootstrap confidence intervals. A superiority result would need the whole
 interval to sit inside the shaded region. None does, and no point estimate is
-positive. Table~\ref{tab:res:rd} gives the same values. Drawn from
-\texttt{data/novel\_risk\_differences.csv}.}
+positive. Table~\ref{tab:res:rd} gives the same values.}
 \label{fig:res:forest}
 \end{figure}
 
 Superiority needs the paired interval to exclude zero on the positive side. No
-cell comes close. Every point estimate is negative.
-Figure~\ref{fig:res:forest} shows why the verdict does not depend on reading
-any single row. All 15 intervals lie to the left of zero. Eight stay strictly
-below it, six reach zero and stop there, and exactly one reaches past it:
-qwen3.5 on
-\code{medical_emergency_in_flight}, whose upper bound is 0.02. The three models
-also separate cleanly in the figure, which is the capability ordering that
-Section~\ref{sec:res:models} returns to.
+cell comes close, and every point estimate is negative. In
+Figure~\ref{fig:res:forest}, eight intervals stay strictly below zero and six
+reach zero and stop there. One reaches past it, qwen3.5 on
+\code{medical_emergency_in_flight}, with an upper bound of 0.02. The figure
+also shows the model ordering that Section~\ref{sec:res:models} reports.
 
 \subsection{The H2 Minimum Effect}
 \label{sec:res:novel:delta}
@@ -313,12 +297,10 @@ exact Clopper-Pearson interval on $P(\text{level}_{\text{agentic}} \geq
 control's constant level, aggregated across scenarios by a sign test with
 Holm-Bonferroni correction.
 
-\textbf{That test was not implemented when the results above were first
-written.} It was coded afterwards, once the result was already known. This is a
-deviation from the pre-registration's timing and is reported as one. Under the
-pre-registration's own rules the analysis is therefore exploratory.
-Chapter~\ref{ch:critique} treats it properly. The numbers are given here
-because they belong beside the verdict they check.
+\textbf{That test was implemented after the result was known}
+(Amendment~15). Under the pre-registration's own rules it is therefore
+exploratory, and Section~\ref{sec:crit:power} treats the deviation. The
+numbers are given here because they belong beside the verdict they check.
 
 The control scored level 4 on all 50 novel runs, so the success event is that
 the agentic run also reached level 4.
@@ -369,45 +351,26 @@ deepseek-v4-pro & 5 & 1 & 4 & 0 & 0.375 & 0.0625 \\
 \end{tabular}
 \end{table}
 
-There is a second finding in that table, and it is about the design rather than
-the systems. \textbf{At $k = 10$ this test can hardly conclude anything.} Every
-Clopper-Pearson interval is about 0.6 wide, so even a cell at 7 of 10 cannot
-separate from chance. The sign test is worse. A two-sided exact sign test on
-five scenarios cannot return a $p$ below 0.0625 however the data fall, and ties
-push the floor higher. qwen3.5 and glm-5.2 each tie two scenarios, which leaves
-three untied observations and a floor of 0.250. Both models are therefore
-already sitting at the smallest $p$ their data could have produced. The
-registered aggregation cannot reach conventional significance in this design at
-all.
-
-This is why the risk difference carries the argument. It is continuous, it is
-paired, and it is far more efficient with the replicates available. The
-weakness of the registered plan is a limitation of the analysis plan, not a
-result, and Chapter~\ref{ch:critique} takes it up as a methods finding.
-
-One more warning about Table~\ref{tab:res:signtest}. The sign test's direction
-is mildly favourable to qwen3.5 and glm-5.2, with three scenarios above chance,
-none below and two tied, while both models still lose residents in every cell.
-That is not a win. The sign test counts which side of 0.5 a cell falls on and
-is blind to how far, which is precisely the information the risk difference
-keeps.
+At $k = 10$ this test can hardly conclude anything. Every Clopper-Pearson
+interval is about 0.6 wide, and qwen3.5 and glm-5.2 already sit at the
+smallest $p$ their data could have produced. Section~\ref{sec:crit:power}
+explains why, and why the paired risk difference carries the argument instead.
+The sign test's direction is mildly favourable to qwen3.5 and glm-5.2, with
+three scenarios above chance and none below. This is not a win. Both models
+lose residents in every cell, and the sign test only counts which side of 0.5
+a cell falls on, never how far.
 
 \subsection{What the Novel Arm Does Not Show}
 \label{sec:res:novel:boundary}
 
 The novel arm answers whether the agentic system won on these scenarios. It
 does not answer whether an agentic system can ever win, because no scenario in
-this thesis ever \emph{required} adaptation. Chapter~\ref{ch:critique} shows
-that a controller which ignores every disruption scores the same level as the
-baseline on all five novel scenarios. The baseline's $S$ of 1.000 is the null
-policy's score.
-
-Two consequences follow, and both hold for every table in this chapter. First,
-the baseline's result must never be described as recovery, adaptation or better
-replanning. It did not adapt, because nothing it did changed an order or a
-kilometre. Second, that withdrawal cuts one way only. It does not turn into an
-agentic win. Against the same null policy the agentic regret is negative in all
-15 novel cells, and 68 of 150 runs came out worse than doing nothing at all.
+this thesis ever required adaptation. A controller that ignores every
+disruption scores the same level as the baseline on all five novel scenarios
+(Section~\ref{sec:crit:defect}), so the baseline's $S$ of 1.000 is the null
+policy's score. It is not evidence that the baseline adapted. This does not
+turn into an agentic win either. Against the same null policy, 68 of the 150
+agentic runs came out worse than doing nothing (Section~\ref{sec:crit:regret}).
 
 \section{What the Losses Were Made Of}
 \label{sec:res:loss}
@@ -441,12 +404,9 @@ qwen3.5 strands far fewer residents than the other two models. It does so on
 every disruption, by a factor of two to eight. Its survival deficit comes
 mostly from residents arriving late or being invalidated by shelter overload,
 not from residents left behind. That is a materially different failure from
-deepseek's, and Section~\ref{sec:res:models} returns to it.
-
-These figures were corrected after the first write-up. The column was computed
-as the ceiling minus sheltered residents with no floor at zero, and the
-over-delivery runs of Section~\ref{sec:res:integrity} drove two cells negative.
-It is now floored at zero. Five cells changed. No confirmatory number moved.
+deepseek's, and Section~\ref{sec:res:models} returns to it. The column is the
+ceiling minus sheltered residents, floored at zero so that the over-delivery
+runs of Section~\ref{sec:res:integrity} cannot push a cell below zero.
 
 \subsection{Late Arrivals and Shelter Overload}
 \label{sec:res:loss:totals}
@@ -496,8 +456,8 @@ arrivals and $+0.061$ for shelter overload. The failure is in what the agents
 committed to move, not in whether their messages arrived.
 
 These are exploratory Protocol~v2 instruments, written after the data were
-seen. They change no confirmatory number. Chapter~\ref{ch:critique} reports
-them in full, together with the alternative explanations that were ruled out.
+seen. Section~\ref{sec:crit:mechanism} lists the alternative explanations that
+were ruled out.
 
 \subsection{The Loss Is Quantised}
 \label{sec:res:loss:quantised}
@@ -513,8 +473,7 @@ the 150 agentic novel runs from the three full models. The distribution
 clusters on a few discrete values instead of spreading smoothly. The six runs
 that report more arrivals than the ceiling admits
 (Section~\ref{sec:res:integrity}) are folded into the \mbox{100+} column, the
-same way the survival tables cap them. Drawn from
-\texttt{data/delivery\_distribution.csv}.}
+same way the survival tables cap them.}
 \label{fig:res:delivery}
 \end{figure}
 
@@ -532,9 +491,7 @@ the end.
 
 The figure also separates the models. The spike at 50 is mostly glm-5.2, with
 12 of its 19 runs. The spike at 90 is mostly deepseek-v4-pro, with 12 of 18.
-qwen3.5 holds 41 of the 102 full deliveries. This is descriptive and
-exploratory, and Chapter~\ref{ch:critique} carries the causal argument and its
-limits.
+qwen3.5 holds 41 of the 102 full deliveries.
 
 \section{Decision Quality}
 \label{sec:res:quality}
@@ -545,8 +502,8 @@ recovery level, and it does not enter any gate. Each cell counts \texttt{yes}
 judgements out of 10. A cell short of 10 had the remainder judged \texttt{no}
 or \texttt{unanswerable}.
 
-Table~\ref{tab:res:rubric} gives all five novel disruptions and all sixteen
-criteria.
+Figure~\ref{fig:res:rubric} shows all sixteen criteria across the five novel
+disruptions. Appendix~\ref{app:rubric} gives the exact counts.
 
 \begin{figure}[htbp]
 \centering
@@ -556,48 +513,10 @@ how the two sides compare. The tick marks the baseline. Parity holds where the
 agentic markers sit on it, and the baseline's lead is the distance to the left
 of it. The bottom group of four is where the baseline itself scores zero. The
 last two are the criteria the source leaves unplaced, drawn apart rather than
-pushed into a group. Table~\ref{tab:res:rubric} gives the counts. Drawn from
-\texttt{data/rubric\_split.csv}.}
+pushed into a group. Table~\ref{tab:res:rubric} in
+Appendix~\ref{app:rubric} gives the counts.}
 \label{fig:res:rubric}
 \end{figure}
-
-\begin{table}[htbp]
-\centering
-\caption{Held-out decision rubric, \texttt{yes} judgements out of 10.}
-\label{tab:res:rubric}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-Criterion & baseline & qwen3.5 & glm-5.2 & deepseek \\
-\midrule
-\multicolumn{5}{l}{\emph{Disruption:} \code{bus1_suspension_capacity_reduction}} \\
-\quad \code{reserve_committed} & 10 & \textbf{10} & \textbf{10} & 9 \\
-\quad \code{whole_population_planned} & 10 & \textbf{10} & \textbf{10} & 6 \\
-\quad \code{bus_load_within_cap} & 0 & 0 & 3 & 2 \\
-\midrule
-\multicolumn{5}{l}{\emph{Disruption:} \code{conflicting_evacuation_orders}} \\
-\quad \code{authority_informed} & 10 & \textbf{10} & 9 & \textbf{10} \\
-\quad \code{full_evacuation_kept} & 10 & 9 & \textbf{10} & 5 \\
-\quad \code{facility_answered_in_time} & \textbf{10} & 0 & 0 & 0 \\
-\midrule
-\multicolumn{5}{l}{\emph{Disruption:} \code{medical_emergency_in_flight}} \\
-\quad \code{authority_informed} & 10 & \textbf{10} & \textbf{10} & \textbf{10} \\
-\quad \code{in_flight_leg_lands_where_ordered} & 10 & 8 & 6 & 6 \\
-\quad \code{medic_sent_to_the_bus_destination} & 0 & 1 & 1 & 0 \\
-\midrule
-\multicolumn{5}{l}{\emph{Disruption:} \code{unverified_persons_report}} \\
-\quad \code{verification_requested} & 10 & 9 & \textbf{10} & \textbf{10} \\
-\quad \code{stood_down_after_retraction} & 10 & \textbf{10} & \textbf{10} & 8 \\
-\quad \code{reserve_committed_in_time} & 10 & 9 & \textbf{10} & 9 \\
-\quad \code{facility_runs_untouched} & \textbf{10} & 7 & 8 & 5 \\
-\midrule
-\multicolumn{5}{l}{\emph{Disruption:} \code{sc1_partial_capacity_loss}} \\
-\quad \code{no_order_raises_shelter_above_beds} & \textbf{10} & 5 & 9 & 8 \\
-\quad \code{shelter_set_down_within_beds} & 0 & 2 & 2 & 0 \\
-\quad \code{everyone_bedded_at_the_reduced_capacity} & 0 & 0 & 0 & 0 \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 Read across all sixteen criteria, the rubric splits three ways.
 Figure~\ref{fig:res:rubric} puts them in that order.
@@ -627,41 +546,27 @@ too. They cannot be reported as agentic failures. On
 baseline, at 2 and 2 against 0.
 
 The zero on \code{medic_sent_to_the_bus_destination} covers two different
-behaviours. On \code{medical_emergency_in_flight} the baseline never asked for
-medical support. The scorer records no \code{request_medical} in any of its ten
-runs. Its answer was the holding order of Section~\ref{sec:wf:fallback}, which
-reports to the authority and holds the residents at the home. That order does
-not reach a bus that is already on the road, so bus-1 set down where the
-original plan had sent it.
+behaviours. The baseline never asked for medical support. The scorer records
+no \code{request_medical} in any of its ten runs. Its answer was the holding
+order of Section~\ref{sec:wf:fallback}, which does not reach a bus that is
+already on the road, so bus-1 set down where the original plan had sent it.
 
 The agentic models read the report correctly. Across all twenty runs from
 qwen3.5 and glm-5.2 the event log holds between 16 and 43 reasoning entries per
 run that name the emergency, the resident's respiratory distress or the medical
-service. One glm-5.2 run sets out the right action and then does not take it.
-Its reasoning records that the medical team had been staged at the pickup point
-while the emergency was on the moving bus, and it concludes \enquote{I must
-immediately alert DRK to intercept bus-1 or proceed to the SC1 dropoff point}.
-The run then committed a status update to the medical service and to the
-authority. The scorer finds no \code{request_medical} in it.
+service. One glm-5.2 run concludes \enquote{I must immediately alert DRK to
+intercept bus-1 or proceed to the SC1 dropoff point}, and then commits only a
+status update to the medical service and the authority. Over the twenty runs,
+two sent a medical order to the shelter the bus was bound for and scored the
+criterion. One sent it to the Augustinum, which the bus had already left.
+Sixteen issued no medical order, and one could not be judged because no leg of
+bus-1 was in flight when the report arrived. The criterion therefore measures
+execution rather than comprehension. It shows the commitment gap of
+Section~\ref{sec:res:loss:quantised} in a single decision.
 
-Three of the twenty runs issued a medical order. Two sent it to the shelter the
-bus was bound for, and those two scored the criterion. The third sent it to the
-Augustinum, the address the bus had already left. Sixteen issued no medical
-order. One could not be judged, because no leg of bus-1 was in flight when the
-report arrived. Across the same twenty runs, three did not deliver every
-resident.
-
-The criterion therefore measures execution rather than comprehension. The
-agents saw what the report meant and named the action it called for, and in
-sixteen of the twenty runs no medical order left the agent at all.
-This is the commitment gap of Section~\ref{sec:res:loss:quantised}, visible in
-a single decision instead of in a delivery count.
-
-\textbf{Decision quality is split, not at parity.} Over the sixteen criteria
-the agentic models match the baseline on five and fall short on five. Parity
-holds on the criteria about deciding, and fails on the criteria about closing
-the loop. This chapter does not round that to decision-quality parity, and
-neither does any later chapter.
+\textbf{Decision quality is split.} Over the sixteen criteria the agentic
+models match the baseline on five and fall short on five. Parity holds on the
+criteria about deciding, and fails on the criteria about closing the loop.
 
 \section{Response Time and Cost}
 \label{sec:res:responsetime}
@@ -676,8 +581,8 @@ per-cell means sit between 815 seconds, for deepseek on
 
 Bus kilometres are comparable within a system but not between the two,
 because the systems compose the total differently. The baseline drove 60.63
-bus-km on every novel scenario, and the same 60.63 undisrupted. That single
-fact is one of the reasons Chapter~\ref{ch:critique} exists.
+bus-km on every novel scenario, and the same 60.63 undisrupted.
+Section~\ref{sec:crit:defect} explains why.
 
 The coordination surface is the cost that the original protocol never printed.
 Table~\ref{tab:res:surface} gives it for the 150 agentic novel runs and their
@@ -707,9 +612,8 @@ delivered. It also spends roughly 800\,000 tokens and 1.8 to 2.7 times the
 wall-clock that the compressed clock allows. 140 of the 150 runs finished over
 budget.
 
-On these scenarios that surface bought nothing. Whether it buys anything on a
-scenario that actually requires adaptation is an open question, and this design
-cannot answer it.
+On these scenarios that surface bought nothing. This design cannot tell
+whether it buys anything on a scenario that requires adaptation.
 
 \section{Process Diagnostics}
 \label{sec:res:diagnostics}
@@ -728,8 +632,7 @@ Table~\ref{tab:res:commitment} bands the 150 agentic novel runs by it.
 point per agentic novel run, spread sideways within each band so that runs at
 the same count stay visible. The percentage above each band is the share of its
 runs that delivered all 100 residents, and \texttt{n} is how many runs the band
-holds. Table~\ref{tab:res:commitment} gives the band means. Drawn from
-\texttt{data/commitment\_per\_run.csv}.}
+holds. Table~\ref{tab:res:commitment} gives the band means.}
 \label{fig:res:commitment}
 \end{figure}
 
@@ -766,18 +669,20 @@ they spread over the whole range, including the two runs that delivered nobody.
 The losses stay on the same few values in every band, which is the quantisation
 of Figure~\ref{fig:res:delivery} seen a second way.
 
-The causal direction is not established, and this chapter does not claim it. Of
-108 aborts, 52.8\% are explicit post-failure stand-downs and only 13.0\% are
-clearly revision-initiated. A run that is going badly plausibly re-plans because
-it is going badly. Observational data cannot separate the two directions.
-Chapter~\ref{ch:critique} names the experiment that would.
+The causal direction is not established. A run that is going badly may
+re-plan because it is going badly, and most aborts are stand-downs after a
+failure. Section~\ref{sec:crit:mechanism} gives the abort breakdown and the
+experiment that would settle the question.
 
 \section{Model Sweep and Capability Threshold}
 \label{sec:res:models}
 
 The gap narrows with model capability. The mean novel-arm risk difference is
-$-0.27$ for deepseek-v4-pro, $-0.16$ for glm-5.2 and $-0.10$ for qwen3.5. The
-ordering is consistent across all five novel disruptions. On four of the five,
+$-0.27$ for deepseek-v4-pro, $-0.16$ for glm-5.2 and $-0.10$ for qwen3.5. deepseek-v4-pro
+has the largest deficit on all five novel disruptions. qwen3.5 has the
+smallest on four of them. The exception is \code{sc1_partial_capacity_loss},
+where glm-5.2 at $-0.19$ does slightly better than qwen3.5 at $-0.22$. On four
+of the five,
 qwen3.5 matches the baseline's median level while still losing residents, so it
 reaches the same recovery category without the same survival.
 
@@ -786,17 +691,13 @@ The weaker models fail badly rather than narrowly. minimax-m3 scored 0.340 on
 scored 0.000 on the two runs it completed. Neither model is part of the
 headline result.
 
-No capability threshold is observable inside the final model set, and the
-design does not support extrapolating past qwen3.5.
-
 \textbf{Hypothesis H3 cannot be resolved, because it presupposes H2.} H3
 predicted that the agentic advantage on novel disruptions would be
 model-robust, with a capability threshold below which that advantage
-disappears. There is no advantage here to be robust or fragile. The threshold
-H3 asks about is therefore undefined rather than unobserved, and no verdict on
-H3 is reported. What the model sweep does establish is the ordering above: the
-size of the deficit tracks model capability, consistently, across every novel
-disruption. That is a descriptive finding and not the registered hypothesis.
+disappears. There is no advantage here to be robust or fragile, so the
+threshold is undefined rather than unobserved. The ordering above is a
+descriptive finding, and the design does not support extrapolating it past
+qwen3.5.
 
 \subsection{Why Levels Are Comparable for Three Arms Only}
 \label{sec:res:models:levelcap}
@@ -811,7 +712,7 @@ best agentic survival with zero level-4 runs, which made every level-based
 comparison involving it an artifact. Amendment~13 ran its ten anticipated
 \code{closed_loop} cells to supply the reference. After re-scoring it has 30
 level-4 runs and a median level of 4, against glm-5.2's 31 and 4. Levels are
-now comparable across the three full arms.
+therefore comparable across the three full arms.
 
 Three series remain capped and are comparable on $S$ only. These are kimi-k3
 with 11 runs at $S = 0.773$, kimi-k2.7-code with 3 runs at 0.667 and gpt-oss
@@ -845,10 +746,6 @@ arms reads the same median at all three cuts, with one exception:
 0.60 cut. The only other unstable cells are minimax-m3 on the anticipated arm
 and two partial series, kimi-k2.7-code at $n = 3$ and kimi-k3 at $n = 1$. No
 agentic-versus-baseline ordering moves anywhere in the cut range.
-
-This analysis was also missing from the first write-up. The summary asserted
-that it had to be reported but printed no table, and the reporting script never
-read the field. It is now aggregated and emitted.
 
 \section{Integrity of the Reported Numbers}
 \label{sec:res:integrity}
@@ -887,56 +784,29 @@ Three of the six are masked, because their valid-resident count stayed at or
 below the ceiling and $S$ therefore looks ordinary. Reporting only the subset
 with $S > 1.0$ would understate the problem.
 
-The mechanism is now diagnosed, and it is not a double count. The feasibility
-ceiling is the smaller of the population and the total declared beds, so it is
-capped at 100 by the population. Valid residents are capped only by per-shelter
-beds. Sheltered residents are a raw sum over logged arrivals and are capped by
-nothing. Where two shelters declare 110 beds between them, a run can validly
-shelter 110 against a ceiling of 100. So this is genuine over-delivery credited
-against a ceiling that does not admit it, not a logging artifact.
-
-The cap stays at the reporting layer, where it is visible and stated. Capping
-at 1.0 moves qwen3.5's novel mean from 0.900 to 0.894 and changes no
-conclusion. A value of $S$ above 1.0 does not appear in any table in this
-thesis.
+The cause is not a double count. The feasibility ceiling is the smaller of the
+population and the total declared beds, so the population caps it at 100.
+Valid residents are capped only by per-shelter beds, and sheltered residents
+are a raw sum over logged arrivals with no cap at all. Where two shelters
+declare 110 beds between them, a run can validly shelter 110 against a ceiling
+of 100. This is real over-delivery credited against a ceiling that does not
+admit it. The cap at 1.0 is applied at the reporting layer, and no table in
+this thesis shows a value of $S$ above 1.0.
 
 One further inconsistency is undiagnosed. Run \texttt{eb997b3e} shelters 150
 against a ceiling of 100 with its overload count recorded as 0, so the overload
 accounting does not agree with the arrival sum on that run.
 
-\subsection{Standing Caveats}
-\label{sec:res:integrity:caveats}
+\subsection{One Time Scale, So H4 Was Not Tested}
+\label{sec:res:h4}
 
-The following apply to every table in this chapter. They are listed in full,
-with the position taken on each, in Chapter~\ref{ch:critique}.
-
-\begin{itemize}
-\item \textbf{One time scale, so H4 was not tested.}
-  \label{sec:res:h4}
-  The scenario-scaling sweep was planned and never run. Every result in this
-  chapter is at a single \code{SIM_TIME_SCALE} of 8.4, so Gate~3's adaptability
-  series has one point per cell and no crossover can be located. H4 asked at
-  which time scale the agentic latency cost overtakes its coordination benefit.
-  This chapter reports no crossover, no trend and no scale-dependence claim of
-  any kind. The evaluation is finished, so this is permanent rather than
-  pending.
-\item \textbf{Reserve-bus confound.} The baseline parallelises the reserve bus
-  while the agentic side honours the reserve role and serialises it. This
-  drives part of the gap. It is architectural rather than a model effect.
-\item \textbf{One run flagged for possible straight-line routing},
-  \texttt{aaae313d}, during a routing-service quota outage.
-\item \textbf{Equity is undefined by declaration.} The resident population is
-  homogeneous, so a maximum-minimum subgroup difference is identically zero.
-\item \textbf{Cloud model tags are not version-frozen.} The serving runtime
-  resolves whatever a tag currently points at, and no digest pins these
-  results.
-\item \textbf{Two parity deviations favour the baseline}, the consolidated
-  situation picture and the controller's access to road distance and duration.
-  Both were accepted for doctrinal reasons and reported rather than corrected.
-\item \textbf{One parity deviation was still open when the campaign ran.} Its
-  direction runs against the baseline, so it cannot explain a baseline win.
-  Chapter~\ref{ch:validity} carries that argument.
-\end{itemize}
+The scenario-scaling sweep was planned and not run. Every result in this
+chapter is at a single \code{SIM_TIME_SCALE} of 8.4, so Gate~3's adaptability
+series has one point per cell and no crossover can be located. H4 asked at
+which time scale the agentic latency cost overtakes its coordination benefit.
+This chapter makes no crossover, trend or scale-dependence claim of any kind.
+The other caveats that apply to every table are collected in
+Section~\ref{sec:crit:limitations}.
 
 \section{Summary of Findings}
 \label{sec:res:findings}
@@ -948,15 +818,11 @@ with the position taken on each, in Chapter~\ref{ch:critique}.
 \item \textbf{H2 is rejected outright}, on both of its co-primaries. Zero of 19
   novel Gate~1 cells pass on survival, and no cell reaches the registered
   minimum effect of one recovery level. The registered Clopper-Pearson primary,
-  implemented late and therefore exploratory, agrees with that verdict. It also
-  could not have detected a moderate effect at $k = 10$.
+  implemented late and therefore exploratory, agrees.
 \item \textbf{H3 cannot be resolved}, because it presupposes the advantage H2
-  failed to establish. The capability threshold it asks about is undefined
-  rather than unobserved. What the model sweep does show is that the size of
-  the deficit narrows with model capability, from $-0.27$ for deepseek through
-  $-0.16$ for glm-5.2 to $-0.10$ for qwen3.5, consistently across all five
-  novel disruptions. That is descriptive. Extrapolating past qwen3.5 is not
-  supported by this design.
+  failed to establish. Descriptively, the deficit narrows with model
+  capability, from $-0.27$ for deepseek through $-0.16$ for glm-5.2 to $-0.10$
+  for qwen3.5.
 \item Agentic non-inferiority holds in exactly one place, glm-5.2 on the
   undisrupted \code{closed_loop}.
 \item Decision quality is split. Over the sixteen rubric criteria the agentic

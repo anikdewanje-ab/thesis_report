@@ -24,8 +24,9 @@ bureaucratic system can respond in a flexible and reliable way when the
 situation keeps changing. The system also has known weak points.
 \textcite{buck2006} find that ICS works less well when many independent
 organizations must cooperate, and that it has trouble absorbing help that was
-not part of the plan. German fire services and civil protection follow a
-comparable doctrine, DV~100 \parencite{fwdv100}. Chapter~\ref{ch:workflow}
+not part of the plan. \textcite{moynihan2009} studies ICS in real crises and
+describes it in practice as a mix of hierarchy and network. German fire
+services and civil protection follow a comparable doctrine, DV~100 \parencite{fwdv100}. Chapter~\ref{ch:workflow}
 describes how our baseline implements it.
 
 Research on business processes asks the same question from a software angle.
@@ -35,11 +36,12 @@ it from the start. An unanticipated exception is one nobody foresaw. It needs a
 change to the running process, and a fixed script cannot make that change by
 itself. Build-time handlers are the state of the art for the first kind.
 Worklets, for example, select a prepared sub-process that fits the current
-context \parencite{adams2007}.
-% TODO(cite): van der Aalst, Pesic & Schonenberg (2009), declarative workflows,
-% for the imperative vs declarative contrast. Not yet in litDB.bib.
-% TODO(cite): Marrella, Mecella & Sardina, SmartPM (automated planning for
-% unanticipated exceptions). Not yet in litDB.bib.
+context \parencite{adams2007}. For the second kind, some systems bring in
+automated planning, so that the process can compute a repair while it runs
+\parencite{marrella2017}. Declarative process models take a middle path. They
+state only the rules a process must respect and leave the order of steps open
+\parencite{vanderaalst2009}. Our baseline is imperative. It fixes the order of
+steps and the response to each anticipated exception in advance.
 
 Resilience engineering draws a similar line. \textcite{woods2015a} separates
 robustness from graceful extensibility. Robustness means handling
@@ -130,17 +132,19 @@ Our agents do not call each other directly. They read and write one shared
 database, and every change is recorded in an append-only log. The idea of
 coordinating through shared state is old. In a blackboard system, independent
 knowledge sources watch a common data structure and add to it when they can
-contribute \parencite{nii1986}. In the Linda model, processes communicate by
+contribute. The classic example is the Hearsay-II speech recognizer
+\parencite{erman1980,nii1986}. In the Linda model, processes communicate by
 placing tuples in a shared space and taking them out again, without knowing
-each other \parencite{gelernter1985}. Event sourcing, a pattern from software
-engineering, keeps the full history of changes as the source of truth. Any
+each other \parencite{gelernter1985}. Later tuple spaces became reactive. They
+can run code when a tuple arrives, so a process reacts to new data without
+asking for it again and again \parencite{omicini1999,cabri1998}. Our agents
+wake in a similar way when a notification tells them that a new row is waiting
+(Section~\ref{sec:data:notify}). Event sourcing, a pattern from software
+engineering, keeps the full history of changes as the source of truth
+\parencite{fowler2005}. Any
 past state can then be rebuilt by replaying the log. An industry study finds
 this useful for audits and replay but notes that it makes schema changes harder
 \parencite{overeem2021}.
-% TODO(cite): Erman et al. (1980), Hearsay-II, the canonical blackboard system.
-% TODO(cite): Fowler (2005), Event Sourcing.
-% TODO(cite): Omicini & Zambonelli, TuCSoN, and Cabri et al., MARS (reactive
-% tuple spaces, the closest analogue to LISTEN/NOTIFY). None is in litDB.bib yet.
 
 We therefore do not claim shared-state coordination as new. Our claim is
 narrower and concerns evaluation. Section~\ref{sec:data:evalbackbone} states it.
@@ -178,4 +182,4 @@ To our knowledge, no prior work puts LLM agents in the role of the
 organizations that coordinate an evacuation and compares them with a
 doctrine-grounded scripted baseline on a scored outcome. This thesis makes that
 comparison. It holds the world model, the action set and the scoring fixed, and
-changes only the way decisions are made (Chapter~\ref{ch:validity}).
+changes only the way decisions are made (Section~\ref{sec:eval:overview}).

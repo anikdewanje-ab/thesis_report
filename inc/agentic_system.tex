@@ -374,7 +374,7 @@ driver which run it is on and how many there are. By default bus-1 makes two
 runs in sequence and bus-2 stays in reserve. Hochbahn releases the reserve for
 only four reasons: a leg needs more seats than bus-1 has, bus-1 is not
 available, BIS names bus-2, or the schedule fails Hochbahn's deadline test. The
-baseline treats the reserve bus differently. Section~\ref{sec:val:reserve}
+baseline treats the reserve bus differently. Section~\ref{sec:wf:fleet}
 describes this and what it means for the comparison.
 
 \paragraph{The scripted agents.} ZKD, the Augustinum and the two schools use
@@ -488,11 +488,10 @@ one of the evaluation's measures of decision quality
 
 The vocabulary is also one leg of the parity argument. The workflow baseline
 replaces only the two reasoning coordinators, BIS and Hochbahn
-(Table~\ref{tab:val:roster}). The four field agents, meaning the two drivers,
+(Section~\ref{sec:wf:rationale}). The four field agents, meaning the two drivers,
 the police officer and the paramedic, are the same programs in both systems.
 Their action sets are therefore identical by construction, and no audit is
-needed to show it. Chapter~\ref{ch:validity} sets out the full comparison,
-including the places where the two systems differ.
+needed to show it.
 
 % =====================================================================
 \section{Chapter Summary}

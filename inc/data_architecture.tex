@@ -254,8 +254,8 @@ gives the same result as scoring it without them.
   judges one either. The same log always gets the same score.
   \item \textbf{Checkable parity.} Because both systems write the same rows
   into the same table, the claim that they are comparable can be tested
-  against shared code instead of stated. Chapter~\ref{ch:validity} does this
-  and lists the seven places where the two systems still differ.
+  against shared code instead of stated. An executable parity test suite
+  does this, and lists the seven places where the two systems still differ.
   \item \textbf{Re-scoring.} The log keeps every run. When a scoring rule
   changes, every run can be scored again from its rows, without running it
   again. Because the log is append-only, a run that is dropped from an

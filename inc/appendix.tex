@@ -9,6 +9,24 @@
 % This appendix is what makes the preregistration claim checkable rather than
 % merely stated.
 
+\paragraph{Baseline freeze.} The workflow baseline was frozen in commit
+\texttt{67a14f8}, made at 11:41 on 2026-09-10 and tagged
+\code{eval-day-2026-09-10}. The five novel scenarios were saved between 15:27
+and 16:04 the same day and then committed.
+
+\paragraph{Pre-registration tags.} The tags \code{prereg-v1} and
+\code{prereg-amendment-1} were cut together on 2026-09-12, on commit
+\texttt{7a4d7cc}. This is the commit the anticipated campaign ran on. The pilot
+ran before the tag, as the pre-registration discloses.
+
+\paragraph{The one post-reveal change.} Commit \texttt{e9e20cd}, merged after
+the reveal, added the switch that turns off re-planning for the no-replan
+control (Amendment~6). It also merged two fenced sections into
+\code{thresholds.py}, one for the negative control and one for the decision
+rubric. Neither section holds anything the ladder reads. The threshold hash
+recorded with the scored runs, \texttt{d08c1e35}, is identical across all 310
+of them.
+
 \chapter{Disruption Brief}
 \label{app:brief}
 % The characteristics-only brief given to the external supplier, reproduced in
@@ -31,7 +49,77 @@
 \label{app:scenarios}
 % TODO: \lstinputlisting of the scenario JSON files.
 
+\chapter{Decision Rubric Counts}
+\label{app:rubric}
+
+Table~\ref{tab:res:rubric} gives the counts behind
+Figure~\ref{fig:res:rubric}, grouped by disruption.
+Table~\ref{tab:eval:heldout} states what each criterion checks. Each cell
+counts \texttt{yes} judgements out of 10.
+
+\begin{table}[htbp]
+\centering
+\caption{Held-out decision rubric, \texttt{yes} judgements out of 10.}
+\label{tab:res:rubric}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Criterion & baseline & qwen3.5 & glm-5.2 & deepseek \\
+\midrule
+\multicolumn{5}{l}{\emph{Disruption:} \code{bus1_suspension_capacity_reduction}} \\
+\quad \code{reserve_committed} & 10 & \textbf{10} & \textbf{10} & 9 \\
+\quad \code{whole_population_planned} & 10 & \textbf{10} & \textbf{10} & 6 \\
+\quad \code{bus_load_within_cap} & 0 & 0 & 3 & 2 \\
+\midrule
+\multicolumn{5}{l}{\emph{Disruption:} \code{conflicting_evacuation_orders}} \\
+\quad \code{authority_informed} & 10 & \textbf{10} & 9 & \textbf{10} \\
+\quad \code{full_evacuation_kept} & 10 & 9 & \textbf{10} & 5 \\
+\quad \code{facility_answered_in_time} & \textbf{10} & 0 & 0 & 0 \\
+\midrule
+\multicolumn{5}{l}{\emph{Disruption:} \code{medical_emergency_in_flight}} \\
+\quad \code{authority_informed} & 10 & \textbf{10} & \textbf{10} & \textbf{10} \\
+\quad \code{in_flight_leg_lands_where_ordered} & 10 & 8 & 6 & 6 \\
+\quad \code{medic_sent_to_the_bus_destination} & 0 & 1 & 1 & 0 \\
+\midrule
+\multicolumn{5}{l}{\emph{Disruption:} \code{unverified_persons_report}} \\
+\quad \code{verification_requested} & 10 & 9 & \textbf{10} & \textbf{10} \\
+\quad \code{stood_down_after_retraction} & 10 & \textbf{10} & \textbf{10} & 8 \\
+\quad \code{reserve_committed_in_time} & 10 & 9 & \textbf{10} & 9 \\
+\quad \code{facility_runs_untouched} & \textbf{10} & 7 & 8 & 5 \\
+\midrule
+\multicolumn{5}{l}{\emph{Disruption:} \code{sc1_partial_capacity_loss}} \\
+\quad \code{no_order_raises_shelter_above_beds} & \textbf{10} & 5 & 9 & 8 \\
+\quad \code{shelter_set_down_within_beds} & 0 & 2 & 2 & 0 \\
+\quad \code{everyone_bedded_at_the_reduced_capacity} & 0 & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \chapter{Reproducibility}
 \label{app:repro}
 % How to run the systems and the harness. Model digests, environment variables
 % (SIM_TIME_SCALE, OLLAMA_MODEL, ORS_API_KEY), migrations, seeds.
+
+\paragraph{The headless world client.} On the agentic side, a bus leg closes
+only when the world acknowledges that the task is complete. In the first pilot
+that acknowledgement came only from the browser's vehicle animation, so without
+a browser no bus ever arrived and every agentic cell scored level 0. We ruled
+that pilot invalid and re-ran it on the same plan. Every agentic cell runs a
+headless client that plays the animations from the backend's own events. A
+cell refuses to start while a browser tab is connected, since both would
+acknowledge every leg.
+
+\paragraph{Replicate blocks.} The replicate index shifts the policy seed, so
+blocks are kept apart by index and by output file. Replicates 100--105 are the
+pilot, 1000--1009 the confirmatory runs, and 2000 onwards the model
+screenings. The scoring and summary commands read only the confirmatory file
+by default, so the code itself keeps pilot and screening runs out of the
+confirmatory analysis.
+
+\paragraph{Two-pass scoring.} A cell's clean-run reference $K^\ast$ must exist
+before any run in it may rise to level 4. Scoring therefore runs in two
+passes, first the references and then the levels.
+
+\paragraph{Wilcoxon variants.} The signed-rank test is exact for up to 20
+non-zero differences without ties. Otherwise it uses a normal approximation
+with tie correction.

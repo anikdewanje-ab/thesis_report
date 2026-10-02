@@ -12,14 +12,13 @@ it honestly against an old-style scripted baseline, and report what was learned
 either way. A negative answer is a result here, not a failure. Write every
 chapter in that voice and never apologise for the outcome.
 
-Four research questions, each with an answer the evidence supports:
+Three research questions, each with an answer the evidence supports:
 
 | | Question | Answer | Where |
 | --- | --- | --- | --- |
 | RQ1 | Can the agentic architecture beat the scripted baseline? | **No.** Gate 1 fails 26 of 27 cells. It also loses to a null policy: 68 of 150 runs came out worse than doing nothing. | Results, Methods critique |
 | RQ2 | If not, why? | A **commitment** failure, not a comprehension failure. The agents understood the disruption; they could not carry one committed plan to delivery. | Results, Discussion |
-| RQ3 | What must change? | Constrain commitment, and test on scenarios that discriminate. The named experiment is a commitment-constrained variant. | Conclusion, future work |
-| RQ4 | What should a designer consider? | The generalisable deliverable. | Design Considerations chapter |
+| RQ3 | What must change, and what should a designer consider? | Constrain commitment, confirm delivery, and test on scenarios that discriminate. The named experiment is a commitment-constrained variant. | Design Considerations chapter; next experiment in Conclusion, future work |
 
 **Why this framing is stronger than it first looks.** Gate 0 showed the baseline
 wins these scenarios without replanning at all. That does not rescue the agentic
@@ -62,7 +61,7 @@ Proposed chapter order:
 5. Architecture: the Workflow Baseline
 6. Data Layer
 7. Observation UI (short, supporting material)
-8. **Validity: are the two systems comparable?** (new)
+8. ~~Validity: are the two systems comparable?~~ (dropped 2026-10-02; reserve bus and deviation 7 moved into the baseline chapter)
 9. Method and Evaluation Protocol
 10. Instrument Implementation (may fold into 9)
 11. Results

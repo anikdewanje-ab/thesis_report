@@ -14,129 +14,190 @@
 
 \section{Motivation}
 \label{sec:intro:motivation}
-% Why evacuation coordination is hard: heterogeneous organisations, local
-% information, a hard deadline, and a disruption space too large to enumerate.
-% Why the old style falls short: a pre-scripted workflow can only cover the
-% cases its author thought of.
-% Why an agentic architecture is the obvious thing to try: agents that reason
-% over a shared database can in principle answer a disruption nobody scripted.
-% END ON THE OPEN QUESTION, not on a promise: nobody had measured whether that
-% promise survives contact with a scored evacuation.
+
+Hamburg lies on the Elbe, upstream of the North Sea. A strong storm surge can
+push water up the estuary and into the city, and this risk is expected to grow
+with climate change \parencite{vonstorch2008}. When a surge is forecast, people
+who live near the river have to leave in time. For most of them this means a
+car or a train. For the residents of a nursing home it means a planned
+operation. Many of them cannot walk far, some need medical care on the way, and
+all of them depend on vehicles and staff that the home does not own. Studies of
+coastal evacuation show that moving elderly people is the part that dominates
+the logistics \parencite{yin2024}. Models that ignore differences in mobility
+underestimate how long the operation takes \parencite{alqahtani2025a}.
+
+Such an evacuation is a coordination problem across organizations. A crisis
+team decides. A transport company supplies buses and drivers. The police escort
+the convoy, a medical service travels with it, and schools open as shelters.
+Each organization sees only its own part of the situation, and all of them work
+against one fixed deadline, the arrival of the water. The plan also rarely stays
+as it was. A road closes, a shelter reports fewer beds, or a resident collapses
+on a bus that is already moving.
+
+In Germany such operations follow a written doctrine, DV~100
+\parencite{fwdv100}. A computer simulation in this tradition is a script. It
+encodes the steps of the doctrine and adds a branch for each disruption its
+author expected. Research on business processes calls these anticipated
+exceptions. It separates them from unanticipated exceptions, which a fixed
+script cannot handle by itself \parencite{reichert2012}. \textcite{woods2015a}
+draws a similar line between robustness against disruptions that were modelled
+in advance and graceful extensibility beyond them. A script can be robust, but
+it only covers the cases its author wrote down.
+
+Agents built from large language models (LLMs) suggest a different design. An
+LLM agent observes, reasons and acts in a loop, and it can revise its plan when
+something unexpected happens \parencite{yao2023}. If each organization is
+played by such an agent, and the agents coordinate through a shared database,
+the system could in principle respond to a disruption that nobody scripted.
+This possibility is what makes an agentic architecture attractive for
+emergency simulation. The critical literature on LLM planning gives reasons for
+doubt \parencite{kambhampati2024,cemri2025}. To our knowledge, however, no
+study had put LLM agents in the role of the coordinating organizations and
+measured them against a doctrine-grounded script on a scored evacuation.
+Whether the promise holds when the score is the number of residents who reach
+a shelter was an open question.
 
 \section{Problem Statement}
 \label{sec:intro:problem}
-% The concrete problem: move 100 residents of a riverside nursing home to
-% shelters before a forecast storm surge, using resources owned by eight
-% different organisations, when the plan must change mid-operation.
+
+We study this question on one concrete case. A storm surge is forecast for
+Hamburg. The Augustinum, a senior residence on the Elbchaussee near the river,
+has to move its 100 residents to two schools that serve as shelters before the
+water arrives. Each school offers 60 beds. The local transport company provides
+two buses with 50 seats each, one as the primary bus and one in reserve. No bus
+can carry everyone in one trip, and no shelter can take everyone, so the
+allocation is a real decision. The resources belong to eight different
+organizations. During the operation a disruption arrives that may force the
+plan to change. Chapter~\ref{ch:casestudy} describes the case in detail.
+
+We treat the problem as a design-and-evaluation study. First, we design a
+database-centric agentic architecture. Ten agents, each representing a person
+at one of the eight organizations, coordinate through one PostgreSQL database.
+Second, we build a workflow baseline that follows the DV~100 doctrine and has no
+language model in the loop. Both systems run the same scenarios and write to
+the same append-only event log, and one deterministic scorer reads that log for
+both. Third, we compare the two on seven scenarios under a pre-registered
+protocol, and we report what we learn in whichever direction the result falls.
 
 \section{Research Questions}
 \label{sec:intro:rq}
-% ---------------------------------------------------------------------------
-% THE FOUR QUESTIONS, AS SETTLED. Each has an answer in this thesis. Write the
-% question here and the answer in the chapter named, then again in the
-% conclusion. Do not hedge any of the four.
-%
-% RQ1  Can a database-centric agentic architecture coordinate an evacuation
-%      BETTER than an old-style scripted workflow baseline?
-%      ANSWER: No, on the pre-registered primary outcome.
-%      -> Chapter~\ref{ch:results}. Gate 1 fails 26 of 27 cells. The baseline
-%         saved every resident in every novel run; the best agentic
-%         configuration saved 90 %.
-%      -> And it is worse than that: against a null policy that ignores every
-%         disruption, agentic regret is negative in all 15 novel cells and 68
-%         of 150 runs came out WORSE THAN DOING NOTHING.
-%      -> BOUNDARY, state it in the same breath (Chapter~\ref{ch:critique}):
-%         no scenario in this thesis ever REQUIRED adaptation, so this answers
-%         "did it win here", not "can it ever win".
-%
-% RQ2  If not, why not? Where does the deficit come from?
-%      ANSWER: A COMMITMENT failure, not a comprehension failure.
-%      -> Chapter~\ref{ch:results} and Chapter~\ref{ch:critique}.
-%      -> The agents understood the disruption. They were told the right
-%         population in 150 of 150 runs, closed 93.8 % of addressed requests,
-%         dispatched the same number of missions in failing and succeeding
-%         runs, and used the reserve bus in 100 % of runs.
-%      -> What they could not do is carry ONE COMMITTED PLAN to delivery.
-%         Losses are quantised at whole bus-loads: of 150 runs, 102 delivered
-%         everyone, 19 delivered exactly 50, 18 delivered exactly 90.
-%      -> Plan revisions band monotonically against delivery: 90 % full
-%         delivery at the minimum revision count, 32 % at six or more.
-%         r(plan revisions, S) = -0.408, the strongest non-definitional
-%         predictor in the data.
-%      -> THE IRONY TO NAME OUT LOUD: re-planning on disruption is the
-%         architecture's advertised capability, and on these scenarios the
-%         correct number of re-plans was ZERO.
-%
-% RQ3  What would have to change to make an agentic emergency simulation
-%      better?
-%      ANSWER: constrain commitment, and test on scenarios that discriminate.
-%      -> Chapter~\ref{ch:conclusion}, future work.
-%      -> The named experiment: a COMMITMENT-CONSTRAINED VARIANT. Cap re-plans,
-%         or forbid cancelling a leg already in flight, run against the same
-%         scenarios under the same models. One campaign, no new scenario
-%         authoring. It is also what would settle the causal direction, which
-%         this thesis explicitly does NOT establish.
-%      -> Plus: Gate 0 as a precondition on scenario authoring, a larger k, and
-%         more than one SIM_TIME_SCALE.
-%
-% RQ4  What should be considered when designing an AI agentic emergency
-%      simulation?
-%      ANSWER: Chapter~\ref{ch:design}. This is the generalisable deliverable
-%      and the part that stops being about one nursing home in Hamburg.
-%
-% ---------------------------------------------------------------------------
-% The four engineering sub-questions from the original proposal still hold and
-% are answered by the architecture chapters. Keep them, subordinate to RQ1-RQ4:
-%   1. Data modelling of actors, states, events, dependencies
-%      -> Chapter~\ref{ch:data}
-%   2. Integration of heterogeneous organisational agents
-%      -> Chapter~\ref{ch:agentic}
-%   3. Persistent structures for runtime control AND evaluation
-%      -> Sections~\ref{sec:data:eventlog} and \ref{sec:data:evalbackbone}
-%   4. Comparative performance, agentic vs workflow
-%      -> Chapters~\ref{ch:eval} and \ref{ch:results}
+
+The thesis asks three research questions.
+
+\begin{description}
+\item[RQ1] Can a database-centric agentic architecture coordinate a nursing
+  home evacuation better than a scripted workflow baseline?
+\item[RQ2] If it cannot, why not? Where does the deficit come from?
+\item[RQ3] What would have to change, and what should a designer consider,
+  when building an agentic simulation for emergency coordination?
+\end{description}
+
+RQ1 has a boundary that we state here and keep throughout the thesis. None of
+our scenarios required adaptation. A controller that ignores every disruption
+reaches the same score as the baseline (Chapter~\ref{ch:critique}). We
+therefore answer RQ1 for these scenarios only. The question is whether the
+agentic architecture won here, and we make no claim about whether it can ever
+win. RQ2 then looks for the cause of the result in the evidence, and RQ3 turns
+that cause into guidance for the next design.
+
+Building the two systems also raises four engineering questions. They support
+the research questions and are answered in the architecture and method
+chapters.
+
+\begin{enumerate}
+\item How can the actors, states, events and dependencies of an evacuation be
+  modelled in a database? (Chapter~\ref{ch:data})
+\item How can agents that represent different organizations be integrated into
+  one system? (Chapter~\ref{ch:agentic})
+\item Which persistent structures can serve both runtime control and
+  evaluation? (Sections~\ref{sec:data:eventlog}
+  and~\ref{sec:data:evalbackbone})
+\item How do the agentic system and the workflow baseline compare in
+  performance? (Chapters~\ref{ch:eval} and~\ref{ch:results})
+\end{enumerate}
 
 \section{Contributions}
 \label{sec:intro:contributions}
-% FOUR contributions. State them as claims the thesis actually supports.
-%
-%  1. ARTEFACT. A database-centric agentic architecture for multi-organisation
-%     evacuation coordination: 10 agents across 8 organisations, Postgres as the
-%     single source of truth and the active message broker, built and running.
-%     Plus a doctrine-grounded workflow baseline that reaches audited parity
-%     with it on the shared surface (Chapter~\ref{ch:validity}).
-%
-%  2. EMPIRICAL. The first scored head-to-head of the two on a common
-%     evacuation case: 310 runs, 7 scenarios, pre-registered, deterministically
-%     scored. The agentic architecture does NOT outperform the scripted
-%     baseline, and underperforms a null policy.
-%     (This replaces the proposal's expected finding. Say so plainly.)
-%
-%  3. DIAGNOSTIC. A measured account of WHY, which is the part a future builder
-%     can use: the deficit is commitment, not comprehension, and plan churn is
-%     its strongest correlate.
-%
-%  4. METHODOLOGICAL. The shared append-only event log that makes the
-%     comparison fair, auditable and replayable; and Gate 0, a treatment-
-%     validity check that catches a disruption which does not discriminate
-%     a replanner from a non-replanner BEFORE it is scored.
-%
-% NOTE. The proposal expected contribution 2 to read "agentic degrades more
-% gracefully". It does not. Do not leave the old wording anywhere.
+
+The thesis makes four contributions.
+
+\paragraph{An agentic architecture and its baseline.} We designed and built a
+database-centric agentic architecture for evacuation coordination across
+several organizations. Ten agents represent people at eight organizations.
+PostgreSQL is the single source of truth, and it also acts as the message
+broker that wakes the agents. Next to it we built a workflow baseline grounded
+in the DV~100 doctrine. The two share the scenarios, the world model, the
+action set and the scoring, and they differ only in how decisions are made
+(Chapters~\ref{ch:agentic}, \ref{ch:workflow} and~\ref{ch:data}).
+
+\paragraph{A scored comparison with a negative result.} To our knowledge, this
+is the first scored head-to-head comparison of the two approaches on a common
+evacuation case. It covers 310 runs over seven scenarios, with pre-registered
+hypotheses and deterministic scoring. The agentic architecture does not
+outperform the scripted baseline, and both pre-registered hypotheses fail.
+Gate~1, the test on resident survival, fails in 26 of 27 cells. The baseline
+sheltered every resident in all 50 novel runs, while the best agentic
+configuration reached a capped mean survival of 0.894. The agentic system also
+loses to a null policy that ignores every disruption. Its regret against that
+policy is negative in all 15 novel cells, and 68 of 150 runs ended worse than
+doing nothing. Decision quality is split. On the 16 criteria of a held-out
+decision rubric, the agentic models match the baseline on 5 and fall short
+on 5.
+
+\paragraph{A diagnosis of the loss.} We measured where the deficit comes
+from. The agents understood the disruptions, and their messages got through.
+Over 1,932 addressed requests, 93.8\% of the handshakes were closed. Residents
+were lost because the agents did not carry a committed plan through to
+delivery. The losses come in whole bus-loads. Of 150 novel runs, 102 delivered
+everyone, 19 delivered exactly 50 and 18 delivered exactly 90. Runs that
+rewrote their plan more often also delivered less. Full delivery falls from
+90\% at the minimum number of plan revisions to 32\% at six or more. We
+therefore describe the deficit as a failure of commitment, not of
+comprehension. The data show a strong association, and we do not claim its
+causal direction.
+
+\paragraph{A method for a fair comparison.} The shared append-only event log is
+the backbone of the comparison. Both systems write to it, one scorer reads it,
+and every run can be replayed and audited. We also propose Gate~0, a check on
+treatment validity. Before a campaign starts, it tests whether a control that
+ignores a disruption scores worse than a system that responds to it. Our own
+novel arm fails this check, and Gate~0 is the test that would have caught it
+before the runs were scored (Chapter~\ref{ch:critique}).
 
 \section{Scope and Delimitations}
 \label{sec:intro:scope}
-% Out of scope: resident-level agents (residents are a passive count), heavy
-% workflow engines (Camunda/Temporal/Airflow), modelling the flood itself,
-% real-time citizen apps.
-% Bounded by design: one case study, one facility, one city.
-% Bounded by what was run: one SIM_TIME_SCALE (8.4), k = 10, three models with
-% a complete novel arm. H4 was not tested. See Chapter~\ref{ch:critique}.
+
+Some limits are part of the design. The residents are a passive count and make
+no decisions of their own. The flood itself is not simulated. It enters the
+case as a forecast and a deadline. The baseline is plain Python and uses no
+workflow engine such as Camunda, Temporal or Airflow. Apps for citizens are
+outside the scope. The study covers one facility, one city and one hazard.
+
+Other limits come from what was run. Every run uses one simulation time scale,
+a \code{SIM_TIME_SCALE} of 8.4, so hypothesis H4 about the effect of time scale
+was not tested. Each cell has $k = 10$ replicates, which is too few for the
+registered test to detect a moderate effect. Three models completed the full
+novel arm: glm-5.2, deepseek-v4-pro and qwen3.5. The third model slot changed
+after data were seen, so the model set of the novel arm is exploratory.
+Chapter~\ref{ch:critique} discusses each of these limits and the position we
+take on it.
 
 \section{Thesis Outline}
 \label{sec:intro:outline}
-% One paragraph over Chapters~\ref{ch:background} to \ref{ch:conclusion}.
-% Point out the two chapters a reader might not expect and why they are there:
-% Chapter~\ref{ch:validity} (the comparison has to be admissible before it is
-% interesting) and Chapter~\ref{ch:critique} (the evaluation is itself a
-% finding).
+
+Chapter~\ref{ch:background} reviews scripted coordination, LLM agents, the
+limits of LLM planning and coordination through shared state, and places the
+thesis among related work. Chapter~\ref{ch:casestudy} presents the Hamburg
+case, the organizations involved and the disruption scenarios.
+Chapters~\ref{ch:agentic} to~\ref{ch:ui} describe what we built: the agentic
+system, the workflow baseline, the data architecture that both share, and the
+interface we use to observe a run. Chapter~\ref{ch:eval} sets out the
+pre-registered method, and Chapter~\ref{ch:results} reports the results.
+Chapter~\ref{ch:critique} may be unexpected in a thesis of this kind. It reads
+the results back against the protocol and shows that the novel arm could not
+test adaptability, because ignoring the disruption already reached the top
+score. We report this as a finding and derive Gate~0 from it.
+Chapter~\ref{ch:discussion} interprets the results and answers RQ1 and RQ2.
+Chapter~\ref{ch:design} answers RQ3 with design considerations for agentic
+emergency simulation. Chapter~\ref{ch:conclusion} summarizes the thesis and
+names the next experiment.

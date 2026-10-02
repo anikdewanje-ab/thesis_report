@@ -51,8 +51,7 @@ the seam is the agentic side's own code.
 \paragraph{What the IC replaces.} The IC takes over the two coordination agents
 that reason with a model, the command post (BIS) and the transport dispatcher
 (Hochbahn). The four scripted agents and the four field agents stay as they
-are, and both conditions share them unchanged. Section~\ref{sec:val:scope}
-gives the full roster. The IC does not drive. A bus driver still drives the bus
+are, and both conditions share them unchanged. The IC does not drive. A bus driver still drives the bus
 and still runs a language model to plan the route. Driving from A to B is the
 same act under either architecture, so we left it out of the comparison.
 
@@ -212,7 +211,8 @@ ladder only runs when the plan still fits and the situation is understood.
 agentic engine takes over, with the same code the agents use. It checks each
 order against the allowed commands, commits the new step, sends the messages
 and writes the rows of the event log. After a decision, both systems run the
-same functions. Chapter~\ref{ch:validity} shows how we test this.
+same functions. An executable parity test suite checks this by identity. The
+reused functions must be the very same objects the agents run, not copies.
 
 % =====================================================================
 \section{The Phase Ladder}
@@ -289,16 +289,20 @@ pass plans from the current situation~\cite[24]{fwdv100}. It also helps in
 practice. A correction from the contingency check reaches the schedule without
 any extra branch, because the next allocation sees the corrected situation.
 
-\paragraph{How the fleet is used.} Every scenario declares two buses of 50
+\paragraph{How the fleet is used.}\label{sec:wf:fleet} Every scenario declares two buses of 50
 seats, and marks the second one as a reserve. The baseline's run schedule does
 not read that mark. It gives each run to the bus that is free first. For 100
 residents this means that bus~2 leaves at the start, in parallel with bus~1. An
 earlier design decision said that the baseline should use the reserve only for
 sequential runs. That rule was never built, and the baseline was frozen
 without it. The agentic transport agent reads the mark and keeps the reserve
-parked by default. Section~\ref{sec:val:reserve} explains why we treat this as
-a difference in decisions rather than a parity defect. It explains part of the
-survival gap.
+parked by default. We treat the reserve role as soft. Both sides have the same
+fleet, and both may send bus~2. Sending it at once and keeping it parked are
+two choices over the same capability, and choices are what the comparison
+measures. We therefore read this as a difference in decisions and not as a
+parity defect. When the agentic side leaves the reserve parked while residents
+are at risk, we count it as a failure of decision quality on that side. It
+explains part of the survival gap.
 % source: ADR-0015 status note 2026-09-21 (rule 7 NOT implemented);
 % PARITY reserve-bus note; RESULTS sec.6.6. Never cite rule 7 as built.
 
@@ -343,9 +347,14 @@ replaced, and the bus-kilometres would have punished re-planning for no
 physical reason.
 
 Only the baseline's scenario files declare such a world. The agentic scenarios
-reach the same effect through live agents. Section~\ref{sec:val:dev7} argues
-that this difference works against the baseline, and why it therefore cannot
-explain the result.
+reach the same effect through live agents. This difference works against the
+baseline. Without a declared world, the baseline received its drop-off
+confirmations from the script, whatever it had ordered. The agentic side never
+had this help, because its counterparties are live agents. The world takes the
+help away from the baseline, so it cannot explain a baseline win. If it had any
+effect, it made the baseline's margin look smaller. This argument holds because
+the baseline won. Had the agentic system won, the agentic scenarios would first
+have needed the same world.
 % source: workflow-baseline-README.md sec.4a and sec.9; ADR-0016.
 
 % =====================================================================
@@ -547,7 +556,7 @@ only made sense on that link cannot be reached, among them the transport side's
 request for more time. The agentic system can negotiate a deadline extension,
 and the baseline cannot, because under central command there is nobody to
 negotiate with. A measure that rewards such a negotiation would measure a link
-that one architecture does not have (Section~\ref{sec:val:table}).
+that one architecture does not have.
 
 The baseline also has clear strengths. It is fast, because no model is called.
 It costs nothing to run. It is fully deterministic, so every run can be

@@ -151,7 +151,9 @@ def main():
     print("wrote", CSV_OUT)
 
     ts.apply()
-    fig, ax = plt.subplots(figsize=(ts.TEXTWIDTH_IN, 5.0))
+    # The body text is 12 pt and the figure prints at 1:1, so every label here
+    # is set at 9 to 10 pt. Smaller sizes were unreadable on the page.
+    fig, ax = plt.subplots(figsize=(ts.TEXTWIDTH_IN, 6.6))
 
     y, ylabels, seps, headers = [], [], [], []
     pos = 0.0
@@ -169,30 +171,31 @@ def main():
 
     for r, p in y:
         ax.plot([0, 10], [p, p], color="#eeeeee", lw=0.8, zorder=0)
-        ax.plot(r["baseline"], p, marker="|", markersize=11, color="#333333",
-                markeredgewidth=1.6, zorder=4,
+        ax.plot(r["baseline"], p, marker="|", markersize=13, color="#333333",
+                markeredgewidth=1.8, zorder=4, linestyle="none",
                 label="baseline" if p == 0 else None)
         # Nudge each model onto its own line within the row. y is categorical,
         # so this costs no accuracy and keeps shared values readable, which
         # matters most in the parity group where everything sits on 10.
         for oi, m in enumerate(ts.MODEL_ORDER):
-            ax.plot(r[m], p + (oi - 1) * 0.19, marker=ts.MODEL_MARKER[m], markersize=4.6,
+            ax.plot(r[m], p + (oi - 1) * 0.22, marker=ts.MODEL_MARKER[m], markersize=6,
                     color=ts.MODEL_COLOR[m], markeredgecolor="#333333",
-                    markeredgewidth=0.4, zorder=3,
+                    markeredgewidth=0.5, zorder=3, linestyle="none",
                     label=m if p == 0 else None)
 
     for s in seps:
         ax.axhline(s, color="#cccccc", lw=0.6, zorder=1)
     for py, title, n in headers:
         ax.annotate("%s (%d)" % (title, n), xy=(-0.3, py), ha="left", va="center",
-                    fontsize=8, color="#333333", annotation_clip=False)
+                    fontsize=10, fontweight="bold", color="#222222", annotation_clip=False)
 
     ax.set_yticks([p for p, _ in ylabels])
-    ax.set_yticklabels([t for _, t in ylabels], fontsize=7)
+    ax.set_yticklabels([t for _, t in ylabels], fontsize=9, fontweight="bold")
     ax.set_ylim(pos + 0.5, 1.8)
     ax.set_xlim(-0.3, 10.6)
-    ax.set_xticks(range(0, 11, 2))
-    ax.set_xlabel("Runs judged “yes”, out of 10")
+    ax.set_xticks(range(0, 11))
+    ax.set_xlabel("Runs judged “yes”, out of 10", fontsize=10)
+    ax.tick_params(axis="x", labelsize=9)
     ax.xaxis.grid(True, zorder=0)
     ax.set_axisbelow(True)
     ax.tick_params(axis="y", length=0)
@@ -202,7 +205,8 @@ def main():
     idx = [labels.index(w) for w in want if w in labels]
     ax.legend([handles[i] for i in idx], [labels[i] for i in idx],
               loc="lower right", bbox_to_anchor=(1.0, 1.0), ncol=4,
-              handletextpad=0.3, columnspacing=1.3, numpoints=1)
+              handletextpad=0.3, columnspacing=1.3, numpoints=1, fontsize=9.5,
+              markerscale=1.2)
 
     ts.save(fig, PDF_OUT)
 

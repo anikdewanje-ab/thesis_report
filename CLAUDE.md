@@ -65,8 +65,11 @@ A negative answer is a result, not a failure. Never apologise for the outcome.
 | --- | --- | --- |
 | RQ1 | Can the agentic architecture beat the scripted baseline? | **No.** It also loses to a null policy. |
 | RQ2 | If not, why? | A **commitment** failure, not a comprehension failure. |
-| RQ3 | What must change? | Constrain commitment; test on scenarios that discriminate. |
-| RQ4 | What should a designer consider? | `inc/design_considerations.tex`. |
+| RQ3 | What must change, and what should a designer consider? | Constrain commitment; confirm delivery; test on scenarios that discriminate. `inc/design_considerations.tex`; next experiment in the conclusion's future work. |
+
+There are **three** RQs. The former RQ3 ("what must change") and RQ4 ("what
+should a designer consider") were merged on 2026-10-02 because they asked the
+same thing. Never reintroduce an RQ4.
 
 Two claims the old skeleton made are **deleted and must not return**:
 "LLM-agent coordination degrades more gracefully than pre-scripted workflows",
@@ -176,7 +179,6 @@ not a limit.
 | Agentic system | The sense / check-messages / reason / execute / reflect loop | `agentic_engine.py` description |
 | Agentic system | Bus-Driver-1 sequence diagram — **must be redrawn**, the existing one is pre-ADR-0011 and shows 100 seats and one run | flagged in `PROJECT_BRIEFING.md` |
 | Data layer | `event_log` as the shared backbone both systems write to | ADR-0003, ADR-0005 |
-| Validity | The capability table, drawn as a two-column parity diagram | `08-validity/PARITY.md` |
 | Method | The three gates and where each hypothesis is tested | `EVALUATION_PROTOCOL.md` |
 | Results | Mean `S` per disruption, baseline vs the three full models | `RESULTS.md` §2 |
 | Results | Risk differences with CIs, all 15 novel cells | `RESULTS.md` §2 — a forest plot suits this well |
