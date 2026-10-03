@@ -216,7 +216,7 @@ All 19 novel-arm failures belong to H2.
 The risk difference is $RD = S_{\text{agentic}} - S_{\text{baseline}}$,
 computed paired, with a positive value favouring the agentic system.
 Table~\ref{tab:res:rd} gives all 15 novel cells with bootstrap confidence
-intervals.
+intervals \parencite{efron1979}.
 
 \begin{table}[htbp]
 \centering
@@ -260,7 +260,7 @@ also shows the model ordering that Section~\ref{sec:res:models} reports.
 
 H2 also set a minimum effect. It required a median shift of one whole recovery
 level, $\delta_m = +1.0$, together with first-order stochastic dominance of the
-agentic system over the baseline. Table~\ref{tab:res:levelshift} gives the
+agentic system over the baseline \parencite{yalonetzky2013}. Table~\ref{tab:res:levelshift} gives the
 median paired level shift in each cell.
 
 \begin{table}[htbp]
@@ -292,10 +292,10 @@ residents. That is why Gate~1 fails where the median level does not.
 \label{sec:res:novel:prereg}
 
 The pre-registration named a different primary test for H2. It registered an
-exact Clopper-Pearson interval on $P(\text{level}_{\text{agentic}} \geq
-\text{level}_{\text{baseline}})$ over the $k$ agentic runs against the
-control's constant level, aggregated across scenarios by a sign test with
-Holm-Bonferroni correction.
+exact Clopper-Pearson interval \parencite{clopper1934} on
+$P(\text{level}_{\text{agentic}} \geq \text{level}_{\text{baseline}})$ over the
+$k$ agentic runs against the control's constant level, aggregated across
+scenarios by a sign test with Holm-Bonferroni correction \parencite{holm1979}.
 
 \textbf{That test was implemented after the result was known}
 (Amendment~15). Under the pre-registration's own rules it is therefore
@@ -677,7 +677,9 @@ experiment that would settle the question.
 \section{Model Sweep and Capability Threshold}
 \label{sec:res:models}
 
-The gap narrows with model capability. The mean novel-arm risk difference is
+The gap narrows with model capability. Agent benchmarks also find large
+differences between models \parencite{ICLR2024_e9df36b2,xu2025}. The mean
+novel-arm risk difference is
 $-0.27$ for deepseek-v4-pro, $-0.16$ for glm-5.2 and $-0.10$ for qwen3.5. deepseek-v4-pro
 has the largest deficit on all five novel disruptions. qwen3.5 has the
 smallest on four of them. The exception is \code{sc1_partial_capacity_loss},
@@ -735,7 +737,8 @@ fixed before the novel arm ran and are unaffected.
 \section{Sensitivity Analysis}
 \label{sec:res:sensitivity}
 
-The protocol makes the cut-point sensitivity analysis a precondition on the
+The protocol makes the cut-point sensitivity analysis
+\parencite{steegen2016} a precondition on the
 headline. Each cell's median level was re-read with the level 1 to 2 cut moved
 to 0.40, 0.50 and 0.60. A cell is stable when it reads the same at all three
 cuts.
