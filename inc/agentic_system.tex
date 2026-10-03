@@ -232,7 +232,8 @@ from one wake to the next.
 
 \paragraph{The answer.} The model must answer with one JSON object. It holds:
 \begin{itemize}
-  \item a short piece of \textbf{reasoning} in plain text, which is required;
+  \item a short piece of \textbf{reasoning} in plain text, which is required.
+  Reasoning written before the action follows ReAct \parencite{yao2023};
   \item the \textbf{current step}, with a label, a deadline and an ordered
   list of actions. For each action the model says only whether it should start
   \emph{now} or \emph{by the deadline}. It never writes a clock time;
@@ -251,7 +252,9 @@ agent.
 \section{Runtime Ownership and Ground Truth}
 \label{sec:ag:runtime}
 
-The model proposes a step, and the runtime decides what happens with it. Some
+The model proposes a step, and the runtime decides what happens with it. This
+follows the advice to pair a language model with an external checker instead of
+trusting its plans directly \parencite{kambhampati2024}. Some
 state belongs to the runtime, and nothing the model writes can change it. We
 list these rules in full. They keep the simulation correct, and they also limit
 what the agentic system can do, which makes them part of the comparison.
@@ -415,7 +418,8 @@ running while he waits.
 \label{sec:ag:replan}
 
 The system has no separate replanning module. There is no special branch that
-runs ``when something goes wrong''. Instead, the model may write a new step or a
+runs ``when something goes wrong'', and no reflection step after a failure as
+in Reflexion \parencite{shinn2023}. Instead, the model may write a new step or a
 new plan on any wake. Replanning is what happens when that new
 step differs from the one already committed. The playbook for the wake steers
 it. The timing-conflict playbook, for example, asks the model to recover from a
@@ -458,7 +462,9 @@ course. The evaluation does not score the count as a measure of success
 capability we built this architecture to offer.
 Chapter~\ref{ch:results} reports how often the agents used it and what
 followed. On the tested scenarios, runs that revised their plan more often
-delivered everyone less often (Table~\ref{tab:res:commitment}). Whether the
+delivered everyone less often (Table~\ref{tab:res:commitment}). Language agents
+are also known to struggle to carry a long plan through under many constraints
+\parencite{xie2024a}. Whether the
 revisions caused the losses, or followed from them, cannot be told from these
 data. Section~\ref{sec:crit:mechanism} discusses this.
 
