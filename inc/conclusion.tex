@@ -3,7 +3,7 @@
 
 In this thesis we designed a database-centric agentic architecture for the
 evacuation of a nursing home before a storm surge. Next to it we built a
-workflow baseline that follows the DV~100 doctrine. Both systems ran seven
+workflow baseline that follows the DV~100 doctrine \parencite{fwdv100}. Both systems ran seven
 scenarios, wrote to one shared append-only event log and were scored by one
 deterministic scorer. We set the work up as a design-and-evaluation study.
 The aim was to learn what such an architecture can do on a scored task, and to
@@ -76,7 +76,9 @@ all state and wakes each agent when it has work.
 
 \paragraph{A scored comparison with a negative result.} The comparison is
 pre-registered and deterministic, so its answer can be checked and reproduced
-from the stored runs. To our knowledge it is the first head-to-head comparison
+from the stored runs. Earlier work with LLM agents in evacuation models the
+people who evacuate or supports practitioners in planning
+\parencite{sultimov2026,lee2025,li2026}. To our knowledge ours is the first head-to-head comparison
 of the two approaches on a common evacuation case. It also reports decision
 quality next to survival, and the two measures do not tell the same story
 (Section~\ref{sec:res:quality}).
@@ -126,7 +128,7 @@ should be fixed and its versions pinned before the first run.
 
 \paragraph{4. A broader case.} In our case the residents are a passive count
 of 100. Modelling them individually, for example with different mobility
-needs, would make it possible to ask about equity, which this study had to
+needs \parencite{alqahtani2025a}, would make it possible to ask about equity, which this study had to
 leave undefined. Beyond that, the architecture and the method should be
 tried on more facilities, other cities and other hazards. Only then can the
 design considerations in Chapter~\ref{ch:design} be tested beyond the one case
