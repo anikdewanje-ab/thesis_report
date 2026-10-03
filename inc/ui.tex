@@ -44,7 +44,8 @@ live view. It runs from its own command-line tool
 \section{Backend}
 \label{sec:ui:backend}
 
-The backend is a Python web service built on FastAPI. It sits between the
+The backend is a Python web service built on
+FastAPI.\footnote{\url{https://fastapi.tiangolo.com}} It sits between the
 database and the browser and has four parts. Figure~\ref{fig:ui:dataflow}
 shows how data moves between them.
 
@@ -90,7 +91,9 @@ touched, because it is append-only (Section~\ref{sec:data:eventlog}).
 \label{sec:ui:frontend}
 
 The frontend is a React application written in TypeScript. The map uses
-Leaflet with OpenStreetMap tiles, and one central store keeps a separate part
+Leaflet with OpenStreetMap tiles,\footnote{Map data \textcopyright{}
+OpenStreetMap contributors, available under the Open Database License, see
+\url{https://www.openstreetmap.org/copyright}.} and one central store keeps a separate part
 for each agent. Figure~\ref{fig:ui:main} shows the screen during a run.
 
 \begin{figure}[htbp]
@@ -102,7 +105,8 @@ ambulance, each on its own route. Right, from the top: scenario selection and
 run controls, the process identifiers of the ten agents, one tab per agent,
 and the panel of the selected agent. Here this is Bus-Driver-2, with its three
 planned steps and their deadlines, the actions of its current step with their
-status, and its list of reasoning ticks.}
+status, and its list of reasoning ticks. Map data \textcopyright{}
+OpenStreetMap contributors.}
 \label{fig:ui:main}
 \end{figure}
 
