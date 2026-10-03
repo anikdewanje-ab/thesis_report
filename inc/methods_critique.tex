@@ -49,7 +49,8 @@ drives 60.63 bus-km on the undisrupted \code{closed_loop} and the same 60.63
 bus-km on each of the five novel disruptions
 (Section~\ref{sec:res:responsetime}).
 
-The protocol's own negative control confirms this. The no-replan control of
+The protocol's own negative control \parencite{lipsitch2010} confirms this.
+The no-replan control of
 Section~\ref{sec:eval:noreplan} is the doctrine baseline with re-planning
 switched off, so it ignores every disruption. When we ran it against the
 scored scenarios, it committed byte-identical orders and scored the identical
@@ -322,7 +323,9 @@ The run ran out of clock & \textbf{Mostly no.} Only 5 of the 19 total-loss runs 
 What remains is a \textbf{commitment failure, not a comprehension failure}.
 The agents understood the disruption, addressed the right parties and got
 their messages answered. They could not carry one committed plan through to
-delivery. Legs were re-planned while in flight, and the coordinator often
+delivery. In agent theory, an intention is a plan the agent keeps until it has
+a reason to drop it, and this persistence is what separates an intention from
+a passing wish \parencite{cohen1990,rao1995}. Legs were re-planned while in flight, and the coordinator often
 could not establish whether a leg had finished. The coordinator's own abort
 messages say so, for example ``bus-2 reassigned to immediate emergency
 dispatch, original mission never delivered'' and ``zero deliveries across 8
@@ -395,7 +398,8 @@ Protocol~v2 draws three consequences from it.
   risk difference, which is continuous and far more efficient, becomes
   primary. Reducing an outcome to a direction or a dichotomy throws power away
   \parencite{savitz2007,ganesh2018}. The sign test becomes a supporting robustness check.
-\item The minimum detectable effect is stated before any run. If it exceeds
+\item The minimum detectable effect \parencite{cohen1988} is stated before any
+  run. If it exceeds
   the registered margin, either $k$ rises or the claim is dropped, and this
   happens before data collection.
 \item Cells that fail Gate~0 are excluded from confirmatory arms by a fixed

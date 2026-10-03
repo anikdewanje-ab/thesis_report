@@ -32,7 +32,9 @@ cases. Runs with six or more revisions did so in 32\% of cases
 survival at $r = -0.408$, while the number of dispatched missions hardly
 matters ($r = -0.070$).
 
-We therefore suggest a commitment boundary on the supersede. A leg in flight
+We therefore suggest a commitment boundary on the supersede. In the terms of
+\textcite{cohen1990}, an agent should keep an intention until it has a reason
+to drop it. A leg in flight
 stays committed unless the agent states why it must be cancelled, and the
 runtime records that reason and counts it against a limit. A new message can
 still wake the agent and change the steps that are waiting. Cancelling a leg
@@ -89,7 +91,7 @@ gap is listed as a deviation together with the side it favours.
 
 A disruption scenario is only a disruption if a system that ignores it scores
 worse than a system that responds. This can be checked cheaply with a
-no-replan control, at two runs per scenario. We did not require this check on
+no-replan control \parencite{lipsitch2010}, at two runs per scenario. We did not require this check on
 the scored files. On all five novel scenarios the control committed
 byte-identical orders and scored the identical level, so the novel arm could
 not test adaptability at all (Section~\ref{sec:crit:gate0}). Gate~0 should run
@@ -101,7 +103,7 @@ The campaign also taught us three smaller things about evaluation design.
 \item \textbf{Size the design before the runs.} At $k = 10$ over five
   scenarios, our registered sign test could not return $p$ below 0.0625,
   whatever the data (Section~\ref{sec:crit:power}). State the smallest effect
-  the design can detect, and raise $k$ or drop the claim before data
+  the design can detect \parencite{cohen1988}, and raise $k$ or drop the claim before data
   collection.
 \item \textbf{Fix the models in advance.} The third model of the novel arm
   changed four times after data were seen. Each such choice opens a path the

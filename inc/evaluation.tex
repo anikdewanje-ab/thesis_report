@@ -57,7 +57,9 @@ Its seed is
 \texttt{policy\_seed} = \operatorname{sha256}\big(\texttt{"<scenario>|<scale>|<replicate>"}\big) \bmod 2^{31}.
 \end{equation}
 The key leaves out the system and the model, so paired runs draw the same seed,
-and a test fails if either field is ever added. Seeded model calls are still
+and a test fails if either field is ever added. Pairing runs on common random
+numbers in this way is a standard variance-reduction technique in simulation
+\parencite{law2015}. Seeded model calls are still
 only near-deterministic (Section~\ref{sec:data:replay}), so every cell is
 replicated.
 
@@ -316,8 +318,9 @@ margin the verdict is \texttt{unregistered}, which counts as a failure. A
 condition that fails Gate 1 is reported as a failure, and its Gate 2 and Gate 3
 figures are not published as achievements.
 
-$\delta_{NI} = 0.05$ is five residents out of 100. A non-inferiority margin has
-to be a quantity of harm, and ``how many residents may we lose and still call
+$\delta_{NI} = 0.05$ is five residents out of 100. We take the non-inferiority
+margin from clinical trials \parencite{piaggio2012}. Such a margin has to be a
+quantity of harm, and ``how many residents may we lose and still call
 it matching?'' has an answer on $S$ and none on levels. Five is half the 0.10
 part-load, the smallest unit the ladder knows. We chose a strict margin because
 a wide one makes matching easy to show and worthless to claim. $\delta_m$ is
@@ -364,7 +367,7 @@ A third condition runs beside the two under test: the doctrine baseline with
 re-planning switched off. The only path to a second dispatch order is
 disabled, so the first committed plan is its only plan, and the rest of the
 doctrine is unchanged. This one ablation separates re-planning from reasoning
-about what to re-plan. It is also the instrument's negative control, under a
+about what to re-plan. It is also the instrument's negative control \parencite{lipsitch2010}, under a
 rule registered as a gate on the whole campaign:
 
 \begin{quote}
@@ -609,7 +612,8 @@ call at a critical step can lose a run.
 
 Choices made after seeing data bias a result even without intent, and
 hypotheses written after the results misrepresent what was tested
-\parencite{gelman2014,kerr1998}. Pre-registration guards against both and is
+\parencite{gelman2014,kerr1998}. Pre-registration guards against both
+\parencite{nosek2018} and is
 established in machine-learning and language-technology research
 \parencite{bertinetto2021,miltenburg2021}. Once tagged, our pre-registration
 was never edited. Changes were appended as dated amendments stating what
