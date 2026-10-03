@@ -72,7 +72,8 @@ plan to change. Chapter~\ref{ch:casestudy} describes the case in detail.
 
 We treat the problem as a design-and-evaluation study. First, we design a
 database-centric agentic architecture. Ten agents, each representing a person
-at one of the eight organizations, coordinate through one PostgreSQL database.
+at one of the eight organizations, coordinate through one PostgreSQL
+database.\footnote{\url{https://www.postgresql.org}}
 Second, we build a workflow baseline that follows the DV~100 doctrine and has no
 language model in the loop. Both systems run the same scenarios and write to
 the same append-only event log, and one deterministic scorer reads that log for

@@ -48,7 +48,7 @@ by both systems under test and by the scoring code. This makes the comparison
 fair, checkable and repeatable. Section~\ref{sec:data:evalbackbone} makes this
 argument in full. The log follows the idea of event sourcing, where the history
 of events is stored and every later view is derived from it
-\parencite{overeem2021}.
+\parencite{fowler2005,overeem2021}.
 
 A single source of truth has a clear cost. If the database is down, the whole
 simulation is down, because no agent can load its state or receive a message.
@@ -284,7 +284,9 @@ row with the recipient's key into the \texttt{messages} table. To read its mail,
 recipient selects its unread rows and marks them as read. It does not delete
 them. The mailbox therefore keeps a full record of every message and of when it
 was read. The rows are locked while they are taken, and rows locked by another
-reader are skipped, so no message is ever read twice.
+reader are skipped, so no message is ever read twice.\footnote{This is
+PostgreSQL's \texttt{SELECT \dots\ FOR UPDATE SKIP LOCKED}, see
+\url{https://www.postgresql.org/docs/current/sql-select.html}.}
 
 \paragraph{One address per agent.} Some senders name a recipient by a short
 alias, such as a vehicle call sign, rather than by the recipient's key. All
@@ -332,9 +334,12 @@ the run on every row.
 % thread on Windows, error backoff unchanged).
 
 An agent should wake as soon as mail arrives, without asking the database
-again and again. PostgreSQL offers a publish-and-subscribe mechanism for this,
-called LISTEN and NOTIFY. A program listens on a named channel, and any other
-program can send a short notification on that channel.
+again and again. Reactive tuple spaces solve the same problem by running code
+when new data arrives \parencite{omicini1999,cabri1998}. PostgreSQL offers a
+publish-and-subscribe mechanism for this, called LISTEN and
+NOTIFY.\footnote{\url{https://www.postgresql.org/docs/current/sql-notify.html}}
+A program listens on a named channel, and any other program can send a short
+notification on that channel.
 
 Each agent has three channels: one for its state, one for its mailbox and one
 for its world reports. Whoever writes a message, a world report or a state
@@ -408,7 +413,7 @@ the setup of a run cannot be separated from the run.
 is derived from the scenario, the time scale and the replicate number. The seed
 is logged. A seeded call to a language model is still only close to
 deterministic, because batching and cache state inside the inference server
-change the sampling. We therefore claim that runs are seeded and logged, not
+change the sampling \parencite{yuan2025}. We therefore claim that runs are seeded and logged, not
 that they can be reproduced at the level of each model answer. This is also why
 every cell is repeated (Section~\ref{sec:eval:analysis}). Models served from a
 hosted endpoint cannot be pinned to one version. For them, the model's details
