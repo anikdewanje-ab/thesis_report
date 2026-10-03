@@ -18,7 +18,8 @@ gate that would have caught it.
 We designed everything in Sections~\ref{sec:crit:gate0}
 to~\ref{sec:crit:mechanism} after we had seen the evaluation data. It is
 registered as Protocol~v2 in Amendment~16, and under the pre-registration's
-own rules all of it is exploratory. It renames what the first protocol
+own rules all of it is exploratory. Choices made after seeing the data can bias
+a result even without intent \parencite{gelman2014,kerr1998}. It renames what the first protocol
 measured, and it leaves every number of Chapter~\ref{ch:results} as it was.
 
 One boundary holds for the whole chapter. No scenario in this thesis ever
@@ -166,7 +167,8 @@ The gate itself is the contribution we claim here. The first protocol had a
 negative control and read it on a fixture. Protocol~v2 requires every
 disruption to pass the negative control before it can be scored as a
 disruption at all. A check on the instrument thereby becomes a check on every
-treatment. How to write a scenario that passes the gate is a design question,
+treatment. It asks whether the measure captures the construct it claims to
+measure \parencite{jacobs2021}. How to write a scenario that passes the gate is a design question,
 and Section~\ref{sec:design:gate0} takes it up.
 
 % =====================================================================
@@ -367,7 +369,8 @@ report no reply latency.
 \label{sec:crit:power}
 
 \paragraph{A timing deviation.} The pre-registration named a Clopper-Pearson
-interval, a scenario-level sign test and a Holm-Bonferroni correction as the
+interval \parencite{clopper1934}, a scenario-level sign test and a
+Holm-Bonferroni correction \parencite{holm1979} as the
 primary test for H2. None of the three existed in the code when we first
 wrote the H2 verdict. We implemented them afterwards, once the result was
 known (Amendment~15). Under the pre-registration's own rules that analysis is
@@ -390,7 +393,8 @@ Protocol~v2 draws three consequences from it.
 \begin{enumerate}
 \item The registered primary must be one the design can detect. The paired
   risk difference, which is continuous and far more efficient, becomes
-  primary. The sign test becomes a supporting robustness check.
+  primary. Reducing an outcome to a direction or a dichotomy throws power away
+  \parencite{savitz2007,ganesh2018}. The sign test becomes a supporting robustness check.
 \item The minimum detectable effect is stated before any run. If it exceeds
   the registered margin, either $k$ rises or the claim is dropped, and this
   happens before data collection.
@@ -398,7 +402,8 @@ Protocol~v2 draws three consequences from it.
   rule, decided before the result is known.
 \end{enumerate}
 
-\paragraph{A second late analysis.} The cut-point sensitivity analysis was
+\paragraph{A second late analysis.} The cut-point sensitivity analysis
+\parencite{steegen2016,simonsohn2020} was
 also a registered precondition on the headline, and it too was added under
 Amendment~15. It supports the headline (Section~\ref{sec:res:sensitivity}).
 The procedural lesson is that a precondition a report asserts should also be
@@ -440,8 +445,8 @@ could only have understated the margin (Section~\ref{sec:wf:world}). \\
 \addlinespace
 42 of 87 doctrine elements have no page citation &
 A limitation on the claim that the baseline is doctrine-grounded, and on
-nothing else. It affects no number. 45 of 87 elements are cited to a page, and
-we assert the rest ourselves. \\
+nothing else. It affects no number. 45 of 87 elements are cited to a page of
+the doctrine \parencite{fwdv100}, and we assert the rest ourselves. \\
 \addlinespace
 Only one time scale ran (8.4) &
 H4 was not tested. We make no crossover, trend or scale-dependence claim
@@ -468,7 +473,9 @@ executed on a dirty working tree, and 28 agentic novel runs did not quiesce
   these results.
 \item \textbf{One run is flagged for possible straight-line routing},
   \texttt{aaae313d}, during a routing-service quota outage.
-\item \textbf{Equity is undefined.} The resident population is homogeneous,
+\item \textbf{Equity is undefined.} Relief logistics treats equity as an
+  objective of its own \parencite{huang2012}, but the resident population is
+  homogeneous,
   so a maximum-minimum subgroup difference is always zero.
 \item \textbf{Four asymmetries favour the baseline.} Two are parity
   deviations accepted for doctrinal reasons: the consolidated situation
