@@ -104,7 +104,8 @@ The campaign also taught us three smaller things about evaluation design.
   the design can detect, and raise $k$ or drop the claim before data
   collection.
 \item \textbf{Fix the models in advance.} The third model of the novel arm
-  changed four times after data were seen. Choose all models and a replacement
+  changed four times after data were seen. Each such choice opens a path the
+  analysis could have taken differently \parencite{gelman2014}. Choose all models and a replacement
   rule before the first run, and pin each model version. Our cloud model tags
   are not version-frozen, so no digest pins our results.
 \item \textbf{Treat retries as a factor.} Our system does not retry malformed
@@ -112,7 +113,8 @@ The campaign also taught us three smaller things about evaluation design.
   model never needed, and it would change what is measured.
 \end{itemize}
 
-The agentic side is also not deterministic, while the baseline is. Its
+The agentic side is also not deterministic \parencite{yuan2025}, while the
+baseline is. Its
 variance across runs is a real cost of the approach, and an evaluation should
 report it next to the mean.
 
@@ -125,7 +127,9 @@ system needed nine to ten times as many messages per resident delivered as the
 baseline, about 800\,000 tokens per run, and 1.8 to 2.7 times the wall-clock
 budget of the compressed clock. 140 of its 150 novel runs finished over
 budget (Section~\ref{sec:res:responsetime}). A designer should plan this cost
-from the start and decide what it has to buy. On our scenarios it bought
+from the start and decide what it has to buy. Other work finds that one
+strong agent with good prompts can match a multi-agent discussion
+\parencite{wang2024}. On our scenarios it bought
 nothing, because no scenario required adaptation. Whether it pays off on a
 scenario that passes Gate~0 is untested.
 
