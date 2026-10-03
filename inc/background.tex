@@ -114,8 +114,6 @@ they fail. The failures fall into three groups: poor system design, poor
 alignment between agents, and poor checking of whether the task is done.
 Other work doubts that several agents help much. A strong single agent
 with good prompts can match a multi-agent discussion \parencite{wang2024}.
-When both get the same budget of reasoning tokens, a single agent can match or
-beat a multi-agent system \parencite{tran2026}.
 
 For this thesis, the literature predicts that agents may understand a
 situation and still fail to act on it well. It also suggests that an LLM
@@ -163,11 +161,7 @@ evacuation decisions. Both works model the people who evacuate. In our system
 the residents make no decisions. The agents are the organizations that move
 them.
 
-DORA is a benchmark for disaster response. It gives LLM agents operational
-tasks that need geospatial tools and scores them against expert-verified
-solutions that can be replayed \parencite{wang2026}. Its scoring is close to
-ours in spirit. It evaluates models on single tasks, however, and does not
-compare an agentic system with a scripted one. \textcite{li2026} ran a long
+\textcite{li2026} ran a long
 design study with emergency-preparedness practitioners. They conclude that LLM
 agent simulations are more useful for shaping procedures and training than for
 predicting outcomes. This matches the purpose of our simulation, which studies

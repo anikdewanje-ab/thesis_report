@@ -596,9 +596,8 @@ reference, which makes levels comparable across the three full arms.
 
 Hosted \texttt{:cloud} model tags cannot be frozen to a version. The model
 metadata is captured on every run, so drift can be detected but not prevented.
-Inference is not bit-exact even with a fixed seed \parencite{yuan2025}, and
-agentic evaluations vary from run to run for this reason
-\parencite{bjarnason2026}, which the ten replicates capture. A failed or
+Inference is not bit-exact even with a fixed seed \parencite{yuan2025}. The
+ten replicates per cell capture this run-to-run variation. A failed or
 malformed model call is never retried and counts as a hard failure. A retry
 would give a weak model a second attempt that a strong model never needed, and
 that difference is what the sweep measures. The price is that one timed-out

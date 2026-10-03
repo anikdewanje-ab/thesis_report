@@ -41,7 +41,7 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 1 | Title | Who I am, title, supervisors | TU logo | draft |
 | 2 | Motivation | Moving a nursing home before a surge needs eight organizations to agree, and a script only covers the disruptions its author foresaw | Hamburg flood map | draft |
 | 3 | Problem and research questions | RQ1 can the agents beat the script, RQ2 why not, RQ3 what should change; RQ1 is answered for these scenarios only | RQ box with the RQ1 boundary under it | draft |
-| 3b | Related work and gap | LLM agents have played evacuees and solved single tasks, but nobody had set them, as the coordinating organizations, against a doctrine-grounded script on a scored outcome | Positioning table (RESPOND, DORA, Lee 2025, Li 2026, this thesis), if built | draft |
+| 3b | Related work and gap | LLM agents have played evacuees and helped practitioners shape procedures, but nobody had set them, as the coordinating organizations, against a doctrine-grounded script on a scored outcome | Positioning table (RESPOND, Lee 2025, Li 2026, this thesis), if built | draft |
 | 4 | Case study | 100 residents, 2 buses of 50, 2 shelters of 60: tight on purpose, so the allocation is a real decision | Storyline swimlane (Fig. `fig:cs:storyline`) | draft |
 | 5 | The agents | Every agent is a person in a real agency; only agents that decide get a model | Roster table (`tab:cs:roster`) | draft |
 | 6 | Architecture | Ten agents on one engine, and every message, state change and decision goes through one PostgreSQL database | Architecture diagram (Fig. `fig:ag:architecture`) | draft |
@@ -315,7 +315,7 @@ A: I concede the substrate is old. The novelty is using the same event log at
 once as the coordination medium for both systems and as the scoring oracle, so
 the comparison is fair and replayable. (Refine after Chapter 4.)
 
-**Q: Maybe the multi-agent design is not why it wins (Tran & Kiela).**
+**Q: Maybe the multi-agent design is not what decides the outcome (a strong single agent can match a multi-agent discussion, Wang et al. 2024).**
 A: The parity spec holds everything equal except the coordination strategy:
 same information, same actions, same world model. That is the control. (Refine
 after Chapter 8.)
@@ -504,10 +504,9 @@ Cemri) predicted what we found. Agents can understand a situation and still
 fail to act on it. That is why the scorer is deterministic code over the event
 log and never a model.
 
-**Q: RESPOND and DORA look close to this. What is different?**
+**Q: RESPOND looks close to this. What is different?**
 A: RESPOND models the population that evacuates, and it is a short demo with no
-controlled comparison. DORA scores single models on single geospatial tasks. In
-our system the residents decide nothing. The agents are the organizations, and
+controlled comparison. In our system the residents decide nothing. The agents are the organizations, and
 we compare them with a scripted baseline under parity.
 
 **Q: The literature already says LLMs cannot plan. Why build this at all?**
