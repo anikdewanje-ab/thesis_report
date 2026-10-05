@@ -1,15 +1,23 @@
 """Null-policy regret: how many runs responding helped, left level, or harmed.
 
 The point of the figure: the baseline gained nothing by responding (every run
-ties the null policy), and the agentic system mostly tied it or did worse.
-Three agentic runs of 150 improved on doing nothing; 68 came out worse.
+ties the null policy), and the agentic system tied it or did worse. No agentic run of 150 improved on
+doing nothing; 68 came out worse.
 
-Regret is R = S_system - S_null, on survival, per run. A run is "helped" when
-R > 0, "neutral" when R = 0, and "harmed" when R < 0.
+Regret is R = min(S_system, 1) - S_null, on survival, per run. A run is
+"helped" when R > 0, "neutral" when R = 0, and "harmed" when R < 0.
+
+S is capped at 1.0, as everywhere in the thesis. The pack's `regret` cells use
+uncapped S, so three qwen3.5 runs that shelter more residents than the
+feasibility ceiling admits (S = 1.1, RESULTS sec. 6.2) count there as "helped".
+The script finds every run with completeness above 1.0 in scores.jsonl and
+moves it from helped to neutral.
 
 Source: thesis-pack/11-results/data/v2.json, key `regret`, one row per
-system/model/scenario cell over the five novel disruptions. Reproduces
-thesis-pack/09-method/EVALUATION_PROTOCOL_V2.md sec. 11.1. Exploratory: the
+system/model/scenario cell over the five novel disruptions, plus
+thesis-pack/11-results/data/scores.jsonl for the cap. Reproduces
+thesis-pack/09-method/EVALUATION_PROTOCOL_V2.md sec. 11.1 with S capped at 1.0.
+Exploratory: the
 instrument was written after the v1 data were seen (Amendment 16).
 
 Writes data/null_policy_regret.csv and pics/critique-regret.pdf.
@@ -30,6 +38,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 V2 = os.path.join(ROOT, "thesis-pack", "11-results", "data", "v2.json")
+SCORES = os.path.join(ROOT, "thesis-pack", "11-results", "data", "scores.jsonl")
 CSV_OUT = os.path.join(ROOT, "data", "null_policy_regret.csv")
 PDF_OUT = os.path.join(ROOT, "pics", "critique-regret.pdf")
 
@@ -43,10 +52,11 @@ OUTCOMES = ["helped", "neutral", "harmed"]
 OUTCOME_COLOR = {"helped": "#6f9ac4", "neutral": "#e3e3e3", "harmed": "#5a5a5a"}
 OUTCOME_TEXT = {"helped": "white", "neutral": "#333333", "harmed": "white"}
 
-# EVALUATION_PROTOCOL_V2 sec. 11.1. The script stops if the pack disagrees.
+# EVALUATION_PROTOCOL_V2 sec. 11.1, after the cap: qwen3.5's three over-ceiling
+# runs move from helped to neutral. The script stops if the pack disagrees.
 EXPECTED = {
     "baseline": (0, 50, 0),
-    "qwen3.5": (3, 30, 17),
+    "qwen3.5": (0, 33, 17),
     "glm-5.2": (0, 34, 16),
     "deepseek-v4-pro": (0, 15, 35),
 }
@@ -68,7 +78,27 @@ def read_counts():
             counts[row][o] += c[o]
         counts[row]["n"] += c["n"]
         regret_sum[row] += c["mean_regret"] * c["n"]
+    null = {(c["system"], c["model"], c["scenario"]): c["null_survival"] for c in cells}
+    apply_cap(counts, regret_sum, null)
     return counts, regret_sum
+
+
+def apply_cap(counts, regret_sum, null):
+    """Cap S at 1.0: an over-ceiling run that beat the null only by the excess
+    moves from helped to neutral, and its excess leaves the regret sum."""
+    with open(SCORES, encoding="utf-8") as fh:
+        runs = [json.loads(line) for line in fh if line.strip()]
+    for r in runs:
+        if r["completeness"] <= 1.0 or r["model"] not in FULL_MODELS:
+            continue
+        key = (r["system"], r["model"], r["scenario"].replace("agentic_", "", 1))
+        if key not in null:
+            continue
+        row = FULL_MODELS[r["model"]]
+        regret_sum[row] -= r["completeness"] - 1.0
+        if 1.0 - null[key] <= 0 < r["completeness"] - null[key]:
+            counts[row]["helped"] -= 1
+            counts[row]["neutral"] += 1
 
 
 def check(counts):

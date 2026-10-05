@@ -69,5 +69,17 @@ rather than restyling by hand.
 Each script asserts its own provenance. `plot_delivery_histogram.py` stops if
 it does not find exactly 150 agentic novel runs, and `plot_forest_rd.py` stops
 if any of the 15 cells is missing from the summary table. `plot_regret.py` stops
-if the helped / neutral / harmed totals differ from `EVALUATION_PROTOCOL_V2.md` §11.1. A silent change in
+if the helped / neutral / harmed totals differ from `EVALUATION_PROTOCOL_V2.md` §11.1 after
+`S` is capped at 1.0, which moves qwen3.5's three over-ceiling runs from helped to neutral. A silent change in
 the pack therefore fails loudly instead of redrawing a wrong figure.
+
+## The agent prompts (Appendix C)
+
+`scripts/render_prompts.py` writes the Bus-Driver-1 system prompt into
+`prompts/` as three files: `bus_driver_persona.txt`, `bus_driver_contract.txt`
+and `bus_driver_playbook_message.txt`. It imports the RescueSim repo's own
+`bootstrap_state` and `render_system`, so the addressbook and message types come
+out as the model saw them. It stops unless the prompt sources in the repo match
+tag `prereg-amendment-1` (commit `7a4d7cc`). The only edit is a shorter indent
+on the deeply indented `inform_escort` lines, which the appendix discloses.
+Never edit the `.txt` files by hand; re-run the script.
