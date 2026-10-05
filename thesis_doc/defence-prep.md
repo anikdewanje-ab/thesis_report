@@ -55,7 +55,7 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 13 | Results: anticipated | H1 is rejected: non-inferiority holds in 1 of 8 anticipated cells | Anticipated-arm table | todo |
 | 14 | Results: novel disruption | H2 is rejected outright: the baseline wins survival in every novel cell | Forest plot of the 15 risk differences | todo |
 | 14b | Why it lost | A commitment failure, not a comprehension failure | Quantised delivery histogram | todo |
-| 14c | The test could not be lost | Ignoring the disruption scored the ceiling, so the baseline's 1.000 is the null policy's score, and the agentic system lost to doing nothing | Gate 0 table (`tab:crit:gate0`) + regret bars (`fig:crit:regret`) | draft |
+| 14c | The test could not be lost | Ignoring the disruption scored the ceiling, so the baseline's 1.000 is the null policy's score, and the agentic system lost to doing nothing | Gate 0 table (`tab:crit:gate0`) + regret bars (`pics/critique-regret.pdf`, slide only) | draft |
 | 15 | Trade-offs | Baseline wins on speed and cost, and it also won the primary outcome | Coordination-surface table | todo |
 | 15b | Design considerations (RQ3) | Commit before re-planning, confirm delivery, make the disruption change the world, and run Gate 0 before the campaign | Four-line list, each with its number (90 % to 32 %; 93.8 % closure; byte-identical control); reuse the plan-revision figure | draft |
 | 16 | Contributions and limits | Two contributions, honest scope | Bullet list | todo |
@@ -107,7 +107,7 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - ~800,000 tokens per model arm; 1.8 to 2.7x the wall-clock budget; **140 of
   150** runs finished over budget. Baseline latency is 0.0 s by construction.
 
-**Case study (from `inc/casestudy.tex`, drafted 2026-09-23)**
+**Case study (from `inc/casestudy.tex`, drafted 2026-09-23, cut to ~5 pages 2026-10-04)**
 
 - Key message: one small, tight case. Every disruption arrives as a message
   and none changes the world, so ignoring it still saves everyone. Say this on
@@ -120,11 +120,20 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - Flood at **12:00**. 7 scenarios: 2 anticipated, 5 novel, revealed
   2026-09-10 after the freeze. S03 is retired.
 
-**Method (from `inc/evaluation.tex`, drafted 2026-09-23, cut to ~5,600 words 2026-10-02)**
+**Method (from `inc/evaluation.tex`, drafted 2026-09-23, cut to ~3,500 words of prose 2026-10-04)**
 
 - The chapter now carries the parity points itself (validity chapter dropped).
-  Commit hashes, replicate blocks and the headless client moved to the
-  appendices `app:frozen` and `app:repro`.
+  The headless world client is a paragraph of its own under Study Design.
+- 2026-10-04: 14 sections became 8. Model sweep and harness folded into Study
+  Design; scenarios and firewall merged; construct validity dropped; the
+  "not measured" table was deleted on 2026-10-05.
+- 2026-10-05: the Reproducibility appendix was deleted. These are no longer in
+  the thesis, so keep them ready from the repo for questions: prereg tags
+  `prereg-v1` / `prereg-amendment-1` on commit `7a4d7cc` (2026-09-12);
+  novel scenarios saved 15:27 to 16:04 on 2026-09-10; replicate blocks
+  100-105 pilot, 1000-1009 confirmatory, 2000+ screenings; two-pass scoring
+  (clean-run reference first, then levels); Wilcoxon exact up to 20 non-zero
+  untied differences, else normal approximation with tie correction.
 
 - Key message: the method fixed every threshold and margin before the runs,
   and it says openly where the execution departed from the plan.
@@ -147,9 +156,14 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
   admitted. Only the shelter-closure fixture discriminates (level 3 vs 0).
 - Baseline bus-km: **60.63** disrupted and undisrupted. Orders byte-identical
   to the no-replan control.
-- Regret: baseline **0 / 50 / 0** (helped / neutral / harmed). Agentic
-  **3 / 79 / 68** over 150. Mean regret qwen3.5 −0.100, glm-5.2 −0.160,
-  deepseek −0.273.
+- Regret, with `S` capped at 1.0: baseline **0 / 50 / 0** (helped / neutral /
+  harmed). Agentic **0 / 82 / 68** over 150. No agentic run beat doing
+  nothing. Mean regret qwen3.5 −0.106, glm-5.2 −0.160, deepseek −0.273. The
+  three qwen3.5 "helped" runs in the pack are the S = 1.1 over-ceiling runs;
+  capping makes them neutral. If asked, that is the answer.
+- Chapter cut to about half on 2026-10-05: the "Measuring Handshakes"
+  subsection, the regret figure and three rows of the limitations table were
+  removed. Handshake detail now lives only in Results.
 - Aborts: 108 total, **52.8 %** post-failure stand-downs, **13.0 %** churn-
   initiated, 34.3 % other. Why the causal direction stays open.
 - Sign-test floor: **0.0625** at five scenarios, **0.250** with two ties.
@@ -250,26 +264,42 @@ Track figures here so the slides reuse the exact same images as the report.
       `fig:ui:dataflow`). Probably not a slide; four columns, each one path
       through Postgres (state out, scenario in, ACK back, prompt records).
 
-The results chapter is complete at four figures. All four are slide-worthy:
+The results chapter has three figures. All three, and the cut forest plot, are
+slide-worthy:
 
 - [x] **Forest plot of the 15 novel risk differences with CIs** — built,
-      `pics/results-forest-rd.pdf`, Figure 10.1. The single clearest picture of
+      `pics/results-forest-rd.pdf`. Cut from the thesis on 2026-10-05 (Table
+      9.4 carries the same values); keep it for the slides. The single clearest picture of
       the result. All 15 intervals left of zero; eight strictly below, six
       touching, one reaching past to +0.02.
 - [x] **Residents delivered per run** — built,
-      `pics/results-delivery-histogram.pdf`, Figure 10.2. The visual proof of
+      `pics/results-delivery-histogram.pdf`, Figure 9.1. The visual proof of
       RQ2: the loss is quantised, not gradual.
 - [x] **The sixteen rubric criteria** — built,
-      `pics/results-rubric-split.pdf`, Figure 10.3. The split in reading order:
+      `pics/results-rubric-split.pdf`, Figure 9.3. The split in reading order:
       parity 5, baseline ahead 5, baseline also at zero 4, unplaced 2. Use it
       whenever someone rounds the result to "decision-quality parity".
 - [x] **Plan revisions against delivery** — built,
-      `pics/results-commitment-scatter.pdf`, Figure 10.4. All 150 runs, not the
+      `pics/results-commitment-scatter.pdf`, Figure 9.2. All 150 runs, not the
       five band means. Shows that the revision floor sits on full delivery
       while the six-or-more band spreads over the whole range.
-- [x] ~~Mean `S` per disruption~~ — **considered and dropped.** It restates
-      Table 10.4 and duplicates Figure 10.1. If an examiner wants the headline
-      as bars, show Figure 10.1 instead.
+- [x] ~~Mean `S` per disruption~~ — **considered and dropped.** It
+      duplicates the forest plot. If an examiner wants the headline as bars,
+      show the forest plot slide instead. The per-disruption `S` table was also cut on
+      2026-10-05: the baseline is 1.000 in every cell, so each agentic value is
+      1 + RD and Table 9.4 (risk differences) already carries it.
+
+Results chapter shortened on 2026-10-05 (prose 3,931 to 2,976 words, 14 tables
+to 7, about 8 pages saved). The median level shift, Clopper-Pearson and
+sign-test tables and the six over-ceiling runs went first to an Appendix D,
+which was then deleted the same day. The thesis now states only their
+verdicts. If an examiner asks for the per-cell numbers or the six run IDs,
+they are in `thesis-pack/00-start-here/RESULTS.md` (over-ceiling runs in
+sec. 6.2). Deleted as redundant: the Gate 1 count table, the
+per-disruption `S` table, the loss-mechanism scope table (the novel-arm,
+three-model figures 985 late / 26 runs / 215 overload stay in the prose).
+Process diagnostics now sit inside "What the Losses Were Made Of", and
+sensitivity inside "Novel Disruptions".
 
 From the data architecture chapter:
 
@@ -285,8 +315,9 @@ From the method and critique chapters:
 - [x] **The level ladder** (`pics/method-ladder.tex`). Cut from the thesis on
       2026-10-02 (it restated the equation), still good for slide 12.
 - [x] **Null-policy regret, helped / neutral / harmed** — built,
-      `pics/critique-regret.pdf`, `fig:crit:regret`, via
-      `python data/scripts/plot_regret.py`. Slide 14c. Pair it with the Gate 0
+      `pics/critique-regret.pdf`, via `python data/scripts/plot_regret.py`,
+      with `S` capped at 1.0. No longer in the thesis (the table carries it),
+      still good for slide 14c. Pair it with the Gate 0
       table (`tab:crit:gate0`), which is a table on purpose.
 
 Every plotted figure regenerates with `python data/scripts/plot_*.py` and shares
@@ -520,6 +551,23 @@ A: No. Blackboards and Linda tuple spaces did it decades ago, and we say so in
 Chapter 2 and in the data chapter. Our claim is the shared log as the backbone
 of both systems and of the scorer.
 
+**Q: Where does your word "commitment" come from? Did you invent it after the
+results?**
+A: No, it is classic agent theory and Section 2.3 introduces it before any
+result. Cohen & Levesque (1990) define an intention as a choice with
+commitment, kept until the goal is reached, impossible, or no longer needed.
+Rao & Georgeff (1995) explain why a BDI agent needs that persistence in a
+changing world. An LLM agent can rewrite its plan at every call, so how often
+it should is a design question. Our data show what happens when it rewrites
+too often.
+
+**Q: Why not just solve the evacuation as an optimization problem?**
+A: Relief-logistics models (Huang 2012, Holguín-Veras 2013, Yin 2024) assume
+one planner who sees everything. Our question is coordination between
+organizations that each own part of the resources and part of the
+information. We measure how well that coordination works, not how close it
+gets to an optimum.
+
 ### Questions the case study invites
 
 **Q: Why only two buses and two shelters?**
@@ -602,6 +650,15 @@ A: Yes. The database is the only channel between agents and the only source of
 truth. Every message, state, world report and decision passes through it, and
 the notifications in it are what wake the agents. Figure `fig:ag:architecture`
 shows no agent-to-agent arrow.
+
+**Q: Did the prompt tell the agents to wait, and so cause the commitment
+failure?**
+A: The prompt says the opposite. The infeasibility playbook states that
+holding is not free, because the clock runs while the agent waits, and that a
+driver who will drive the leg anyway should commit, start driving and ask in
+the same answer. Appendix A prints the persona, contract and message playbook
+verbatim from the campaign commit `7a4d7cc`, and Table `tab:app:playbooks`
+summarises the other two. The examiner can read exactly what the model was told.
 
 ### Questions the baseline chapter invites
 
@@ -722,14 +779,28 @@ would be better; they were declined as late scope chosen with the campaign in
 view. The ladder cannot tell the 60 most mobile from the 60 least mobile, and I
 say so.
 
+**Q: Why an ordinal ladder and not the resilience triangle?**
+A: The triangle is an area under a functionality curve (Bruneau 2003), and very
+different trajectories can give the same area (Cremen 2025). The ladder records
+what matters here: were the residents in a shelter before the water arrived.
+(The thesis text no longer makes this argument; both sources were cut to keep
+the bibliography at 50. They are still in `litDB.bib`.)
+
 **Q: Why not use an LLM judge for decision quality?**
 A: A model judging models brings back the nondeterminism being measured. The
 rubric reads structure only (who, when, what was ordered, what landed) and
 anything that depends on prose is listed as not judged.
 
-**Q: Why not just use LangGraph / why Ollama?** (Resolve once the framework
-story in Chapter 6 is settled.)
-A: (TODO)
+**Q: Why not just use LangGraph / why Ollama?**
+A: The runtime has to own three things that a framework keeps for itself.
+First, the simulated clock, which keeps running while the agents think.
+Second, the check of every command and message against the agent's role.
+Third, the audit trail, so that the agents and the baseline write the same
+rows to the event log. If a framework hid these, the comparison would be much
+harder to defend. So we wrote a small engine in plain asynchronous Python, and
+PostgreSQL is the single source of truth (ADR-0005). Ollama serves cloud and
+local models through one interface, so changing the model for the sweep is one
+setting and no code change.
 
 ### Questions the conclusion invites
 
@@ -781,6 +852,36 @@ pre-registered and scored, the diagnosis is measured (0.938 closure, quantised
 losses, 90 % to 32 %), and the event log plus Gate 0 is reusable whatever the
 outcome.
 
+### Questions the scenario appendix invites
+
+Key message: every disruption is a message with the same text on both sides,
+and none of them changes a bed, a road or a vehicle. Appendix B prints the
+disruption messages word for word (S02 and the five novel ones). Slide
+candidate: one of the printed messages, e.g. S06, to show what "a disruption"
+looked like to the agents.
+
+**Q: Did both systems receive the same disruption?**
+A: The same text at the same time, yes. The type differs on purpose. The
+agentic side gets `situation_update`, which BIS routes to re-planning. The
+baseline gets a type outside its catalogue, so it reaches the fallback and
+holds. Sent as `situation_update`, the commander would have read it as an
+order from above.
+
+**Q: Why does the baseline control start at 09:30 and the agentic control at
+09:45?**
+A: Priced on real road distance, the baseline's control plan takes about
+2 h 07 min, because its allocation rule fills SC1 first and one bus makes a
+second trip. From 10:00 it would land at 12:07 and lose 40 residents with no
+disruption. In the novel arm both sides start at 09:45. (Prepare this one:
+the 15-minute offset applies only to S01, and it is not in the validity
+chapter's list of deviations.)
+
+**Q: Why does S02 hold 60 residents on the baseline side and 100 on the
+agentic side?**
+A: The baseline cannot re-route, so a closure can only reach it as a shelter
+going unreachable. Losing a 60-bed shelter leaves no complete allocation for
+100. Completeness is scored against each file's own population.
+
 ---
 
 ## 6. Backup slides (only if asked)
@@ -789,6 +890,8 @@ outcome.
 - Database schema in detail
 - Scoring rubric (0 to 4 recovery-outcome levels)
 - Per-scenario result tables
+- The seven scenarios in one line each (`tab:cs:scenarios`, Chapter 3), for
+  "what exactly happens in S05?"
 
 ---
 

@@ -11,20 +11,17 @@
 
 In this chapter we read the results back against the protocol that produced
 them. Applied to its own data, the protocol showed that its primary arm could
-not have answered the question it was built for. We report that as a result in
-its own right, and we use the protocol's own negative control to define the
-gate that would have caught it.
+not have answered the question it was built for. We report that as a result,
+and we use the protocol's own negative control to define a gate that would
+have caught it.
 
-We designed everything in Sections~\ref{sec:crit:gate0}
-to~\ref{sec:crit:mechanism} after we had seen the evaluation data. It is
-registered as Protocol~v2 in Amendment~16, and under the pre-registration's
-own rules all of it is exploratory. Choices made after seeing the data can bias
-a result even without intent \parencite{gelman2014,kerr1998}. It renames what the first protocol
-measured, and it leaves every number of Chapter~\ref{ch:results} as it was.
-
-One boundary holds for the whole chapter. No scenario in this thesis ever
-required adaptation. We therefore answer RQ1 as ``did the agentic architecture
-win here'', and we make no claim about whether it can ever win.
+Everything in Sections~\ref{sec:crit:gate0} to~\ref{sec:crit:mechanism} was
+designed after we had seen the evaluation data. It is registered as
+Protocol~v2 in Amendment~16 and is exploratory, because choices made after
+seeing the data can bias a result even without intent \parencite{gelman2014}.
+It leaves every number of Chapter~\ref{ch:results} as it was. No scenario in
+this thesis ever required adaptation, so we answer RQ1 as ``did the agentic
+architecture win here'' and make no claim about whether it can ever win.
 
 % =====================================================================
 \section{The Defect}
@@ -33,48 +30,36 @@ win here'', and we make no claim about whether it can ever win.
 We built the novel arm to test H2: does the agentic system recover better than
 a scripted workflow when a disruption arrives that the workflow has no branch
 for? On that arm the workflow baseline scored $S = 1.000$ in all 50 of its
-runs. This perfect score does not show a recovery. It shows invariance, and the
-scenario design guaranteed it before we chose any model.
+runs. This score shows invariance and no recovery, and the scenario design
+guaranteed it before we chose any model.
 
 The cause lies in how the scenarios are written. Every event in every one of
 the fourteen scenario files is an envelope of the form \texttt{\{at, send\}}:
-at a given time, send a given message. No scenario event changes the declared
-world state, that is the \code{world}, \code{sensing} or \code{hazard} blocks.
-The disruption exists as text in an inbox and nowhere else. When SC1 reports a
-partial capacity loss, SC1 keeps declaring 60 beds. When bus-1 is suspended,
-bus-1 keeps its seats.
-
-The disruption therefore leaves the baseline's physical plan untouched. It
-drives 60.63 bus-km on the undisrupted \code{closed_loop} and the same 60.63
-bus-km on each of the five novel disruptions
+at a given time, send a given message. No event changes the declared world
+state, that is the \code{world}, \code{sensing} or \code{hazard} blocks. When
+SC1 reports a partial capacity loss, SC1 keeps declaring 60 beds. When bus-1 is
+suspended, bus-1 keeps its seats. The baseline's physical plan is therefore
+untouched. It drives 60.63 bus-km on the undisrupted \code{closed_loop} and the
+same 60.63 bus-km on each of the five novel disruptions
 (Section~\ref{sec:res:responsetime}).
 
 The protocol's own negative control \parencite{lipsitch2010} confirms this.
-The no-replan control of
-Section~\ref{sec:eval:noreplan} is the doctrine baseline with re-planning
-switched off, so it ignores every disruption. When we ran it against the
-scored scenarios, it committed byte-identical orders and scored the identical
-level on all five novel files and on \code{closed_loop}.
-
-On the novel arm, then, \textbf{ignoring the disruption is an optimal policy}.
-If doing nothing already scores at the ceiling, a test cannot produce evidence
-for or against an adaptability hypothesis in either direction. The agentic
-system could only reach a non-negative risk difference by also doing nothing,
-and an agentic architecture is built to respond.
-
-The first protocol knew the mechanism and wrote it down. As
-Section~\ref{sec:eval:noreplan} quotes, it stated that on every scored scenario
-the control ``cannot differ from the doctrine in outcome, by construction''. We
-used that note as the reason to read the negative control on a separate
-fixture. Nothing was hidden. Our mistake was that we never required the gate's
-guarantee to hold on the files where we read the hypotheses.
+The no-replan control of Section~\ref{sec:eval:noreplan} is the doctrine
+baseline with re-planning switched off, so it ignores every disruption. On all
+five novel files and on \code{closed_loop} it committed byte-identical orders
+and scored the identical level. On the novel arm, ignoring the disruption is
+an optimal policy. A test where doing nothing already scores at the ceiling
+cannot produce evidence for or against an adaptability hypothesis. The first
+protocol knew this and wrote it down (Section~\ref{sec:eval:noreplan}). Our
+mistake was that we never required the control to discriminate on the files
+where we read the hypotheses.
 
 % =====================================================================
 \section{Gate 0: Treatment Validity}
 \label{sec:crit:gate0}
 
-Protocol~v2 adds a gate that is read before Gates 1 to 3. It is read once per
-scenario, and it does not depend on the system under test:
+Protocol~v2 adds a gate that is read once per scenario, before Gates 1 to 3,
+and independent of the system under test:
 
 \begin{quote}
 A scenario is admitted to a confirmatory adaptability arm only if a system
@@ -82,46 +67,34 @@ that ignores its disruption scores strictly worse on it than one that
 responds.
 \end{quote}
 
-A scenario that fails Gate~0 may still be run and reported, as a test of base
-execution. It may not carry an adaptability claim, and no risk difference
-computed on it may be described as evidence about re-planning. The gate is
-cheap. It costs two runs of the control per scenario and reuses the no-replan
-machinery that the first protocol already built.
-
-We call a disruption \emph{binding} when three conditions hold. Each one
-catches a different way in which a scenario can miss what it was written to
-test.
+A scenario that fails Gate~0 may still be run as a test of base execution, but
+it may not carry an adaptability claim. The gate costs two runs of the control
+per scenario. We call a disruption \emph{binding} when three conditions hold.
 
 \begin{description}
-\item[D1, state-mutating.] The disruption changes the declared world state as
-  well as an inbox. A purely informational disruption can still bind in
-  principle, if the system has to act on the information to succeed. We cannot
-  assume that it does.
+\item[D1, state-mutating.] The disruption changes the declared world state,
+  and not only an inbox.
 \item[D2, order-binding.] The null policy commits a different order sequence
-  from the responding policy. If the orders are byte-identical, no downstream
-  instrument can tell the two apart, whatever it measures.
+  from the responding policy.
 \item[D3, outcome-binding.] The null policy scores a strictly lower outcome.
-  When D2 holds without D3, the plans differ but the scoring function cannot
-  see the difference.
 \end{description}
 
-A fourth condition applies to the scenario set as a whole.
-\textbf{D4, recoverable:} at least one policy must reach the feasibility
-ceiling. If no policy can recover from a disruption, the score measures the
-hazard and says little about the coordinator.
+A fourth condition applies to the scenario set as a whole. \textbf{D4,
+recoverable:} at least one policy must reach the feasibility ceiling, or the
+score measures the hazard and not the coordinator.
 
 Table~\ref{tab:crit:gate0} holds the evidence. We ran the doctrine baseline and
 the no-replan control side by side on the fixture and on all seven scored
-scenarios. Neither variant has a clean-run reference in this comparison, so
-both are capped at level 3. We compare the two variants with each other here,
-and the campaign's level 4 plays no part.
+scenarios. Both are capped at level 3 here, because neither has a clean-run
+reference in this comparison.
 
 \begin{table}[htbp]
 \centering
 \caption[Gate 0 evidence: the no-replan control on the scored scenarios]{Gate~0
 evidence. The doctrine baseline against the no-replan control, which ignores
 every disruption. $L$ is the level, capped at 3 here, with completeness in
-brackets. Only the fixture discriminates. Exploratory.}
+brackets. Only the fixture discriminates. \code{closed_loop} has no
+disruption, so Gate~0 does not apply to it. Exploratory.}
 \label{tab:crit:gate0}
 \scriptsize
 \setlength{\tabcolsep}{3.5pt}
@@ -146,99 +119,57 @@ Scenario & world & identical & doctrine & no-replan & doctrine & no-replan & min
 
 Every scored row reads ``discriminates: no''. On the five novel disruptions
 the two variants commit the same orders, drive the same kilometres and reach
-the same level. They fail all three conditions.
+the same level, so they fail all three conditions. \code{road_closure} passes
+D2, with 83.1 km against 38.1 km, but it declares no \code{world}. Its dropoffs
+are injected by the scenario, so completeness comes out the same whatever was
+ordered, and it fails D3.
 
-\code{road_closure} fails in a different way. It is the one scored file where
-the null policy commits different orders, 83.1 km against 38.1 km, so it
-passes D2. But the scenario declares no \code{world}. The dropoffs are injected
-by the scenario instead of being earned by the plan, and completeness comes out
-the same whatever was ordered. The disruption changes the orders and leaves the
-outcome as it was, so the scenario fails on D3.
-
-\code{closed_loop} carries no disruption, so Gate~0 does not apply to it. We
-list it for completeness, and its result is not affected.
-
-\textbf{None of the six disruption scenarios is admitted.} The only scenario in
-the repository that passes is the shelter-closure fixture, where the doctrine
-reaches level 3 and the null policy level 0. That property is why the first
-protocol chose it as the discrimination fixture, and the evaluation set lacks
-it.
-
-The gate itself is the contribution we claim here. The first protocol had a
-negative control and read it on a fixture. Protocol~v2 requires every
-disruption to pass the negative control before it can be scored as a
-disruption at all. A check on the instrument thereby becomes a check on every
-treatment. It asks whether the measure captures the construct it claims to
-measure \parencite{jacobs2021}. How to write a scenario that passes the gate is a design question,
-and Section~\ref{sec:design:gate0} takes it up.
+None of the six disruption scenarios is admitted. The only scenario in the
+repository that passes is the shelter-closure fixture, where the doctrine
+reaches level 3 and the null policy level 0. The gate is the contribution we
+claim here. The first protocol read its negative control on one fixture.
+Protocol~v2 requires every disruption to pass it before it can be scored as a
+disruption at all. How to write a scenario that passes the gate is taken up in
+Section~\ref{sec:design:gate0}.
 
 % =====================================================================
 \section{What Is Withdrawn and What Stands}
-\label{sec:crit:withdrawn}
 
-\subsection{Withdrawn}
+We withdraw H2's verdict as a statement about adaptability. The sentence ``the
+workflow baseline recovers better from unanticipated disruption'' is not
+supported, because the disruption never disturbed the baseline. For the same
+reason we withdraw H1's verdict on \code{road_closure}, where the disruption
+changes the orders but not the outcome. Gate~0 fails on all seven scored
+scenarios, so the withdrawal reaches beyond the novel arm.
 
-\paragraph{H2's verdict, as a statement about adaptability.} The sentence
-``the workflow baseline recovers better from unanticipated disruption'' is not
-supported, and this design could not have supported it. The disruption never
-disturbed the baseline, so there was nothing for it to recover from. Nowhere
-in this thesis do we describe the baseline as having adapted, recovered or
-re-planned better.
+The withdrawal works in one direction only. The agentic models lost between 10
+and 27 residents per 100 on scenarios where the correct plan needed no change
+at all. The scenario design explains why the baseline's score carries no
+information about adaptation. It does not explain why the agentic score is
+low.
 
-\paragraph{H1's verdict on \texttt{road\_closure}.} The same reason applies at one
-remove. The disruption changes the orders but leaves the outcome as it was
-(Section~\ref{sec:crit:gate0}), so a survival comparison on it says nothing
-about re-planning.
-
-\paragraph{The scope is wider than the novel arm.} Gate~0 fails on all seven
-scored scenarios, including the two anticipated ones. We started from a
-question about the novel arm, and the evidence supports the wider withdrawal.
-
-\subsection{Not Replaced by an Agentic Win}
-
-The withdrawal works in one direction only. The baseline's score tells us
-nothing about adaptation, and that does not make the agentic score look
-better. The agentic models lost between 10 and 27 residents per 100 on
-scenarios where the correct plan needed no change at all. The scenario design
-explains why the baseline's score carries no information. It does not explain
-why the agentic score is low.
-
-\subsection{Standing, Unchanged}
-
-\begin{itemize}
-\item \textbf{Every number.} Nothing in Protocol~v2 regenerates the scores.
-  $S$, every risk difference, every recovery level and all 27 Gate~1 verdicts
-  are byte-identical before and after.
-\item \textbf{The agentic deficit.} It is real and large, and the next
-  subsection makes it sharper.
-\item \textbf{\code{closed_loop}.} It has no disruption, so the question there
-  is base execution. glm-5.2's non-inferiority pass on it stands in full.
-\item \textbf{The decision rubric.} It reads the structure of decisions and
-  does not use the null policy's score. Its split verdict stands as
-  Section~\ref{sec:res:quality} reports it, with parity on five criteria and a
-  baseline advantage on five.
-\end{itemize}
+Everything else stands. Protocol~v2 regenerates no score, so $S$, every risk
+difference, every recovery level and all 27 Gate~1 verdicts are unchanged.
+glm-5.2's non-inferiority pass on \code{closed_loop} stands, since that
+scenario tests base execution. The decision rubric does not use the null
+policy, so its split verdict stands as Section~\ref{sec:res:quality} reports
+it.
 
 \subsection{Regret Against the Null Policy}
 \label{sec:crit:regret}
 
-The first protocol compared the two systems only with each other. It did not
-measure how each system scores against doing nothing, and that quantity would
-have exposed the problem. Protocol~v2 adds it as null-policy regret,
-\begin{equation}
-R = S_{\text{system}} - S_{\text{null}},
-\label{eq:crit:regret}
-\end{equation}
-measured per run, on survival, against the no-replan control. $R > 0$ means
-responding helped. $R = 0$ means responding bought nothing. $R < 0$ means the
-system harmed itself by responding. We use survival instead of level because
-the null-policy runs are capped at level 3 while scored runs reach level 4, and
-a level difference would then be an artifact of the cap.
+The first protocol compared the two systems only with each other. Protocol~v2
+also compares each system with doing nothing, as null-policy regret
+$R = S_{\text{system}} - S_{\text{null}}$, per run, on survival, against the
+no-replan control. $R > 0$ means responding helped, $R = 0$ means it bought
+nothing, and $R < 0$ means the system harmed itself by responding. We use
+survival because the null-policy runs are capped at level 3, while scored runs
+reach level 4. As everywhere in this thesis, $S$ is capped at 1.0.
 
 \begin{table}[htbp]
 \centering
 \caption[Null-policy regret on the novel arm]{Null-policy regret over the five
-novel disruptions, 50 runs per row. Exploratory.}
+novel disruptions, 50 runs per row, with $S$ capped at 1.0. Exploratory.}
 \label{tab:crit:regret}
 \small
 \begin{tabular}{lcccc}
@@ -246,58 +177,39 @@ novel disruptions, 50 runs per row. Exploratory.}
 System and model & mean regret & helped & neutral & harmed \\
 \midrule
 workflow baseline & $+0.000$ & 0 & \textbf{50} & 0 \\
-agentic / qwen3.5 & $-0.100$ & 3 & 30 & 17 \\
+agentic / qwen3.5 & $-0.106$ & 0 & 33 & 17 \\
 agentic / glm-5.2 & $-0.160$ & 0 & 34 & 16 \\
 agentic / deepseek-v4-pro & $-0.273$ & 0 & 15 & 35 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{pics/critique-regret.pdf}
-\caption[Null-policy regret per run]{Each novel-arm run against the null
-policy, which ignores the disruption. The baseline ties it in every run. The
-agentic models tie it or do worse, and three runs of 150 do better.
-Exploratory.}
-\label{fig:crit:regret}
-\end{figure}
+Table~\ref{tab:crit:regret} gives the counts. The baseline's regret is zero in
+all 50 runs, because its response changed no order and no kilometre. The
+headline that the baseline beats the agentic system on survival in every
+disruption is arithmetically true, but the baseline never had to compete.
 
-Table~\ref{tab:crit:regret} gives the counts and Figure~\ref{fig:crit:regret}
-shows them per run. The two systems tell different stories.
-
-\textbf{The baseline's regret is zero in all 50 runs.} It gained nothing by
-responding, because its response to each disruption changed no order and no
-kilometre. The headline ``the workflow baseline beats the agentic system on
-resident survival in every disruption tested'' is arithmetically true. But in
-that contest the baseline never had to compete.
-
-\textbf{The agentic regret is negative in every cell.} The mean is below zero
-in all 15 model and disruption cells. Of 150 runs, three improved on the null
-policy, 79 tied it, and \textbf{68 came out worse than doing nothing}. This is
-harsher than what the first protocol said. There, the agentic system lost to a
-better system. Under regret, it lost to inaction. A negative regret is a
-self-inflicted loss, so we cannot blame it on the scenario being hard. The
-model ordering of Section~\ref{sec:res:models} is unchanged.
+The agentic regret is negative in all 15 model and disruption cells. Of 150
+runs, none improved on the null policy, 82 tied it, and \textbf{68 came out
+worse than doing nothing}. Under the first protocol, the agentic system lost to
+a better system. Under regret, it lost to inaction. A negative regret is a
+self-inflicted loss, so we cannot blame it on a hard scenario. The model
+ordering of Section~\ref{sec:res:models} is unchanged.
 
 % =====================================================================
 \section{The Mechanism, Corrected by Measurement}
 \label{sec:crit:mechanism}
 
-Our first write-up explained the agentic deficit in prose. It said the agents
-lost residents ``at the handshakes'': a driver's completion call that times out
-and is never retried, a facility query that is never answered. The diagnosis
-was plausible, but we had never measured it. Protocol~v2 measured it, and the
-measurement did not support it. Handshake closure is 0.938
+Our first write-up said the agents lost residents ``at the handshakes'': a
+driver's completion call that times out and is never retried, a facility query
+that is never answered. We had never measured this. Protocol~v2 measured it,
+and the measurement did not support it. Handshake closure is 0.938
 (Section~\ref{sec:res:loss:handshakes}), the loss comes in whole bus-loads
 (Figure~\ref{fig:res:delivery}), and it is dominated by residents who were
 never dispatched. The messages arrived and were answered. What went wrong was
 the agents' decision about which residents to move.
-
-\subsection{The Alternatives We Ruled Out}
-
-Table~\ref{tab:crit:ruledout} lists every other cause we tested against the
-150 agentic novel runs.
+Table~\ref{tab:crit:ruledout} lists the other causes we tested against the 150
+agentic novel runs.
 
 \begin{table}[htbp]
 \centering
@@ -320,217 +232,107 @@ The run ran out of clock & \textbf{Mostly no.} Only 5 of the 19 total-loss runs 
 \end{tabularx}
 \end{table}
 
-What remains is a \textbf{commitment failure, not a comprehension failure}.
-The agents understood the disruption, addressed the right parties and got
-their messages answered. They could not carry one committed plan through to
+What remains is a \textbf{commitment failure}, while comprehension held. The
+agents understood the disruption, addressed the right parties and got their
+messages answered. They could not carry one committed plan through to
 delivery. In agent theory, an intention is a plan the agent keeps until it has
-a reason to drop it, and this persistence is what separates an intention from
-a passing wish \parencite{cohen1990,rao1995}. Legs were re-planned while in flight, and the coordinator often
-could not establish whether a leg had finished. The coordinator's own abort
-messages say so, for example ``bus-2 reassigned to immediate emergency
-dispatch, original mission never delivered'' and ``zero deliveries across 8
-transport plan revisions''.
+a reason to drop it, and this persistence separates an intention from a
+passing wish \parencite{rao1995}. Here, legs were re-planned while in flight,
+and the coordinator often could not establish whether a leg had finished. One
+of its abort messages reads ``zero deliveries across 8 transport plan
+revisions''. Re-planning on disruption is the capability the agentic design
+advertises, and on these scenarios the correct number of re-plans was zero.
 
-This works against the architecture's own claim. Re-planning on disruption is
-the capability the agentic design advertises, and on these scenarios the
-correct number of re-plans was zero.
-
-\subsection{What Is Not Established}
-
-We do not claim a causal direction. A run that is going badly may re-plan
-because it is going badly. Nothing in an observational arm separates that from
-re-planning causing the loss.
-
-We classified each abort by its stated reason. Of 108 aborts, 57 (52.8\%) are
-explicit stand-downs after a failure, 14 (13.0\%) are clearly started by a
-re-plan, and 37 (34.3\%) are other. We test for a failure response first,
-because a stand-down message often names the re-dispatch attempts before it,
-for example ``Hochbahn unresponsive to 3 redispatch requests over 18 min''.
-Testing for churn first would count these as re-plans and inflate a causal
-reading that the design cannot support.
-
-The experiment that would settle the direction is a
-\textbf{commitment-constrained variant}. It caps the number of re-plans, or
-forbids cancelling a leg that is already in flight, and runs on the same
-scenarios with the same models. It needs one campaign and no new scenarios,
-and we leave it to future work.
-
-\subsection{Measuring Handshakes}
-
-Three reading rules carry the closure instrument, and dropping any one of them
-silently zeroes a whole handshake type. First, a driver addressed as
-\code{agent-bus-driver-1} signs as \code{bus-driver-1}, and exact string
-matching reports closure as 0.50 instead of 0.94. Second,
-\code{confirm_dropoff} asks a shelter for intake but only reports progress to
-Hochbahn, which sends no answer. Third, each recipient stamps its own simulated
-time, so no clock orders two agents' rows. We therefore define closure as a
-matching between requests and replies, which holds under any ordering, and we
-report no reply latency.
+We do not claim a causal direction, because a run that is going badly may
+re-plan for that reason. Of 108 aborts, 57 (52.8\%) are stand-downs after a
+failure, 14 (13.0\%) are clearly started by a re-plan, and 37 (34.3\%) are
+other. A \textbf{commitment-constrained variant} would settle the direction.
+It caps the number of re-plans, or forbids cancelling a leg already in flight,
+and runs on the same scenarios with the same models. We leave it to future
+work.
 
 % =====================================================================
 \section{The Pre-Registered Primary Was Underpowered by Construction}
 \label{sec:crit:power}
 
-\paragraph{A timing deviation.} The pre-registration named a Clopper-Pearson
-interval \parencite{clopper1934}, a scenario-level sign test and a
-Holm-Bonferroni correction \parencite{holm1979} as the
-primary test for H2. None of the three existed in the code when we first
-wrote the H2 verdict. We implemented them afterwards, once the result was
-known (Amendment~15). Under the pre-registration's own rules that analysis is
-exploratory. It agrees with the verdict it was checking
-(Section~\ref{sec:res:novel:prereg}), which does not excuse the timing.
-
-\paragraph{A design finding.} At $k = 10$ the registered aggregation could not
-reach conventional significance however the data fell. A two-sided exact sign
+The registered primary test for H2 was implemented only after the result was
+known (Amendment~15), so it is exploratory
+(Section~\ref{sec:res:novel:prereg}). The cut-point sensitivity analysis
+\parencite{simonsohn2020} was added under the same amendment. The more
+important finding is about the design. At $k = 10$, a two-sided exact sign
 test on five scenarios cannot return a $p$ below 0.0625, even when every
 scenario points the same way. Ties push the floor higher. qwen3.5 and glm-5.2
-each tie two scenarios, which leaves three untied observations and a floor of
-0.250. Table~\ref{tab:res:signtest} shows that both models sit at the smallest
-$p$ their data could have produced. Had a moderate effect existed, the design
-would have missed it.
-
-We report this as a finding about pre-registered analysis plans in general. A
-registered primary test that cannot reach significance does not test anything.
-Protocol~v2 draws three consequences from it.
+each tie two scenarios, which leaves a floor of 0.250, and both reached
+$p = 0.250$. A registered primary that cannot reach significance does not test
+anything, and a moderate effect would have been missed. Protocol~v2 draws
+three consequences.
 
 \begin{enumerate}
-\item The registered primary must be one the design can detect. The paired
-  risk difference, which is continuous and far more efficient, becomes
-  primary. Reducing an outcome to a direction or a dichotomy throws power away
-  \parencite{savitz2007,ganesh2018}. The sign test becomes a supporting robustness check.
+\item The paired risk difference becomes primary, since reducing an outcome to
+  a direction throws power away \parencite{ganesh2018}. The sign test becomes a
+  robustness check.
 \item The minimum detectable effect \parencite{cohen1988} is stated before any
-  run. If it exceeds
-  the registered margin, either $k$ rises or the claim is dropped, and this
-  happens before data collection.
-\item Cells that fail Gate~0 are excluded from confirmatory arms by a fixed
-  rule, decided before the result is known.
+  run. If it exceeds the registered margin, either $k$ rises or the claim is
+  dropped.
+\item Cells that fail Gate~0 are excluded from confirmatory arms by a rule
+  fixed before the result is known.
 \end{enumerate}
-
-\paragraph{A second late analysis.} The cut-point sensitivity analysis
-\parencite{steegen2016,simonsohn2020} was
-also a registered precondition on the headline, and it too was added under
-Amendment~15. It supports the headline (Section~\ref{sec:res:sensitivity}).
-The procedural lesson is that a precondition a report asserts should also be
-computed by the report, and the build should fail when it is missing.
 
 % =====================================================================
 \section{Limitations Declared, With the Position Taken on Each}
 \label{sec:crit:limitations}
 
-Table~\ref{tab:crit:limits} lists the six limitations that came out of
-executing the design. For each one we state the position we take. The
-limitations we set out before the evaluation are in
-Table~\ref{tab:eval:scope}.
+The invalid novel arm, the open causal direction and the late primary test are
+covered above. Table~\ref{tab:crit:limits} lists three further limitations
+that came out of executing the design, with the position we take on each.
 
 \begin{table}[htbp]
 \centering
-\caption{Declared limitations and the position taken on each.}
+\caption{Further declared limitations and the position taken on each.}
 \label{tab:crit:limits}
 \small
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X}
 \toprule
 Limitation & Position \\
 \midrule
-The novel arm was not a valid adaptability test &
-We declare it and claim it as the methods contribution. The protocol's own
-negative control shows the null policy at the ceiling on every scored
-scenario, so H2 could not have resolved in either direction
-(Section~\ref{sec:crit:gate0}). \\
-\addlinespace
-The causal direction of plan churn is open &
-Future work. Plan revisions track survival, but most aborts are stand-downs
-after a failure. The commitment-constrained variant is the experiment that
-would settle it (Section~\ref{sec:crit:mechanism}). \\
-\addlinespace
 Parity deviation 7 was still open when the campaign ran &
 Closed by written re-argument, which the protocol's gate allows. The
-deviation runs against the baseline, so it cannot explain a baseline win. It
-could only have understated the margin (Section~\ref{sec:wf:world}). \\
+deviation runs against the baseline, so it could only have understated the
+margin (Section~\ref{sec:wf:world}). \\
 \addlinespace
 42 of 87 doctrine elements have no page citation &
-A limitation on the claim that the baseline is doctrine-grounded, and on
-nothing else. It affects no number. 45 of 87 elements are cited to a page of
-the doctrine \parencite{fwdv100}, and we assert the rest ourselves. \\
+This limits the claim that the baseline is doctrine-grounded, and affects no
+number. 45 of 87 elements are cited to a page of the doctrine
+\parencite{fwdv100}, and we assert the rest ourselves. \\
 \addlinespace
 Only one time scale ran (8.4) &
 H4 was not tested. We make no crossover, trend or scale-dependence claim
-anywhere (Section~\ref{sec:res:h4}). \\
-\addlinespace
-The registered H2 primary was implemented late &
-Disclosed and labelled exploratory. We report it as a methods finding: the
-registered primary was underpowered by construction
-(Section~\ref{sec:crit:power}). \\
+(Section~\ref{sec:res:h4}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Chapter~\ref{ch:results} discloses five further caveats where their effect
-shows: levels are comparable only across the three full arms
-(Section~\ref{sec:res:models:levelcap}), six runs shelter more residents than
-the ceiling admits (Section~\ref{sec:res:integrity:ceiling}), the third model
-slot changed four times (Section~\ref{sec:res:models:churn}), two runs
-executed on a dirty working tree, and 28 agentic novel runs did not quiesce
-(Section~\ref{sec:res:summary}). Four more apply to every table.
+Chapter~\ref{ch:results} discloses further caveats where their effect shows
+(Sections~\ref{sec:res:models:levelcap}, \ref{sec:res:integrity:ceiling}
+and~\ref{sec:res:summary}). Four more apply to
+every table.
 
 \begin{itemize}
-\item \textbf{The cloud model tags are not version-frozen}, so no digest pins
-  these results.
-\item \textbf{One run is flagged for possible straight-line routing},
-  \texttt{aaae313d}, during a routing-service quota outage.
-\item \textbf{Equity is undefined.} Relief logistics treats equity as an
-  objective of its own \parencite{huang2012}, but the resident population is
-  homogeneous,
+\item The cloud model tags are not version-frozen, so no digest pins these
+  results.
+\item One run, \texttt{aaae313d}, is flagged for possible straight-line
+  routing during a routing-service quota outage.
+\item Equity is undefined. Relief logistics treats equity as an objective of
+  its own \parencite{huang2012}, but the resident population is homogeneous,
   so a maximum-minimum subgroup difference is always zero.
-\item \textbf{Four asymmetries favour the baseline.} Two are parity
-  deviations accepted for doctrinal reasons: the consolidated situation
-  picture, and the controller's access to road distance and duration. The
-  other two are the anchor of a replacement bus leg and a fallback playbook
-  that mis-frames two message types for the agents. Since all four
-  favour the baseline, none of them can explain the agentic deficit away. The
-  reserve-bus serialisation also drives part of the gap. We treat it as a
-  difference in decisions, not a deviation (Section~\ref{sec:wf:fleet}).
+\item Four asymmetries favour the baseline. Two are parity deviations
+  accepted for doctrinal reasons: the consolidated situation picture, and the
+  controller's access to road distance and duration. The other two are the
+  anchor of a replacement bus leg and a fallback playbook that mis-frames two
+  message types for the agents. None of them can explain the agentic deficit
+  away. The reserve-bus serialisation also drives part of the gap, and we
+  treat it as a difference in decisions (Section~\ref{sec:wf:fleet}).
 \end{itemize}
-
-% =====================================================================
-\section{What This Protocol Still Does Not Measure}
-\label{sec:crit:scope}
-
-Protocol~v2 keeps the whole scope table of the first protocol
-(Table~\ref{tab:eval:scope}). Table~\ref{tab:crit:scope} adds the limits that
-v2 introduces or inherits.
-
-\begin{table}[htbp]
-\centering
-\caption{What Protocol~v2 still does not measure.}
-\label{tab:crit:scope}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X}
-\toprule
-Not measured & Why \\
-\midrule
-Whether the agentic architecture wins on a scenario that passes Gate~0 &
-No such scenario has been run. Protocol~v2 makes the question askable. It does
-not answer it, and nothing here licenses a claim about what would happen. \\
-\addlinespace
-Reply latency & No clock in the log orders two agents' rows. We measure
-closure and leave lag unmeasured. \\
-\addlinespace
-Whether a reply was correct & Closure asks whether an answer came back, never
-whether it was right. A shelter that confirms an intake it cannot hold still
-counts as closed. \\
-\addlinespace
-Whether over-budget runs would do better at a slower clock & Only one time
-scale was run, so H4 was not tested. \\
-\addlinespace
-Any confirmatory claim & Every v2 instrument was written after the data were
-seen. \\
-\addlinespace
-The baseline's coordination cost under a binding disruption & Its 13 messages
-per run were measured on scenarios that asked for no re-planning. A scenario
-that did would raise that number by an unknown amount. \\
-\bottomrule
-\end{tabularx}
-\end{table}
 
 In summary:
 
@@ -538,13 +340,13 @@ In summary:
 \item We ran the comparison on scenarios where the baseline could not lose.
   The no-replan control shows this on every scored file.
 \item The agentic deficit is still real. 68 of 150 agentic runs came out worse
-  than doing nothing.
+  than doing nothing, and none did better.
 \item The agents failed at commitment, while their understanding of the
   disruption held. The message layer closes 94\% of addressed requests, and
-  the loss is dominated by residents never dispatched. The causal direction is
-  not established.
+  most of the loss is residents never dispatched. The causal direction is not
+  established.
 \item The architecture costs an order of magnitude more to coordinate
   (Section~\ref{sec:res:responsetime}). No scenario here required that cost to
-  pay off, so a campaign on scenarios that pass Gate~0 is the experiment that
-  would show whether it ever does.
+  pay off. A campaign on scenarios that pass Gate~0 would show whether it ever
+  does.
 \end{enumerate}

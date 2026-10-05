@@ -48,7 +48,7 @@ by both systems under test and by the scoring code. This makes the comparison
 fair, checkable and repeatable. Section~\ref{sec:data:evalbackbone} makes this
 argument in full. The log follows the idea of event sourcing, where the history
 of events is stored and every later view is derived from it
-\parencite{fowler2005,overeem2021}.
+\parencite{overeem2021}.
 
 A single source of truth has a clear cost. If the database is down, the whole
 simulation is down, because no agent can load its state or receive a message.
@@ -335,7 +335,7 @@ the run on every row.
 
 An agent should wake as soon as mail arrives, without asking the database
 again and again. Reactive tuple spaces solve the same problem by running code
-when new data arrives \parencite{omicini1999,cabri1998}. PostgreSQL offers a
+when new data arrives \parencite{omicini1999}. PostgreSQL offers a
 publish-and-subscribe mechanism for this, called LISTEN and
 NOTIFY.\footnote{\url{https://www.postgresql.org/docs/current/sql-notify.html}}
 A program listens on a named channel, and any other program can send a short

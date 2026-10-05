@@ -3,11 +3,12 @@
 
 This thesis compares two ways of coordinating an evacuation. One is a script
 written in advance. The other is a group of language-model agents that reason
-over a shared database. Four lines of research meet here. The first is work on
+over a shared database. Five lines of research meet here. The first is work on
 scripted processes and how they handle events nobody planned for. The second is
-work on agents built from large language models (LLMs). The third is a critical
-line of work that tests how well such models plan. The fourth is older work on
-programs that coordinate through a shared store. We close with the systems that
+work on agents built from large language models (LLMs). The third is classic
+agent theory on intentions and commitment. The fourth is a critical line of
+work that tests how well LLMs plan. The fifth is older work on programs that
+coordinate through a shared store. We close with the systems that
 come closest to ours and the gap this thesis fills.
 
 % =====================================================================
@@ -24,8 +25,7 @@ bureaucratic system can respond in a flexible and reliable way when the
 situation keeps changing. The system also has known weak points.
 \textcite{buck2006} find that ICS works less well when many independent
 organizations must cooperate, and that it has trouble absorbing help that was
-not part of the plan. \textcite{moynihan2009} studies ICS in real crises and
-describes it in practice as a mix of hierarchy and network. German fire
+not part of the plan. German fire
 services and civil protection follow a comparable doctrine, DV~100 \parencite{fwdv100}. Chapter~\ref{ch:workflow}
 describes how our baseline implements it.
 
@@ -36,18 +36,13 @@ it from the start. An unanticipated exception is one nobody foresaw. It needs a
 change to the running process, and a fixed script cannot make that change by
 itself. Build-time handlers are the state of the art for the first kind.
 Worklets, for example, select a prepared sub-process that fits the current
-context \parencite{adams2007}. For the second kind, some systems bring in
-automated planning, so that the process can compute a repair while it runs
-\parencite{marrella2017}. Declarative process models take a middle path. They
-state only the rules a process must respect and leave the order of steps open
-\parencite{vanderaalst2009}. Our baseline is imperative. It fixes the order of
+context \parencite{adams2007}. Our baseline works the same way. It fixes the order of
 steps and the response to each anticipated exception in advance.
 
 Resilience engineering draws a similar line. \textcite{woods2015a} separates
 robustness from graceful extensibility. Robustness means handling
 disruptions that were modelled in advance. Graceful extensibility means
-stretching to meet a surprise that falls outside the model
-\parencite{woods2018}. These terms give
+stretching to meet a surprise that falls outside the model. These terms give
 the comparison in this thesis its vocabulary. A scripted baseline can be robust
 against anticipated disruptions. Whether an agentic system extends further when
 the disruption is new is an empirical question, and Chapter~\ref{ch:eval}
@@ -71,25 +66,42 @@ A second line of work gives agents human roles. Generative Agents places 25
 agents with memory, reflection and planning in a small simulated town, and
 human raters find their social behaviour believable \parencite{park2023}. That
 study measures believability. It does not score how well the agents perform a
-task under pressure. CAMEL assigns roles through prompts and studies how two
-role-playing agents cooperate on a task \parencite{li2023}. Our ten agents
-follow the same idea. Each one plays a person in a role at one of eight
+task under pressure. Our ten agents also take human roles. Each one plays a person in a role at one of eight
 organizations.
 
-Several frameworks let many such agents work together. AutoGen builds
-applications from agents that talk to each other, to tools and to humans
-\parencite{wu2023}. ChatDev splits software development into phases and gives
-each phase to agents in fixed roles \parencite{qian2024}. MetaGPT writes human
+Several frameworks let many such agents work together. MetaGPT, for example, writes human
 standard operating procedures into the prompts of role-specialized agents and
 passes work along an assembly line \parencite{hong2024}. MetaGPT is
 interesting for this thesis because it mixes the two ideas we keep apart. Its
-agents reason, but their order of work comes from a script. Recent surveys
-group these systems by how they coordinate: through a central controller, in a
-hierarchy, or as peers \parencite{tran2025,zhuLLMBasedMultiAgentOrchestration2026a}.
+agents reason, but their order of work comes from a script.
 
 We use none of these frameworks. Our system runs its models through
 Ollama\footnote{\url{https://ollama.com}} inside an engine we wrote in plain asynchronous Python.
 Chapter~\ref{ch:agentic} explains why.
+
+% =====================================================================
+\section{Intentions and Commitment}
+\label{sec:bg:commitment}
+
+Agent research had a precise word for keeping to a plan long before LLMs. In
+the belief-desire-intention (BDI) model, an agent holds beliefs about the
+world, desires it would like to reach, and intentions it has chosen to act on
+\parencite{rao1995}. Rao and Georgeff explain why a practical agent needs
+intentions at all. The world changes while the agent acts, and the agent
+cannot afford to plan again from the start at every change.
+\textcite{cohen1990} describe an intention as a choice with commitment. The
+agent keeps it until it believes the goal is reached, believes the goal can no
+longer be reached, or the reason for the goal is gone. Without this
+persistence, an intention would be only a passing wish.
+
+It follows that an agent which reconsiders its plan too often never finishes
+what it started. One that reconsiders too rarely follows a plan that no longer
+fits the world. In an LLM agent, the plan usually lives in text
+that the model writes, and the model can rewrite it every time it is called.
+Our agents keep their plan as committed steps in the database, but the model
+may still revise those steps whenever it wakes (Section~\ref{sec:ag:replan}).
+How often it should do so is a design question for any agentic
+system. Section~\ref{sec:crit:mechanism} returns to it.
 
 % =====================================================================
 \section{Limits of LLM Planning}
@@ -98,9 +110,7 @@ Chapter~\ref{ch:agentic} explains why.
 A strong critical literature questions whether LLMs can plan at all.
 \textcite{kambhampati2024} argue that an LLM on its own can neither plan
 reliably nor check its own plans. In their view, it should propose plans and
-leave the checking to a sound external verifier. Benchmark results support
-this. Planning performance is weak and uneven across models, and newer
-reasoning models improve it without solving it \parencite{valmeekam2024}.
+leave the checking to a sound external verifier.
 
 Self-correction is a related concern, because it is how a replanning agent is
 supposed to recover. \textcite{huang2024} find that when a model corrects its
@@ -132,15 +142,14 @@ database, and every change is recorded in an append-only log. The idea of
 coordinating through shared state is old. In a blackboard system, independent
 knowledge sources watch a common data structure and add to it when they can
 contribute. The classic example is the Hearsay-II speech recognizer
-\parencite{erman1980,nii1986}. In the Linda model, processes communicate by
+\parencite{nii1986}. In the Linda model, processes communicate by
 placing tuples in a shared space and taking them out again, without knowing
 each other \parencite{gelernter1985}. Later tuple spaces became reactive. They
 can run code when a tuple arrives, so a process reacts to new data without
-asking for it again and again \parencite{omicini1999,cabri1998}. Our agents
+asking for it again and again \parencite{omicini1999}. Our agents
 wake in a similar way when a notification tells them that a new row is waiting
 (Section~\ref{sec:data:notify}). Event sourcing, a pattern from software
-engineering, keeps the full history of changes as the source of truth
-\parencite{fowler2005}. Any
+engineering, keeps the full history of changes as the source of truth. Any
 past state can then be rebuilt by replaying the log. An industry study finds
 this useful for audits and replay but notes that it makes schema changes harder
 \parencite{overeem2021}.
@@ -168,10 +177,29 @@ agent simulations are more useful for shaping procedures and training than for
 predicting outcomes. This matches the purpose of our simulation, which studies
 a coordination mechanism and does not forecast a real evacuation.
 
-Evacuation research without LLMs is large. It includes optimization of
-citywide transfers of elderly people and agent-based models of people with
-reduced mobility. Chapter~\ref{ch:casestudy} cites the studies that bear on our
-case.
+LLM agents are more and more often evaluated on realistic tasks, with scores
+computed by code. TravelPlanner asks agents to build travel plans with tools
+and checks each plan against hard constraints and common-sense rules
+\parencite{xie2024a}. TheAgentCompany scores agents on professional
+tasks in a simulated software company \parencite{xu2025}. Scoring by code also
+avoids the known biases of using an LLM as the judge \parencite{zheng2023}.
+These benchmarks compare models with each other. Neither runs a
+non-LLM controller through the same harness as a reference point.
+
+Evacuation and relief logistics are usually studied as optimization problems.
+\textcite{huang2012} define performance measures for relief routing and show
+that efficiency, efficacy and equity can pull in different directions.
+\textcite{holguin-veras2013} argue that such models should minimize social
+cost. This adds the cost of human suffering from late or missing supplies to
+the cost of the logistics itself. For coastal cities, \textcite{yin2024} plan
+storm-flood evacuations with a focus on moving elderly people. These models
+take the view of one planner who sees the whole problem and computes the best
+plan. In our case, the resources and the information belong to several
+organizations. Even the baseline's commander has to collect reports and give
+orders through messages. We therefore study how well the coordination works,
+and we do not search for an optimal route or allocation.
+Chapter~\ref{ch:casestudy} cites further work on evacuating people with reduced
+mobility.
 
 To our knowledge, no prior work puts LLM agents in the role of the
 organizations that coordinate an evacuation and compares them with a

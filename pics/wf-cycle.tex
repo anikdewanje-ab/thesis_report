@@ -2,7 +2,7 @@
 % ordered checks at the seam, and the execution model closing the loop.
 % Source: workflow-baseline-README.md sec.4 and sec.4a,
 % DOCTRINE_BASELINE_DESIGN.md sec.2.2 and sec.3.1. Input from
-% inc/workflow_baseline.tex, Section "The Command Cycle and the Seam".
+% inc/workflow_baseline.tex, Section "The Command Cycle".
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
@@ -28,9 +28,9 @@
   \node[stage, below=0.7cm of q] (lage) {\textbf{Situation assessment}\\ (\emph{Lagefeststellung})\\ read the wake, update the\\ situation picture (S2)};
 
   % --- Planung: the three ordered checks at the seam -----------------
-  \node[rung, below=1.15cm of lage] (r1) {\textbf{1\enspace Contingency check (D8)}\\ does the committed plan still fit?};
-  \node[rung, below=0.6cm of r1] (r2) {\textbf{2\enspace Fallback check (D9)}\\ is the situation understood at all?};
-  \node[rung, below=0.6cm of r2] (r3) {\textbf{3\enspace Phase ladder (D3)}\\ what is the next phase? (S3, S4)};
+  \node[rung, below=1.15cm of lage] (r1) {\textbf{1\enspace Contingency check}\\ does the committed plan still fit?};
+  \node[rung, below=0.6cm of r1] (r2) {\textbf{2\enspace Fallback check}\\ is the situation understood at all?};
+  \node[rung, below=0.6cm of r2] (r3) {\textbf{3\enspace Phase ladder}\\ what is the next phase? (S3, S4)};
   \node[seam, fit=(r1)(r2)(r3), inner sep=6pt,
     label={[font=\footnotesize, anchor=north west, align=left, inner sep=3pt]north east:\textbf{Planning}\\(\emph{Planung}),\\the seam}] (plan) {};
 

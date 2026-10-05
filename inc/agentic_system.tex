@@ -67,7 +67,7 @@ plays the vehicles instead and sends the same reports
 
 Inference runs through Ollama. We wrote the engine around it ourselves, in
 plain asynchronous Python, and use no agent framework.
-Section~\ref{sec:bg:agentic} surveys such frameworks. We chose a custom engine
+Section~\ref{sec:bg:agentic} discusses such frameworks. We chose a custom engine
 because the runtime has to control three things that a general framework would
 keep for itself. The first is time, since the agents act in a simulated clock
 that keeps running while they think (Section~\ref{sec:ag:crons}). The second is
@@ -245,8 +245,8 @@ from one wake to the next.
   \item optionally, an \textbf{abort} with a reason.
 \end{itemize}
 Since leaving the remaining plan out means ``no change'', every plan the model
-does write counts as a deliberate revision. The evaluation relies on this. Appendix~\ref{app:prompts} gives the full prompts of the reference
-agent.
+does write counts as a deliberate revision. The evaluation relies on this. Appendix~\ref{app:prompts} reproduces the system prompt of
+the reference agent.
 
 % =====================================================================
 \section{Runtime Ownership and Ground Truth}
@@ -458,7 +458,7 @@ the same depot, and the gap kept growing.
 
 We count supersedes, but only as a diagnostic of how often an agent changed
 course. The evaluation does not score the count as a measure of success
-(Section~\ref{sec:eval:rubric}). Rewriting the plan on any wake is the main
+(Section~\ref{sec:eval:metrics}). Rewriting the plan on any wake is the main
 capability we built this architecture to offer.
 Chapter~\ref{ch:results} reports how often the agents used it and what
 followed. On the tested scenarios, runs that revised their plan more often

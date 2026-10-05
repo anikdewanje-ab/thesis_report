@@ -4,121 +4,51 @@
 \section{Scenario Overview}
 \label{sec:cs:overview}
 
-We use one concrete case to study evacuation coordination. The case is a
-predicted storm surge in Hamburg that forces the evacuation of a nursing home
-on the bank of the river Elbe. This section describes the hazard, the site, and
-the coordination task. The sections that follow then describe the organizations
-involved, the ten steps they go through, and the disruptions used to test them.
-
-\subsection{The Hazard}
-\label{sec:cs:overview:hazard}
-
-The Elbe is tidal along its whole course through Hamburg. A storm over the North
-Sea can push water up the estuary and raise the water level in the middle of the
-city. Hamburg has lived with this risk for a long time, and the risk is expected
-to grow with climate change \parencite{vonstorch2008}. Risk studies for the
-German Bight and for the Elbe estuary model how such extreme surges develop and
-what areas they reach \parencite{oumeraci2015a,wahl2015a}. We take this hazard
-as given and do not model the flood itself. We model what people and
-organizations have to do once a surge is forecast.
-
-For us, the important property of the hazard is the warning time. A storm surge
-is not a sudden event. It is forecast hours in advance. This gives responders a
-window to act, but the window is fixed and it closes. The scenario is therefore
-a planning problem under a deadline, and this is the kind of problem we want to
-study.
-
-\subsection{The Site}
-\label{sec:cs:overview:site}
+We study evacuation coordination on one concrete case: a predicted storm surge
+in Hamburg that forces the evacuation of a nursing home on the river Elbe. The
+Elbe is tidal along its whole course through the city, and a storm over the
+North Sea can push water up the estuary into the city centre. Risk studies for
+the German Bight and the Elbe estuary model how such surges develop and which
+areas they reach \parencite{oumeraci2015a}. We take this hazard as
+given and do not model the flood itself. For us, its key property is the
+warning time. A surge is forecast hours in advance, so responders have a
+window to act, but the window is fixed. The case is therefore a planning problem
+under a deadline.
 
 The site is the Augustinum, a senior care facility at Elbchaussee 374, 22609
-Hamburg. It sits close to the river in the west of the city. The scenario
-assumes 100 residents who all have to leave before the water arrives.
+Hamburg, close to the river in the west of the city. Its 100 residents all have
+to leave before the water arrives. Many of them cannot walk far, cannot drive,
+and cannot leave on their own, so the evacuation is a transport and care
+operation. Evacuation models that ignore differences in mobility underestimate
+how long such an operation takes \parencite{alqahtani2025a}. The German
+storm-surge work cited above studies the hazard, the risk and the damage, but
+not the evacuation of vulnerable groups on the Elbe. We found no ready-made
+model of this operation to reuse, which is one reason we built the case.
 
-The residents are the reason this case is hard. They are old. Many of them
-cannot walk far, cannot drive, and cannot be told to leave on their own.
-Evacuating them means running a transport and care operation. Buses have to be
-requested, staffed, and routed. Shelters have to be found that can take a large
-group at short notice. Medical staff have to travel with the convoy. Research
-on evacuation planning for coastal cities shows that moving elderly populations
-is the part that dominates the logistics \parencite{yin2024}, and evacuation
-models that ignore differences in mobility underestimate how long the operation
-takes \parencite{alqahtani2025a}.
+The case is small enough to run many times and large enough to be realistic.
+The roster is fixed at two buses with 50 seats each, two school shelters with
+60 beds each, one police escort and one medical team. No bus can carry all 100
+residents in one trip, and no shelter can take all of them. The 120 beds leave
+only 20 to spare. A plan therefore has to split the residents between the
+shelters and schedule more than one run, which makes the allocation a real
+decision. Bus-2 is declared a reserve, and the two systems use it differently
+(Section~\ref{sec:wf:fleet}).
 
-Here we also meet a gap in the literature. The German storm-surge work cited
-above studies the hazard, the risk, and the damage. It does not study the
-evacuation logistics of vulnerable groups on the Elbe coast. The elderly
-evacuation work is set in Shanghai and New York, not in Germany. So there is no
-ready-made model of this operation to reuse, which is one reason the case is
-worth building.
-
-\subsection{The Coordination Task}
-\label{sec:cs:overview:task}
-
-The task is to move 100 residents from the Augustinum to school buildings that
-serve as emergency shelters, before the forecast high water, and to bring them
-there safely.
-
-No single organization can do this alone. The city crisis unit knows which
-facilities are at risk. The nursing home knows how many residents it has and
-what care they need. The schools know how many beds they can offer. The public
-transport operator owns the buses. The police can escort a convoy. The medical
-service can send a team for the trip. Each of these actors holds information the
-others do not have, and each controls resources the others cannot use directly,
-so they have to exchange information before any plan can exist.
-
-Two properties of the case made it a natural place to try an agentic
-architecture. First, the actors are heterogeneous and hold local information,
-so coordination has to happen through communication and not through a central
-planner who already knows everything. Second, the space of things that can go
-wrong is large. A road can flood, a shelter can lose capacity, a bus can break
-down, and these can happen together and in the middle of the operation. A
-pre-written script covers the cases its author thought of. Agents that reason
-over a shared database can, in principle, also answer a case nobody wrote down.
-We set out to test that promise, and Chapter~\ref{ch:eval} describes how.
-
-The case offers a large disruption space in principle, but the scenarios we ran
-did not use it. In none of them did a disruption require a change of plan to
-save the residents (Section~\ref{sec:crit:gate0}). We therefore answer whether
-the agentic system won on this case. We do not answer whether such a system can
-ever win.
-
-We kept the scenario small enough to run many times and large enough to be
-realistic. The roster is fixed at two buses and two receiving shelters, with one
-police escort and one medical team. Each bus has 50 seats, so the 100 residents
-do not fit in a single trip. Each shelter declares 60 beds, so the 120 beds
-cover the residents with only 20 to spare, and neither shelter on its own can
-take everyone.
-
-We chose these numbers on purpose, because they make the allocation a real
-decision. A single bus and a single shelter could absorb the whole mission
-between them, and then there would be nothing to allocate and nothing to
-compare. With two of each, a plan has to split the population across the
-shelters and it has to schedule more than one run.
-
-Bus-2 is declared a reserve. The intended plan is that bus-1 makes two
-sequential runs and bus-2 stands by for a breakdown. The two systems read this
-declaration differently. The baseline sends bus-2 out in parallel from its first
-schedule. The agentic transport dispatcher holds it back unless one of four
-named reasons releases it. Both sides have the same fleet, so this is a
-difference in decisions and not in capability. Section~\ref{sec:wf:fleet}
-describes the mechanism.
+The case offers a large space of possible disruptions. The scenarios we ran,
+however, never required a change of plan to save the residents
+(Section~\ref{sec:crit:gate0}). We therefore answer whether the agentic system
+won on this case, and not whether such a system can ever win.
 
 % =====================================================================
 \section{Organizational Agents}
 \label{sec:cs:agents}
 
-Every agent in this thesis stands for a person in an organizational role.
-There is a coordinator at a desk, a transport dispatcher, two bus drivers, a
-police officer, a paramedic, a head of a nursing home and two head teachers.
-Vehicles are not agents. A bus, a patrol car and an ambulance are passive
-resources that a person drives. This follows how civil protection in Hamburg is
-organized, with agencies that are run by people. It also limits each agent to
-what the person in that role could see from where they sit.
-
-The case has ten agents (Table~\ref{tab:cs:roster}).
-Each agent has a fixed identity with a name, a role, a work address and an
-address book of the contacts it may message. The names are invented.
+Every agent stands for a person in an organizational role, such as a
+coordinator at a desk, a bus driver or a head teacher. Vehicles are passive
+resources that a person drives. Each agent has a fixed identity with an invented
+name, a role, a work address and an address book of the contacts it may
+message. It only knows what the person in that role could see.
+Table~\ref{tab:cs:roster} lists the ten agents in eight organizations.
 
 \begin{table}[htbp]
 \centering
@@ -145,192 +75,122 @@ SC2 & Klaus Werner, head teacher & Schule Marienthal, Wandsbek (60 beds) & scrip
 \end{table}
 
 We gave a language model only to the agents that make a decision in the case.
-The disaster staff ZKD relays the alarm, books the reports, and countersigns a
-stand-down. It never has to choose between options, so it is scripted. The two
-schools only report their free beds and confirm who arrived. The nursing home
-reports its residents and tells the coordinator when the building is empty. All
-four answer by fixed rules and without delay.
+ZKD relays the alarm, books the reports and countersigns a stand-down. The
+schools report their free beds and confirm arrivals, and the nursing home
+reports its residents and when the building is empty. None of the four has to
+choose between options, so all four are scripted.
 
-The six reasoning agents face real choices. BIS is the only coordinator that
-decides. It chooses the allocation, asks for transport and escorts, and is the
-only agent that may call off the mission. Hochbahn decides how the fleet is
-used: which bus runs, in what order, and when the reserve is released. The
-police officer and the paramedic work on the road. Each of them drives their
-own vehicle as part of the convoy and plans their own legs. The two bus drivers
-do the same for their buses.
-
-The workflow baseline keeps this roster with one change. A single scripted
-Incident Commander replaces the two coordinating agents, BIS and Hochbahn. All
-other agents are shared by both systems. No coordination decision on the
-baseline side therefore comes from a model. Chapter~\ref{ch:workflow} describes
-the baseline, and Chapter~\ref{ch:agentic} describes how the agents reason.
+The workflow baseline keeps this roster, but one scripted Incident Commander
+replaces the two coordinating agents, BIS and Hochbahn. All other agents are
+shared, so no coordination decision on the baseline side comes from a model.
+Chapter~\ref{ch:agentic} describes how the agents reason, and
+Chapter~\ref{ch:workflow} describes the baseline.
 
 % =====================================================================
 \section{Coordination Storyline}
 \label{sec:cs:storyline}
 
-The mission follows a fixed storyline of ten steps. The storyline says what has
-to happen and who is responsible. It leaves open how each step is decided. That
-choice belongs to the coordinator, and it is where the two systems differ.
-Figure~\ref{fig:cs:storyline} shows the steps as messages between the
-organizations.
+The mission follows ten steps (Figure~\ref{fig:cs:storyline}). They fix what
+has to happen and who is responsible, and leave the decisions to the
+coordinator.
 
 \begin{enumerate}
-  \item \textbf{Identification.} ZKD receives the flood alert and relays it to
-  BIS as an alarm. BIS now knows that a facility in the flood zone has to be
-  cleared, and by when.
-  \item \textbf{Evacuation assessment.} BIS asks the Augustinum how many
-  residents must leave, and passes on the deadline. The home confirms 100.
-  \item \textbf{Resource allocation.} BIS asks both schools for free beds. Each
-  offers 60. The coordinator now decides how many residents go to each school.
-  \item \textbf{Route planning.} No coordinator draws routes. Each driver agent
-  routes its own legs over real roads, using
-  OpenRouteService.\footnote{\url{https://openrouteservice.org}} The coordinators
-  work with addresses and times.
-  \item \textbf{Logistics.} BIS asks Hochbahn for buses. Hochbahn writes the run
-  schedule and sends it back to BIS as a transport plan. By default bus-1 makes
-  two sequential runs and bus-2 stays in reserve. If the schedule does not fit
-  the deadline, Hochbahn may release the reserve or ask BIS for more time.
-  \item \textbf{Police coordination.} BIS orders an escort. The police officer
-  drives the patrol car at the head of the convoy.
-  \item \textbf{Medical support.} BIS orders medical cover. The paramedic drives
-  the ambulance at the tail of the convoy. Both escorts cover every run and stand
-  down only after the last one.
-  \item \textbf{Evacuation execution.} The residents board and the bus leaves.
-  The driver tells the home that the bus has departed and how many are aboard. A
-  bus that only starts boarding does not count. When everyone has left, the home
-  reports the building as cleared. If the deadline passes first, it reports the
-  building as not cleared, with the number still inside. In both cases the home
-  sends the report only once.
-  \item \textbf{Arrival and handover.} At the school, the driver hands the
-  residents over and the school confirms the intake. The driver also reports the
-  drop-off to Hochbahn, which tells BIS that the run is complete.
-  \item \textbf{Mission report.} Once every run is complete, BIS sends its report
-  to ZKD, which closes the evacuation record.
+  \item \textbf{Identification.} ZKD relays the flood alert to BIS.
+  \item \textbf{Evacuation assessment.} The Augustinum confirms 100 residents
+  and the deadline.
+  \item \textbf{Resource allocation.} Each school offers 60 beds, and BIS
+  decides the split.
+  \item \textbf{Route planning.} Each driver routes its own legs with
+  OpenRouteService.\footnote{\url{https://openrouteservice.org}}
+  \item \textbf{Logistics.} Hochbahn sends BIS a run schedule, by default two
+  runs of bus-1 with bus-2 in reserve.
+  \item \textbf{Police coordination.} The patrol car leads the convoy on every
+  run.
+  \item \textbf{Medical support.} The ambulance follows at the tail on every run.
+  \item \textbf{Evacuation execution.} The driver reports each departure, and
+  the home reports once whether the building is cleared.
+  \item \textbf{Arrival and handover.} The school confirms the intake, and
+  Hochbahn tells BIS the run is complete.
+  \item \textbf{Mission report.} BIS reports to ZKD, which closes the record.
 \end{enumerate}
 
-Steps 8 and 9 repeat for every bus run. The storyline fixes no split of
-residents between the schools. How many go where, and on which run, is the
-coordinator's decision.
+Steps 8 and 9 repeat for every bus run. How many residents go to each school,
+and on which run, is the coordinator's decision. The baseline's commander walks
+the same steps in four phases (Table~\ref{tab:wf:phases}).
 
 \input{pics/cs-storyline}
 
-\paragraph{The stand-down.} One further path exists outside the ten steps. If
-BIS finds that no recovery is possible, it asks ZKD to countersign a stand-down.
-ZKD authorizes it without conditions, and BIS then recalls the transport, the
-police and the medical team. The decision stays with BIS, and the formal
-authority stays with ZKD. No evaluated scenario triggered this path.
-
-\paragraph{The same storyline in the baseline.} The baseline's Incident
-Commander walks the same steps in four phases. Intake covers steps 1 to 3,
-transport allocation steps 4 and 5, issuing orders (\emph{Befehlsgebung}) steps
-5 to 8, and the mission report step 10. Because the commander replaces both BIS
-and Hochbahn, the messages between those two disappear on the baseline side.
-Section~\ref{sec:wf:steps} gives the details.
+One further path lies outside the ten steps. If BIS finds that no recovery is
+possible, ZKD countersigns a stand-down and BIS recalls the transport and the
+escorts. No evaluated scenario triggered it.
 
 % =====================================================================
 \section{Disruption Scenarios}
 \label{sec:cs:disruptions}
 
-The storyline describes a mission where nothing goes wrong. In the evaluation
-we disturb it. Every run begins with the alarm, and every run ends at the
-forecast high water. In all scenarios the flood reaches the zone at 12:00. A
-resident who reaches a shelter after that time does not count as rescued.
+Every run begins with the alarm and ends at the forecast high water. In all
+scenarios the flood reaches the zone at 12:00, and a resident who reaches a
+shelter later does not count as rescued. We evaluated seven scenarios in two
+arms (Table~\ref{tab:cs:scenarios}). The two \emph{anticipated} scenarios were
+known while the systems were built, and the baseline has a written branch for
+them. The five \emph{novel} scenarios were supplied by the domain expert,
+Rüdiger Höfert, from a brief that named only the kind of disruption wanted.
+They were revealed after the baseline was frozen on 2026-09-10
+(Section~\ref{sec:eval:firewall}). A shelter closure (S03) had no agentic
+counterpart and was not scored. Section~\ref{sec:eval:heldout} lists the
+response each scenario expects.
 
-We evaluated seven scenarios. They fall into two groups, which the evaluation
-calls the two arms (Table~\ref{tab:eval:scenarios}). The \emph{anticipated} arm
-has two scenarios that were known while the systems were built. The baseline has
-a written branch for them. The \emph{novel} arm has five scenarios that were
-supplied by the domain expert, Rüdiger Höfert, and revealed only after the
-baseline had been frozen on 2026-09-10. He wrote them from a brief that named
-the kind of disruption wanted, compound and unfolding mid-mission, but not its
-content. Section~\ref{sec:eval:firewall} describes this firewall. A third
-anticipated scenario, a shelter closure (S03), had no agentic counterpart and
-was not scored.
+\begin{table}[htbp]
+\centering
+\caption{The seven evaluated scenarios.}
+\label{tab:cs:scenarios}
+\small
+\begin{tabularx}{\textwidth}{@{}ll>{\raggedright\arraybackslash}X@{}}
+\toprule
+ID & Scenario & What happens \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Anticipated arm}} \\
+S01 & Closed loop & Nothing goes wrong. The undisrupted control. \\
+S02 & Road closure & A road on the transport corridor closes during the evacuation. The baseline has no routing command, so its version makes a school unreachable. Its ceiling falls to 60, and completeness is scored against its own population. \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Novel arm}} \\
+S04 & Medical emergency in flight & A resident collapses on a moving bus. The patient is not modelled. \\
+S05 & Unverified persons report & A 112 call reports extra people at the home and is later withdrawn. \\
+S06 & Conflicting evacuation orders & The district office (\emph{Bezirksamt}) issues an order that contradicts the running plan. \\
+S07 & Reduced bus capacity & Bus-1 may carry only 25 residents. The simulator does not enforce this limit. \\
+S08 & Partial shelter capacity loss & A third party reports that SC1 can take only 40. SC1 still declares 60 beds. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-The paragraphs below describe what happens in each scenario and what a sensible
-coordinator would do. Section~\ref{sec:eval:heldout} gives the checks that turn
-these expectations into scores.
-
-\paragraph{S01, closed loop.} Nothing goes wrong. The two runs go out and land
-as planned. This is the undisrupted control, and every other scenario is read
-against it.
-
-\paragraph{S02, road closure.} A road on the transport corridor closes while the
-evacuation is under way. On the agentic side the closure is reported to the
-transport side, and the convoy has to be routed around it. The baseline's
-Incident Commander has no routing command. In its version of the scenario the
-closure is therefore written as a school becoming unreachable, and the
-commander has to re-allocate. The two versions therefore test different things,
-and the baseline version ends with a lower feasibility ceiling, 60 instead of
-100. We score completeness against each scenario's own declared population,
-so the lower ceiling does not count against the baseline.
-
-\paragraph{S04, medical emergency in flight.} A resident collapses on a bus that
-is already moving. A good response keeps the bus on its way, sends the
-ambulance to meet it at the school it is heading for, and tells ZKD. The bus
-should be neither diverted nor held. The simulator does not model the patient,
-so this case is judged on the decisions that were taken.
-
-\paragraph{S05, unverified persons report.} An emergency call to 112 reports
-more people at the home than the plan counts. The report is not confirmed, and
-it is later taken back. The coordinator should check the report with the police
-or ZKD, keep the running evacuation untouched, and commit the reserve bus as a
-hedge in case the report is true. Once the report is withdrawn, nothing new
-should still be on its way.
-
-\paragraph{S06, conflicting evacuation orders.} The district office
-(\emph{Bezirksamt}) issues an order that contradicts the running plan. Here the
-coordinator should answer the home quickly, escalate the conflict to ZKD, and
-keep the full evacuation going.
-
-\paragraph{S07, reduced bus capacity.} Bus-1 is reported as degraded, and it
-may carry only 25 residents instead of 50. The bus is still in service. A good
-response loads bus-1 with no more than 25, brings in the reserve bus, and keeps
-everyone planned. The simulator does not enforce the 25-seat limit. The
-scenario file says so in advance, and the case is judged on the decisions.
-
-\paragraph{S08, partial shelter capacity loss.} A third party reports that
-SC1 can now take only 40 residents instead of 60. The coordinator should book
-no more than 40 into SC1 and move the rest to SC2. The school itself still
-declares 60 beds, because the report is only a message. The case is therefore
-judged on where the orders sent people.
-
-\paragraph{What the disruptions have in common.} Every disruption arrives as a
-message, and none of them changes the declared world. The school keeps its
-beds, the bus keeps its seats, and the road network stays as it was. A
-coordinator that ignores the message can therefore still bring everyone to
-safety. We built the case this way, and it affects how every later result has
-to be read. Section~\ref{sec:crit:gate0} draws the consequence.
+Every disruption arrives as a message, and none of them changes the declared
+world. The school keeps its beds, the bus keeps its seats, and the roads stay
+open. A coordinator that ignores the message can therefore still bring everyone
+to safety, and S04, S06, S07 and S08 are judged mainly on the decisions. This shapes
+how every later result has to be read (Section~\ref{sec:crit:gate0}).
 
 % =====================================================================
 \section{Assumptions and Simplifications}
 \label{sec:cs:assumptions}
 
-Like any model, the case leaves things out. The main simplifications are listed
-here. They apply to both systems.
+The case makes the following simplifications, for both systems.
 
 \begin{itemize}
-  \item \textbf{Residents are a count.} The 100 residents are a plain number.
-  They have no behaviour of their own and no subgroups, for example by mobility
-  or care level.
-  \item \textbf{The flood is a deadline.} The surge itself is not simulated.
-  Each zone has one flood arrival time. A resident who is not sheltered by
-  then does not count as rescued.
-  \item \textbf{Roads have no traffic.} Travel distance and time come from
-  OpenRouteService, with a straight-line fallback when the service is not
-  available. There is no congestion and no queueing.
-  \item \textbf{Bus seats are not enforced.} A bus can in principle carry more
-  than its seats. Shelter beds and the flood deadline are enforced on both
-  systems. Residents above a shelter's declared beds do not count as safe.
-  \item \textbf{Messages always arrive.} Replies come after a fixed delay. There
-  is no message loss and no variable delay.
-  \item \textbf{One clock speed.} All runs use the same ratio between simulated
-  time and real time, 8.4 simulated seconds per real second.
-  \item \textbf{One case.} There is one facility, one city, two buses and two
-  shelters. We did not run other sizes or layouts.
+  \item \textbf{Residents are a count,} with no behaviour and no subgroups by
+  mobility or care level.
+  \item \textbf{The flood is a deadline.} Each zone has one arrival time, and
+  the surge is not simulated.
+  \item \textbf{Roads have no traffic.} Distances and times come from
+  OpenRouteService, with a straight-line fallback.
+  \item \textbf{Bus seats are not enforced.} Shelter beds and the deadline are,
+  and residents above a shelter's beds do not count as safe.
+  \item \textbf{Messages always arrive,} after a fixed delay.
+  \item \textbf{One clock speed.} All runs use 8.4 simulated seconds per real
+  second.
+  \item \textbf{One case.} There is one facility, with two buses and two
+  shelters.
 \end{itemize}
 
-These choices keep the case small enough to run hundreds of times and to score
-by a fixed rule, and they also limit what the results can show.
-Chapter~\ref{ch:critique} and Chapter~\ref{ch:discussion} return to them.
+These choices keep the case small enough to run hundreds of times, and they
+limit what the results can show (Chapters~\ref{ch:critique}
+and~\ref{ch:discussion}).

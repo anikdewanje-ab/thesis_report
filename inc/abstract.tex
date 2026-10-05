@@ -2,40 +2,38 @@
 \addcontentsline{toc}{chapter}{Abstract}
 
 Nursing homes near the coast have to move their residents before a storm surge
-arrives. Such an evacuation needs several organizations to work together, and
-the plan often changes while it runs. Simulations of this task are usually
-scripts that follow written doctrine. They cover only the disruptions their
-authors expected. Agents built from large language models (LLMs) could, in
-principle, also respond to disruptions that nobody scripted.
+arrives. This needs several organizations to work together, and the plan often
+changes on the way. Simulations of this task are usually scripts that cover
+only the disruptions their authors expected. Agents built from large language
+models (LLMs) could, in principle, also handle disruptions that nobody scripted.
 
-In this thesis we design a database-centric agentic architecture and evaluate
-it against a scripted baseline. The case is the evacuation of the Augustinum
-nursing home in Hamburg, with 100 residents, two buses with 50 seats each and
-two school shelters with 60 beds each. Ten LLM agents represent people at eight
-organizations. They coordinate through one PostgreSQL database, which holds all
-state and wakes each agent when it has work. The baseline follows the German
-DV~100 doctrine and uses no language model. Both systems write to one shared
-append-only event log, and one deterministic scorer reads it. We compared them
+We design a database-centric agentic architecture and compare it with a
+scripted baseline that follows the German DV~100 doctrine. The case is the
+evacuation of the Augustinum nursing home in Hamburg with 100 residents. Ten
+agents represent people at eight organizations. Six of them reason with an
+LLM, and all coordinate through one PostgreSQL database. Both systems write to
+one shared event log, and one deterministic scorer reads it. We compared them
 on seven scenarios under a pre-registered protocol.
 
-Both pre-registered hypotheses failed. The baseline sheltered every resident in
-all 50 novel runs, and the test on resident survival failed in 26 of 27 cells.
-The best agentic configuration reached a mean survival of 0.894. The agentic
-system also did worse than a null policy that ignores every disruption. No
-scenario required adaptation, however, so the baseline's perfect score says
-nothing about its ability to adapt. The agents read the disruptions correctly,
-and 93.8\% of 1,932 requests between them ended in a closed handshake. The loss
-came from residents who were never dispatched. It arrived in whole bus-loads
-and grew with the number of plan revisions. We therefore describe it as a
-failure of commitment rather than of comprehension. Decision quality is split.
-Over 16 rubric criteria the agentic models match the baseline on five and fall
-short on five.
+Both pre-registered hypotheses failed. The baseline sheltered every resident
+in all 50 runs with a disruption it was not written for, but it did not adapt.
+It kept its original orders. A controller that ignores every disruption scores
+the same, because no disruption changed what the scorer counts. The agentic
+system did react, and its agents read the disruptions correctly. Yet the best
+configuration sheltered only 89.4\% of the residents, and in every scenario
+with such a disruption it did worse than ignoring the disruption. The lost
+residents were never dispatched, so the loss came in whole bus-loads. The more
+often a run revised its plan, the fewer residents it delivered. Coordination
+itself worked, with 93.8\% of the requests between agents answered. We
+therefore see a failure of commitment rather than of comprehension. Since no
+scenario required adaptation, these results show who won here, not whether
+adaptation can ever pay off.
 
-From these results we derive design considerations for agentic emergency
-simulation. A leg that is already on the road should stay committed, every
-delivery should be confirmed, and scenarios should let a disruption change the
-world that is scored. The next experiment is an agentic variant with a
-commitment boundary, run on the same scenarios.
+From this we derive design considerations. An agent should not cancel a bus run
+once it has started, every delivery should be confirmed, and test scenarios
+should be ones where ignoring the disruption costs residents. As a next step,
+we propose to rerun the same scenarios with agents that may revise their plan
+only a few times.
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
