@@ -71,22 +71,20 @@ Proposed chapter order:
 
 ## 3. Fix these before writing a word
 
-The 300 -> 100 fix is **done**. The rest still stand.
+All items below are **done** (last checked 2026-10-05).
 
 - ~~`inc/casestudy.tex` says **300 residents**.~~ **Fixed 2026-09-22**, along
   with two other stale facts in the same chapter: the fleet is **2 buses at 50
   seats**, not three, and the shelters are **SC1 and SC2 at 60 beds each**, not
   two out of five candidates. The disruption list in that chapter named the
   three retired prototyping fixtures; it now names the real seven scenarios.
-- **No chapter cites anything yet.** `bibs/litDB.bib` holds 46 entries and
-  `inc/` uses zero `\cite`. `casestudy.tex` is the only chapter with prose and
-  it does cite, so the habit exists; the rest are skeletons.
-- Most sources in `rubric-bibliography.md` are **not** in `litDB.bib`. Import
-  them before writing the rubric justification.
-- `bibs/litDB.bib` has 9 em-dashes in titles that the Times font cannot render.
-  They print as missing characters in the bibliography. Replace with `---`.
-- `pics/` holds only a logo and `data/` holds only a README. Every results
-  figure still has to be produced from `thesis-pack/11-results/data/`.
+- ~~**No chapter cites anything yet.**~~ Every chapter cites; all cited keys
+  resolve in `bibs/litDB.bib`.
+- ~~Most sources in `rubric-bibliography.md` are **not** in `litDB.bib`.~~
+  Imported (commit 0ab5099).
+- ~~`bibs/litDB.bib` has 9 em-dashes in titles.~~ None left.
+- ~~`pics/` holds only a logo.~~ The results, critique and architecture
+  figures are built; plot scripts are in `data/scripts/`.
 
 ## 4. Writing order
 

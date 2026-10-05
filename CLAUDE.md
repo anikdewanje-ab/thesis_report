@@ -162,8 +162,13 @@ scripts and their inputs in `data/`, and every figure needs a caption plus a
 
 ### Current state
 
-`pics/` holds only `logo-thi.jpg` and `data/` holds only a `README.md`, so
-**every figure in the thesis still has to be made.** The raw material is in
+The figure set is built (as of 2026-10-05). `pics/` holds TikZ diagrams
+(`ag-architecture`, `ag-engine`, `cs-storyline`, `data-backbone`,
+`data-tables`, `method-gates`, `method-ladder`, `ui-dataflow`, `wf-cycle`),
+the plotted PDFs (`results-forest-rd`, `results-delivery-histogram`,
+`results-rubric-split`, `results-commitment-scatter`, `critique-regret`) and
+two UI screenshots. Plot scripts and their CSV inputs are in `data/`. The
+candidates below that are not yet drawn are optional. The raw material is in
 `thesis-pack/11-results/data/`.
 
 ### Candidates already identified

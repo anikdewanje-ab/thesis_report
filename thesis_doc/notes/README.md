@@ -14,15 +14,22 @@ decision, and what to fix before drafting.
 ## Open questions
 
 - [x] ~~**Framing.**~~ **Settled with the supervisor 2026-09-22.** The thesis is
-      a design-and-evaluation study answering four RQs: can it beat the scripted
-      baseline (no), why not (commitment failure), what must change, and what a
-      designer should consider. See `writing-plan.md` §1.
+      a design-and-evaluation study answering three RQs: can it beat the
+      scripted baseline (no), why not (commitment failure), and what must
+      change and what a designer should consider (the former RQ3 and RQ4,
+      merged 2026-10-02). See `writing-plan.md` §1.
 - [x] ~~Add the two missing chapters (Validity, Methods critique) to `main.tex`
       and reorder the architecture chapters.~~ **Done 2026-09-22.** 13 chapters,
       builds clean, no undefined references.
-- [ ] Fill the real inventory number in `inc/profile.tex` (`\invnr`).
-- [ ] Import the `rubric-bibliography.md` sources into `bibs/litDB.bib`.
-- [ ] Verify the *(verify)*-flagged sources before citing any of them.
+- [x] ~~Fill the real inventory number in `inc/profile.tex` (`\invnr`).~~
+      **Removed 2026-10-05.** Not needed; the footer now shows the page number
+      only.
+- [x] ~~Import the `rubric-bibliography.md` sources into `bibs/litDB.bib`.~~
+      **Done** (commit 0ab5099). All seven rubric DOIs are in the bib.
+- [x] ~~Verify the *(verify)*-flagged sources before citing any of them.~~
+      **Done.** The five that are cited (clopper1934, holm1979, efron1979,
+      lipsitch2010, nosek2018) came in through Zotero by DOI or JSTOR id, and
+      volume, issue and pages match the publisher records.
 
 ## Closed
 
