@@ -31,6 +31,17 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{listings}
+\usepackage{newunicodechar}
+% The verbatim agent prompts (Appendix app:prompts) contain these symbols.
+% Courier has no glyph for them, and under XeTeX listings passes characters
+% above U+00FF straight through, so they are mapped here. A raw ß lands in the
+% T1 slot that holds "SS", so it is mapped too.
+\newunicodechar{ß}{\ss}
+\newunicodechar{—}{\textemdash}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{✓}{\ensuremath{\checkmark}}
+\newunicodechar{✗}{\ensuremath{\times}}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
 
