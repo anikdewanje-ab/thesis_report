@@ -60,7 +60,8 @@ reasoning helps the model track and update its plan and deal with exceptions
 reflection on its own performance and keeps it in memory for the next attempt
 \parencite{shinn2023}. The authors also note that this works best when the
 agent receives a clear signal about what went wrong. Our agents run a similar
-loop of sensing, reasoning, acting and reflecting.
+loop of sensing, reasoning and acting, but they have no separate reflection
+step (Section~\ref{sec:ag:replan}).
 
 A second line of work gives agents human roles. Generative Agents places 25
 agents with memory, reflection and planning in a small simulated town, and
@@ -101,7 +102,7 @@ that the model writes, and the model can rewrite it every time it is called.
 Our agents keep their plan as committed steps in the database, but the model
 may still revise those steps whenever it wakes (Section~\ref{sec:ag:replan}).
 How often it should do so is a design question for any agentic
-system. Section~\ref{sec:crit:mechanism} returns to it.
+system. Section~\ref{sec:disc:mechanism} returns to it.
 
 % =====================================================================
 \section{Limits of LLM Planning}
@@ -130,7 +131,8 @@ For this thesis, the literature predicts that agents may understand a
 situation and still fail to act on it well. It also suggests that an LLM
 should not judge its own success. Our evaluation therefore
 scores every run with deterministic code over the event log, and not with a
-model. Chapter~\ref{ch:results} comes back to these failure types when it asks
+model. On the agentic side, the arrivals in that log are still the drivers'
+own reports (Section~\ref{sec:eval:survival}). Chapter~\ref{ch:discussion} comes back to these failure types when it asks
 where the agentic deficit comes from.
 
 % =====================================================================

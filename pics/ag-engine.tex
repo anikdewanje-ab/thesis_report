@@ -67,7 +67,7 @@
   \draw[link] (p7.east) -- (pg.west);
   \draw[link] (p8.east) -- (pg.west);
 \end{tikzpicture}
-\caption{The shared engine that runs every agent. A wake enters the queue and
+\caption[The shared engine that runs every agent]{The shared engine that runs every agent. A wake enters the queue and
 passes through eight steps, and only step 4 calls the language model. Actions
 are sent to the world on the right without the model. The model wakes again
 only when a message arrives, when the last action of a step is confirmed, or

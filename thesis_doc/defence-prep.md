@@ -13,11 +13,12 @@ then questions.
 
 > We built LLM agents that play the eight organizations evacuating a Hamburg
 > nursing home and scored them, on one shared event log, against a scripted
-> DV 100 baseline: the script saved every resident, the agents lost whole
-> bus-loads because they kept rewriting plans they had already committed to.
+> DV 100 baseline: the script saved every resident, the agents lost residents
+> on legs they had already dispatched, because they kept rewriting plans they
+> had already committed to.
 
-Short form for slide 3: "Can the agents beat the script? No. Why not? They
-understood the problem but did not carry their plans through."
+Short form for slide 3: "Can the agents beat the script? No. Why not? Nothing
+shows they misread the problem, but they did not carry their plans through."
 
 The introduction (`inc/intro.tex`, drafted 2026-10-02) is the wording the
 conclusion and abstract should mirror: three RQs, four contributions (artefact,
@@ -26,7 +27,7 @@ negative comparison, diagnosis, method), RQ1 boundary stated next to RQ1.
 The abstract (`inc/abstract.tex`, drafted 2026-10-02) is the 60-second
 spoken version of the talk. Its four paragraphs follow the opening slides in
 order: problem, what we built, what we found (26 of 27 cells, 0.894, 93.8 %
-of 1,932 handshakes closed, loss in whole bus-loads, rubric 5 / 5), and what a
+of 1,932 handshakes closed, loss in discrete amounts, rubric 5 / 5), and what a
 designer should change. If asked for "the thesis in one minute", say the
 abstract.
 
@@ -54,7 +55,7 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 12b | Validity (backup only) | Chapter dropped from the report on 2026-10-02. Keep the parity points below as backup answers; in the text they now live in Sec. `sec:wf:fleet`, `sec:wf:world` and `sec:crit:limitations` | none | dropped |
 | 13 | Results: anticipated | H1 is rejected: non-inferiority holds in 1 of 8 anticipated cells | Anticipated-arm table | todo |
 | 14 | Results: novel disruption | H2 is rejected outright: the baseline wins survival in every novel cell | Forest plot of the 15 risk differences | todo |
-| 14b | Why it lost | A commitment failure, not a comprehension failure | Quantised delivery histogram | todo |
+| 14b | Why it lost | Leading hypothesis: a commitment failure. Comprehension not measured; live field agents (deviation 7) are an unseparated rival. In the report this is Ch. 11 (`sec:disc:mechanism`), moved there from the methods critique on 2026-10-05 | Quantised delivery histogram + ruled-out table (`tab:disc:ruledout`) | todo |
 | 14c | The test could not be lost | Ignoring the disruption scored the ceiling, so the baseline's 1.000 is the null policy's score, and the agentic system lost to doing nothing | Gate 0 table (`tab:crit:gate0`) + regret bars (`pics/critique-regret.pdf`, slide only) | draft |
 | 15 | Trade-offs | Baseline wins on speed and cost, and it also won the primary outcome | Coordination-surface table | todo |
 | 15b | Design considerations (RQ3) | Commit before re-planning, confirm delivery, make the disruption change the world, and run Gate 0 before the campaign | Four-line list, each with its number (90 % to 32 %; 93.8 % closure; byte-identical control); reuse the plan-revision figure | draft |
@@ -72,6 +73,8 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 
 - Gate 1 fails **26 of 27** cells. The one pass is glm-5.2 on the undisrupted
   `closed_loop`, and it is a non-inferiority pass, not a superiority one.
+  Three of the 26 are on `road_closure`, which is not like-for-like; without
+  them it is **23 of 24**.
 - Novel-arm mean survival `S`: baseline **1.000**, qwen3.5 **0.894** (capped),
   glm-5.2 0.840, deepseek-v4-pro 0.727.
 - The baseline scored a perfect 1.000 on **all 50** novel runs.
@@ -99,7 +102,8 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - Loss is quantised: of 150 runs, 102 delivered everyone, 19 delivered exactly
   50, 18 delivered exactly 90, 2 delivered none.
 - Full delivery falls from **90%** at 2 plan revisions to **32%** at 6 or more.
-  `r(plan revisions, S)` = −0.408.
+  `r(plan revisions, S)` = −0.408, picked post hoc as the largest of several
+  process measures, so it overstates the association.
 
 **Cost**
 
@@ -213,6 +217,10 @@ from the report 2026-10-02; kept as backup material for parity questions; source
   insertion order.
 - **3** notification channels per agent (state, inbox, world); fallback poll
   **5 s**, so a lost notification slows an agent and never stalls it.
+- Load (Section 6.7, from `11-results/data/runs.jsonl`, `n_event_rows`): the
+  **310** scored runs wrote **83,661** event-log rows. Agentic run: median
+  **345.5** rows, middle half **294–392** (240 runs, all models). Baseline run:
+  **25–29** rows. Notification latency was **not measured**; do not quote one.
 
 **From the baseline chapter** (`inc/workflow_baseline.tex`, drafted
 2026-09-24; source `05-architecture-baseline/`, ADR-0002, 0015, 0016):
@@ -391,8 +399,11 @@ confirmatory result after the fact.
 **Q: You said the deficit was a handshake problem. Now you say commitment.
 Which is it?**
 A: Commitment. The handshake reading was my first write-up and measurement
-superseded it: closure is 0.938 over 1,932 requests. The deficit is residents
-never dispatched, `r` = −0.745.
+superseded it: closure is 0.938 over 1,932 requests. For deepseek and glm the
+deficit is residents never delivered (ceiling minus sheltered), `r` = −0.745.
+The V2 script calls this "never dispatched", but the buses were sent: about
+2.3 dispatch orders in failing and successful runs alike. For qwen3.5 the loss
+is mostly lateness and overload.
 
 **Q: Does plan churn cause the losses?**
 A: Not established, and I say so. 53% of aborts are post-failure stand-downs,
@@ -401,9 +412,11 @@ would settle it is a commitment-constrained variant on the same scenarios.
 
 **Q: Your registered primary test was coded after you saw the data.**
 A: Yes, and it is declared as a timing deviation and labelled exploratory. The
-more interesting point is that at `k` = 10 the registered aggregation cannot
-reach conventional significance however the data fall. The floor on `p` is
-0.0625, and with ties it is 0.250, which is exactly where two models sit.
+more interesting point is that with five scenarios the registered sign test
+cannot reach conventional significance however the data fall, at any `k`. The
+floor on `p` is 2 × 0.5⁵ = 0.0625. At `k` = 10, a 5-of-10 scenario is a tie,
+and with two ties the floor is 0.250, which is where two models sit. More
+scenarios fix the sign test; a larger `k` only helps the risk difference.
 
 **Q: You registered four hypotheses. Where are H3 and H4?**
 A: Both are reported, and neither is part of the claim. The pre-registration
@@ -466,16 +479,85 @@ baseline; it ties it.
 > disruption tested, and that the win is invariance rather than recovery.
 
 **Q: How do you know it's commitment and not something else?**
-A: Six alternatives were tested and ruled out (`tab:crit:ruledout`): wrong
+A: Six alternatives were tested and ruled out (`tab:disc:ruledout`, Ch. 11): wrong
 population, message layer, too few dispatches, scorer dedup, driver
-over-claiming, running out of clock. Then the positive evidence: whole
-bus-loads lost, and full delivery 90 % to 32 % as plan revisions rise. The
-causal direction is still open.
+over-claiming, running out of clock. Then the positive evidence: delivery
+clusters on discrete values (19 runs at 50, one bus-load short; 18 at 90,
+which is no bus-load and which the data do not explain), and full delivery
+falls from 90 % to 32 % as plan revisions rise. That makes commitment the
+leading hypothesis, not a proven finding: the causal direction is open, and a
+live field agent may have dropped the leg instead (next question).
+
+**Q: Your r = −0.41 was chosen after seeing the data. Isn't it inflated?**
+A: Yes. We examined several process measures and report the strongest, and a
+value picked as the maximum of a selection overstates the association. The
+thesis says so (§8.6.4 and §9.4.4) and labels the table exploratory. The
+monotone fall in full delivery across the bands (90 % → 32 %) is the more
+robust pattern, and neither result is causal.
+
+**Q: The baseline runs no field agents. Isn't that a second independent
+variable?**
+A: Yes, and the thesis names it (deviation 7, `tab:eval:deviations`, and the
+limitations table). Deviation 7 cuts both ways: removing the scripted
+drop-offs works against the baseline, and a simulator in place of live drivers,
+police and medic works for it. The net direction is unknown. Part of the gap
+may come from the live field agents, and our design cannot separate the two,
+so RQ2 cannot say whether a lost leg was dropped by the command post or by a
+field agent. The clean test is the agentic command post driving the execution
+model.
+
+**Q: You say the agents lost to doing nothing. Isn't some of that just poor
+execution, not the response?**
+A: Yes. The null policy runs on the baseline's execution model, and the agents
+lose residents even undisrupted: `closed_loop` S is 1.000 for glm, 0.950 for
+qwen3.5 and 0.790 for deepseek. So for deepseek about 0.21 of its 0.27 deficit
+is already there without a disruption, for qwen3.5 about half, for glm none.
+That is why the thesis says "below the null policy" and not "harmed by
+responding". glm is the clean case: 1.000 undisrupted, 0.840 novel.
+
+**Q: How did you decide which rubric criteria are "parity"?**
+A: By inspection. No grouping rule was registered, and the thesis says so. The
+groups follow qwen3.5 and glm-5.2. Two criteria (`verification_requested`,
+`reserve_committed_in_time`) are within one judgement for every model and are
+left out of the groups. Under the plain rule "within one judgement for both
+qwen3.5 and glm-5.2" the split is 8 parity / 4 baseline leads, and the thesis
+says so. Either way, the agents match on deciding and fall short on closing
+the loop.
+
+**Q: On road_closure the baseline completes only 0.60. Why do you say it wins
+there?**
+A: We do not. The thesis says the baseline wins on the five novel
+disruptions, and that `road_closure` is not like-for-like. The baseline has no
+routing command, so its version of the file makes one 60-bed school
+unreachable. That would leave 40 residents without a bed, so the file declares
+only 60 residents (PARITY row 4d). Ceiling = min(population, beds) = 60, the
+baseline shelters all 60, S = 1.000, 0.60 of the nominal 100. Nobody is left
+at the home in its run; the 40 are not in its file. The agentic version costs
+a detour and keeps all 100. Against
+the nominal 100, glm (0.84) and deepseek (0.70) deliver more than the
+baseline's 0.60. We keep the recorded verdicts (26 of 27) and give the
+like-for-like count beside it (23 of 24). H1 fails without S02 as well.
+
+**Q: How do you know the agents understood the disruption?**
+A: We do not test understanding directly; the rubric never reads message text.
+The evidence is behavioural: the right population in 150 of 150 runs, 93.8 %
+handshake closure, and parity on five decision criteria. Two criteria fit less
+well: no model answered the facility in time (0/10 each), and half the qwen3.5
+runs raised a shelter above its beds on S08 (5/10). Either could be a misread
+report or an order never updated. So we say the evidence points mainly to
+commitment, and we do not claim comprehension was proven.
 
 ### Questions the discussion chapter invites
 
-Key message: the agents understood the disruption and then did not carry their
-plan through. The architecture's main feature, re-planning, is where it lost,
+Chapter roles after the 2026-10-05 cut (reviewer asked for less repetition):
+Ch. 9 numbers only, Ch. 10 validity and its consequences (all limitations
+live in `sec:crit:limitations`), Ch. 11 the interpretation of RQ1 and RQ2
+including the mechanism and the ruled-out table, Ch. 12 prescriptions only,
+Ch. 13 compact answers and future work. If asked "where do you show it is
+commitment?", point to Ch. 11, not Ch. 10.
+
+Key message: the agents' plans were not carried through, and this fits the
+evidence better than a misreading of the disruption. The architecture's main feature, re-planning, is where it lost,
 on scenarios where the right number of re-plans was zero. No new figure; reuse
 the delivery histogram and the plan-revision scatter on one slide.
 
@@ -515,7 +597,8 @@ purpose (about 1,150 words) and points back to the evidence. No new figure.
 Numbers to quote: full delivery 90 % at 2 revisions vs 32 % at 6+;
 r(revisions, S) = -0.408 vs r(missions, S) = -0.070; 93.8 % closure over 1,932
 requests; 53 % of 108 aborts are post-failure stand-downs, 13 % churn-initiated;
-sign test floor p = 0.0625 at k = 10; 140 of 150 novel runs over budget.
+sign test floor p = 0.0625 at five scenarios, whatever k; 140 of 150 novel
+runs over budget.
 
 **Q: These come from one case. Why should anyone take them as general?**
 A: I do not claim they are general. They are the considerations this one
@@ -543,8 +626,9 @@ we compare them with a scripted baseline under parity.
 **Q: The literature already says LLMs cannot plan. Why build this at all?**
 A: The literature tests planning puzzles and reasoning benchmarks. Nobody had
 measured it on a multi-organization evacuation against a competent scripted
-opponent. Our result agrees with the critics, and we say where the failure sits:
-commitment, not comprehension.
+opponent. Our result agrees with the critics, and we say where the failure
+most likely sits: commitment, as the leading hypothesis. Comprehension was not
+measured directly, and the field agents are not separated from the command post.
 
 **Q: Is a shared database as coordination medium new?**
 A: No. Blackboards and Linda tuple spaces did it decades ago, and we say so in
@@ -727,6 +811,23 @@ A: A fallback nobody runs drifts silently into a second implementation. With
 one backend, an outage stops the simulation, and start-up checks the database
 first.
 
+**Q: Why PostgreSQL and LISTEN/NOTIFY, not Kafka, RabbitMQ or an event store?**
+A: Three reasons (Section 6.7). A save is one transaction: state and log rows
+commit together, which a separate broker cannot share. The agents and the
+scorer read one store with plain SQL; an event store would still need a second
+store for state and mailboxes, and we already removed one second store (the
+file backend) because it hid bugs. And the load is tiny: 83,661 rows over 310
+runs, about 346 per agentic run. The one broker feature we need is a prompt
+wake-up, which NOTIFY gives. The cost is a single point of failure, checked at
+start-up.
+
+**Q: How fast is a NOTIFY wake-up?**
+A: We did not benchmark it. The test gate shows a NOTIFY wakes a waiter well
+inside a 10 s fallback, and correctness never depends on it: the 5 s fallback
+poll bounds the delay. Every agent decision waits on a language-model call
+(wall latency per agentic run 763–3,810 s), so the wake-up is unlikely to
+matter, but that is an argument, not a measurement.
+
 **Q: Can two runs leak into each other?**
 A: The event log cannot, since every row carries the run. `messages` and
 `world_events` have no run column, so separation relies on the reset the
@@ -758,6 +859,16 @@ registered the implemented rule rather than change the code, and I state the
 cost: a system exactly at the margin passes about half the time. So a pass is
 reported as "the point estimate lies inside the margin", never as
 "non-inferiority demonstrated". In the event only one cell passed.
+
+**Q: The baseline is deterministic. What does "paired" and "common random
+numbers" buy you?**
+A: On the baseline side, nothing beyond fixing the scenario. The baseline
+ignores the seed and scores the same in every replicate, so each paired
+difference is an agentic run against a fixed reference, and the paired
+bootstrap is in effect an interval on the agentic mean minus a constant. The
+common seed matters across the agentic models: the same replicate of a
+scenario gives every model the same simulator draws. The numbers do not change
+either way; Section "Pairing" in the method chapter says this.
 
 **Q: Why was the negative control read on a fixture and not on the scored
 scenarios?**
@@ -802,6 +913,25 @@ PostgreSQL is the single source of truth (ADR-0005). Ollama serves cloud and
 local models through one interface, so changing the model for the sweep is one
 setting and no code change.
 
+**Q: You say every run can be audited. Can I check that myself?**
+A: Section `sec:eval:availability`. The repo is private at Absolute
+(`absolutehh/RescuemateEvacuationWithAgents`), and read access goes through
+the company. Freeze: `eval-day-2026-09-10` at `67a14f8` (11:41, before the
+afternoon reveal). Pre-registration: `prereg-v1` and `prereg-amendment-1`,
+both at `7a4d7cc`. `git diff prereg-v1 -- docs/PREREGISTRATION.md` shows
+1154 lines added and 0 deleted, so "never edited" can be checked in one
+command. The results folder and the whole `event_log` table (as `pg_dump` and
+as JSONL, 135,293 rows from 1,114 runs) are public at
+`github.com/anikdewanje/master-thesis-submission`, tag `thesis-submission`
+(`4d7d802`), with Absolute's agreement. `python verify_checksums.py` prints
+"310 of 310 runs match". Each run record carries `n_event_rows` and an
+order-independent SHA-256 `log_checksum`. If asked why the log has one more row
+per run than recorded: the harness writes its `run_outcome` row, which carries
+the checksum, after taking it. A restore of the dump matched the source table
+on every row. Know the CRLF caveat:
+`thresholds_sha256` `d08c1e35…` is taken over Windows line endings, so a
+Linux checkout hashes differently.
+
 ### Questions the conclusion invites
 
 Key message: three answers and one next step. RQ1 no (and the boundary in
@@ -813,7 +943,7 @@ and no figure; everything quoted already appears in Results or Critique.
 
 Numbers to quote: 26 of 27 cells; 0.894 best capped mean vs 1.000; 68 of 150
 worse than the null policy; 93.8 % closure over 1,932 requests; 102 / 19 / 18;
-90 % to 32 %; p floor 0.0625 at k = 10.
+90 % to 32 %; p floor 0.0625 at five scenarios, whatever k.
 
 **Q: If you could run one more experiment, which and why?**
 A: The commitment-constrained variant: cap re-plans or forbid cancelling a leg
@@ -903,8 +1033,12 @@ Keep the spoken words identical to the thesis so nothing sounds contradictory.
 - "workflow baseline" (not "the old way")
 - "event log" as the single source of truth
 - "recovery-outcome level" as the primary result
-- "a commitment failure, not a comprehension failure" for why the agentic
-  system lost
+- "leading hypothesis: a commitment failure" for why the agentic system lost,
+  always with "comprehension was not measured" and the field-agent confound
+  (deviation 7); never "the evidence points to" or "the finding is"
+- "below the null policy" for regret, never "harmed itself by responding"
+- "the five novel disruptions" for where the baseline wins, never "every
+  disruption tested" (`road_closure` is not like-for-like)
 - "decision quality is split" and never "decision-quality parity"
 
 Words that must **not** be spoken, because the data contradict them:

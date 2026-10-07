@@ -15,17 +15,22 @@ LLM, and all coordinate through one PostgreSQL database. Both systems write to
 one shared event log, and one deterministic scorer reads it. We compared them
 on seven scenarios under a pre-registered protocol.
 
-Both pre-registered hypotheses failed. The baseline sheltered every resident
+Both confirmatory hypotheses failed. The baseline sheltered every resident
 in all 50 runs with a disruption it was not written for, but it did not adapt.
-It kept its original orders. A controller that ignores every disruption scores
+A controller that ignores every disruption scores
 the same, because no disruption changed what the scorer counts. The agentic
-system did react, and its agents read the disruptions correctly. Yet the best
-configuration sheltered only 89.4\% of the residents, and in every scenario
-with such a disruption it did worse than ignoring the disruption. The lost
-residents were never dispatched, so the loss came in whole bus-loads. The more
-often a run revised its plan, the fewer residents it delivered. Coordination
-itself worked, with 93.8\% of the requests between agents answered. We
-therefore see a failure of commitment rather than of comprehension. Since no
+system did react. On 16 rubric criteria its agents matched the baseline on 5
+and fell short on 5. The best configuration sheltered only 89.4\% of the
+residents. In every scenario with such a disruption it scored below a
+controller that ignores the disruption, partly because it lost residents even
+without one. For two of the three models, most lost residents were never
+delivered to a shelter, while failing runs dispatched as many missions as
+successful ones. The more often a run revised its plan, the fewer residents it
+delivered. Coordination worked, with 93.8\% of the requests between
+agents answered. Our leading hypothesis is a failure of commitment, but we did
+not measure comprehension. The agentic bus drivers were live LLM agents
+where the baseline used a simulator, so a driver may have dropped a lost leg.
+Since no
 scenario required adaptation, these results show who won here, not whether
 adaptation can ever pay off.
 

@@ -34,10 +34,8 @@ shelters and schedule more than one run, which makes the allocation a real
 decision. Bus-2 is declared a reserve, and the two systems use it differently
 (Section~\ref{sec:wf:fleet}).
 
-The case offers a large space of possible disruptions. The scenarios we ran,
-however, never required a change of plan to save the residents
-(Section~\ref{sec:crit:gate0}). We therefore answer whether the agentic system
-won on this case, and not whether such a system can ever win.
+The case offers a large space of possible disruptions (the ones we ran never
+required a change of plan, Section~\ref{sec:crit:gate0}).
 
 % =====================================================================
 \section{Organizational Agents}
@@ -80,9 +78,10 @@ schools report their free beds and confirm arrivals, and the nursing home
 reports its residents and when the building is empty. None of the four has to
 choose between options, so all four are scripted.
 
-The workflow baseline keeps this roster, but one scripted Incident Commander
-replaces the two coordinating agents, BIS and Hochbahn. All other agents are
-shared, so no coordination decision on the baseline side comes from a model.
+The workflow baseline keeps this roster, but one scripted Incident Commander (IC)
+replaces the two coordinating agents, BIS and Hochbahn. The other agents are
+not started in a baseline run. An execution model carries out the IC's orders
+in their place, so no decision on the baseline side comes from a model.
 Chapter~\ref{ch:agentic} describes how the agents reason, and
 Chapter~\ref{ch:workflow} describes the baseline.
 
@@ -132,8 +131,8 @@ Every run begins with the alarm and ends at the forecast high water. In all
 scenarios the flood reaches the zone at 12:00, and a resident who reaches a
 shelter later does not count as rescued. We evaluated seven scenarios in two
 arms (Table~\ref{tab:cs:scenarios}). The two \emph{anticipated} scenarios were
-known while the systems were built, and the baseline has a written branch for
-them. The five \emph{novel} scenarios were supplied by the domain expert,
+known while the systems were built. S01 has no disruption, and the baseline
+has a written branch for the road closure in S02. The five \emph{novel} scenarios were supplied by the domain expert,
 Rüdiger Höfert, from a brief that named only the kind of disruption wanted.
 They were revealed after the baseline was frozen on 2026-09-10
 (Section~\ref{sec:eval:firewall}). A shelter closure (S03) had no agentic
@@ -151,7 +150,7 @@ ID & Scenario & What happens \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Anticipated arm}} \\
 S01 & Closed loop & Nothing goes wrong. The undisrupted control. \\
-S02 & Road closure & A road on the transport corridor closes during the evacuation. The baseline has no routing command, so its version makes a school unreachable. Its ceiling falls to 60, and completeness is scored against its own population. \\
+S02 & Road closure & A road on the transport corridor closes during the evacuation. The baseline has no routing command, so its version makes a school unreachable and declares only 60 residents. Its ceiling is 60, so this scenario is not a like-for-like comparison. \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{Novel arm}} \\
 S04 & Medical emergency in flight & A resident collapses on a moving bus. The patient is not modelled. \\
@@ -163,11 +162,9 @@ S08 & Partial shelter capacity loss & A third party reports that SC1 can take on
 \end{tabularx}
 \end{table}
 
-Every disruption arrives as a message, and none of them changes the declared
-world. The school keeps its beds, the bus keeps its seats, and the roads stay
-open. A coordinator that ignores the message can therefore still bring everyone
-to safety, and S04, S06, S07 and S08 are judged mainly on the decisions. This shapes
-how every later result has to be read (Section~\ref{sec:crit:gate0}).
+Every disruption arrives as a message and leaves the declared world unchanged,
+so S04, S06, S07 and S08 are judged mainly on the decisions
+(Section~\ref{sec:crit:gate0}).
 
 % =====================================================================
 \section{Assumptions and Simplifications}

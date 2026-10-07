@@ -83,11 +83,30 @@ win".
 
 ## The headline, so no chapter drifts from it
 
-Both pre-registered hypotheses fail. The workflow baseline beats the
-database-centric agentic system on resident survival in every disruption tested.
-Gate 1 fails 26 of 27 cells. Decision quality is **split**, not at parity: over
-the 16 held-out rubric criteria the agentic models match the baseline on 5 and
-fall short on 5.
+Both confirmatory hypotheses (H1, H2) fail; four were registered, H3 is
+unresolved and H4 was not tested. The workflow baseline beats the
+database-centric agentic system on resident survival on all five **novel**
+disruptions; glm-5.2 ties it on the undisrupted `closed_loop`. Never write
+"in every disruption tested": on `road_closure` (S02) the two systems ran
+different versions of the scenario (baseline file sized at 60, agentic 100
+with a detour), so that cell is **not like-for-like**, and against the nominal
+100 the baseline's 0.60 is below glm (0.84) and deepseek (0.70). Gate 1 fails
+26 of 27 cells as recorded; say beside it that three are on `road_closure` and
+that without them it fails 23 of 24. H1 still fails without S02 (2 of the 3
+confirmatory `closed_loop` cells). Decision quality is **split**, not at
+parity: over the 16 held-out rubric criteria the agentic models match the
+baseline on 5 and fall short on 5.
+
+Three wording rules from the 2026-10-05 review:
+
+- Regret against the null policy is "below doing nothing", never "harmed
+  itself by responding". Part of each model's gap exists undisrupted
+  (`closed_loop` S: glm 1.000, qwen3.5 0.950, deepseek 0.790).
+- Parity deviation 7 cuts both ways (scripted drop-offs removed: against the
+  baseline; simulator in place of live field agents: for it). RQ2 therefore
+  cannot separate the command post from the field agents.
+- "Commitment, not comprehension" is always hedged. Comprehension was not
+  measured directly.
 
 Two corrections from Protocol v2 that apply in every chapter:
 
@@ -96,8 +115,12 @@ Two corrections from Protocol v2 that apply in every chapter:
    baseline's `S` = 1.000 is the null policy's score. H2's verdict is withdrawn
    **as a statement about adaptability**, and is not replaced by an agentic win.
 2. The agentic deficit is a **commitment** failure, not a handshake failure.
-   Handshake closure is 0.938 over 1,932 requests. The loss is dominated by
-   residents never dispatched.
+   Handshake closure is 0.938 over 1,932 requests. For deepseek and glm the
+   loss is dominated by residents never **delivered** (V2 calls the measure
+   "never dispatched", but it is ceiling minus sheltered, and the legs were
+   dispatched). For qwen3.5 the loss is mostly lateness and overload. Never
+   write "never dispatched" or "whole bus-loads" as the general mechanism; the
+   90-delivery spike is not a bus-load.
 
 ## Facts that were wrong in earlier drafts
 
@@ -195,6 +218,13 @@ not a limit.
 
 ## Working style
 
+- **Length budget (standing rule from 2026-10-06).** No edit or change may
+  increase a chapter's total word count or page count. Reducing either is
+  fine. Any text added must be offset by cutting at least as much elsewhere in
+  the same chapter. Check the chapter's word count before and after
+  (`texcount` is not installed, so use `wc -w inc/<chapter>.tex` and the same
+  method both times) and its page span in the built PDF, and report both
+  numbers in the reply.
 - Draft one chapter or one section per session to keep focus.
 - The author verifies every empirical claim and citation. Flag anything uncertain.
 - Suggest figures as you draft, per the section above. Do not wait to be asked.

@@ -57,7 +57,7 @@
   \node[lbl, below=0.35cm of log, text width=6.5cm] {a trigger rejects every update and
     delete; a unique key on run, agent and row makes a second save harmless};
 \end{tikzpicture}
-\caption{The event log as the backbone of the evaluation. Both systems write
+\caption[The event log as the backbone of the evaluation]{The event log as the backbone of the evaluation. Both systems write
 rows of the same format into one append-only table. The baseline's decision
 rows carry their own kind because no model was called. The harness records
 each run's setup in the same log, one level deeper than any field the scorer

@@ -20,15 +20,16 @@ identity file. The other agents follow the same structure with their own
 persona and playbooks.
 
 We rendered the text with the system's own code, from the agent's identity
-file, at commit \texttt{7a4d7cc}. The confirmatory campaign ran on this commit,
-and the prompt files are unchanged after it. The listings are verbatim, so they
+file, at the version the confirmatory campaign ran on. The prompt files are
+unchanged after it. The listings are verbatim, so they
 keep the prompt's own dashes, capital letters, and German names and addresses.
-The one change is layout. In the contract, the description of
+We made two changes. First, in the contract, the description of
 \code{inform_escort} was indented by 78 spaces, and we shortened that indent so
-the lines fit the page.
+the lines fit the page. Second, the contract names two of the agent's files,
+and we replaced each file name with a plain description, ``the state file''
+and ``the identity file''.
 The reasoning field from Section~\ref{sec:ag:prompts} is called
-\code{thinking} in the output schema. The script
-\code{data/scripts/render_prompts.py} rebuilds the listings.
+\code{thinking} in the output schema.
 
 The persona and the contract are the same on every wake. The playbook depends
 on the kind of wake. We print the playbook for a new message in full, since a
@@ -190,3 +191,20 @@ Criterion & baseline & qwen3.5 & glm-5.2 & deepseek \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\chapter{Supplementary Tables}
+\label{app:supp}
+
+These tables give the per-cell figures behind Chapter~\ref{ch:results}. We
+built them from the scored runs.
+Scenario codes follow Table~\ref{tab:cs:scenarios}. Each table lists every cell
+that was run, including the partial series, which are exploratory
+(Section~\ref{sec:res:models}).
+
+Table~\ref{tab:app:levels} gives the raw level counts behind every median and
+the cut-point sensitivity of Section~\ref{sec:res:sensitivity}.
+Table~\ref{tab:app:gate1} gives Gate~1 in all 27 cells with the Wilcoxon check
+of Section~\ref{sec:eval:analysis}. Table~\ref{tab:app:secondary} gives the
+measures of Section~\ref{sec:eval:metrics} that cannot move the level.
+
+\input{inc/app_supp_tables}

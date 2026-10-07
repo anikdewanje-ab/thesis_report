@@ -29,6 +29,13 @@ OUT = Path(__file__).resolve().parent.parent / "prompts"
 DEEP_INDENT = re.compile(r"^ {40,}", re.MULTILINE)
 PAGE_INDENT = 6
 
+# The report is submitted without the code, so source file names in the prompt
+# are replaced by plain words. The appendix text says so.
+FILE_NAMES = {
+    "state.json": "the state file",
+    "identity.yaml": "the identity file",
+}
+
 
 def main() -> None:
     diff = subprocess.run(
@@ -62,6 +69,8 @@ def main() -> None:
     }
     for name, text in parts.items():
         text = DEEP_INDENT.sub(" " * PAGE_INDENT, text)
+        for file_name, words in FILE_NAMES.items():
+            text = text.replace(file_name, words)
         (OUT / name).write_text(text.strip("\n") + "\n", encoding="utf-8")
 
     print(f"rendered from {TAG} ({commit}): {', '.join(parts)}")

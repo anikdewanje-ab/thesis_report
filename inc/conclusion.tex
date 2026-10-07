@@ -13,33 +13,22 @@ report the answer in whichever direction it fell.
 \label{sec:concl:summary}
 
 \paragraph{RQ1: Can the agentic architecture beat the scripted baseline?}
-On our scenarios it could not. Both pre-registered hypotheses failed. Gate~1,
-the test on resident survival, failed in 26 of 27 cells. The baseline
-sheltered every resident in all 50 novel runs. The best agentic configuration
-reached a capped mean survival of 0.894 (Chapter~\ref{ch:results}). The
-agentic system also lost to a null policy that ignores every disruption. Its
-regret against that policy was negative in all 15 novel cells, and 68 of 150
-runs ended worse than doing nothing (Chapter~\ref{ch:critique}). The answer
-holds for these scenarios only. No scenario in this thesis required
-adaptation, because a controller that ignores the disruption already reaches
-the top score (Section~\ref{sec:crit:gate0}). The baseline's perfect score is
-therefore the null policy's score, and it says nothing about adaptability. We
-answer RQ1 as ``did the agentic architecture win here''. Whether it can ever
-win remains open.
+On our scenarios it could not. Both confirmatory hypotheses failed, and the
+baseline won on survival on all five novel disruptions
+(Section~\ref{sec:res:findings}). The agentic system also scored below a null
+policy that ignores every disruption (Section~\ref{sec:crit:regret}). No
+scenario in this thesis required
+adaptation, so the baseline's perfect score is the null policy's score and
+says nothing about adaptability. We answer RQ1 as ``did the agentic
+architecture win here''. Whether it can ever win remains open.
 
 \paragraph{RQ2: Why did it lose?}
-The agents read the disruptions correctly, and the coordination between them
-worked. Of 1,932 addressed requests, 93.8\% ended in a closed handshake. Most
-of the lost residents were never dispatched at all, so the loss comes in whole
-bus-loads. Of the 150 novel runs, 102 delivered everyone, 19 delivered exactly
-50 and 18 delivered exactly 90 (Section~\ref{sec:res:loss}). The more often a
-run revised its plan, the less it delivered. Full delivery fell from 90\% at
-the minimum number of plan revisions to 32\% at six or more, and the number of
-revisions correlates with survival at $r = -0.408$. This is why we speak of a
-failure of commitment rather than of comprehension
-(Chapter~\ref{ch:discussion}). The link is a strong association. Its causal
-direction stays open, since a run that is already failing may re-plan as a
-result (Section~\ref{sec:crit:mechanism}).
+The messages between the agents worked, and the missions were dispatched.
+What failed was carrying committed legs through to delivery, and runs that
+revised their plan more often delivered less. Our leading hypothesis is a
+failure of commitment (Section~\ref{sec:disc:mechanism}). We did
+not measure comprehension directly, the causal direction is open, and the
+design cannot separate the command post from the live field agents.
 
 \paragraph{RQ3: What must change, and what should a designer consider?}
 Chapter~\ref{ch:design} answers with four groups of considerations, each tied
@@ -50,7 +39,7 @@ evaluation should pass Gate~0 and be sized before the first run. The cost of
 the agentic approach should be planned from the start.
 
 \paragraph{The engineering questions.} The four supporting questions are
-answered in the chapters that describe what we built. The actors, states,
+answered where we describe what we built. The actors, states,
 events and dependencies of the evacuation are modelled in one PostgreSQL
 schema (Chapter~\ref{ch:data}). Agents from different organizations are
 integrated through one asynchronous engine, and the database also acts as the
@@ -63,37 +52,34 @@ reported in Chapter~\ref{ch:results}.
 \section{Contributions Revisited}
 \label{sec:concl:contributions}
 
-The introduction promised four contributions
-(Section~\ref{sec:intro:contributions}). Here we say what each one offers
-beyond this study.
+Each of the four contributions of Section~\ref{sec:intro:contributions} offers
+something beyond this study.
 
 \paragraph{An agentic architecture and its baseline.} The two systems form a
-matched pair. They differ only in how decisions are made, so a later study can
-change one side and keep the other fixed (Chapters~\ref{ch:agentic},
+matched pair. They differ mainly in how decisions are made, while the
+baseline's orders are carried out by a simulator in place of live field agents.
+A later study can change one side and keep the other fixed (Chapters~\ref{ch:agentic},
 \ref{ch:workflow} and~\ref{ch:data}). The agentic side shows one way to let
 agents of different organizations coordinate through a database that holds
 all state and wakes each agent when it has work.
 
-\paragraph{A scored comparison with a negative result.} The comparison is
-pre-registered and deterministic, so its answer can be checked and reproduced
-from the stored runs. Earlier work with LLM agents in evacuation models the
-people who evacuate or supports practitioners in planning
-\parencite{sultimov2026}. To our knowledge ours is the first head-to-head comparison
-of the two approaches on a common evacuation case. It also reports decision
+\paragraph{A scored comparison with a negative result.} The comparison
+(Section~\ref{sec:bg:related} places it among earlier work) is pre-registered
+and deterministic, so its answer can be checked and re-scored from the stored
+runs. It also reports decision
 quality next to survival, and the two measures do not tell the same story
 (Section~\ref{sec:res:quality}).
 
-\paragraph{A diagnosis of the loss.} The diagnosis gives a future builder
-something to act on. It points to one place in the architecture, the step
-where a new message may cancel a leg that is already moving. It also warns
-against reading healthy messaging as a sign of success.
+\paragraph{A diagnosis of the loss.} If the commitment hypothesis holds, the
+fix lies in one place in the architecture, the step where a new message may
+cancel a leg that is already moving. The diagnosis also warns against reading healthy messaging as a sign of success.
 
 \paragraph{A method for a fair comparison.} The method can be reused without
 our architecture. A shared append-only log keeps the comparison fair, and new
 measures can be computed from it long after the runs have ended. The regret
-against a null policy shows whether a system does better than doing nothing. Gate~0 tests a scenario before any campaign is spent on it. Our own
-novel arm fails this gate, and that failure is how we learned the gate is
-needed.
+against a null policy shows whether a system does better than doing nothing.
+Gate~0 tests a scenario before any campaign is spent on it
+(Section~\ref{sec:crit:gate0}).
 
 \section{Future Work}
 \label{sec:concl:future}
@@ -103,43 +89,34 @@ We rank the follow-up work by how much each item would change what we know.
 \paragraph{1. A commitment-constrained variant.} The next experiment is a
 version of the agentic system with a commitment boundary. It caps the number
 of re-plans, or it forbids cancelling a leg that is already in flight. It
-should run on the same scenarios under the same models. This needs one
-campaign and no new scenarios. It is also the experiment that would settle
+needs one campaign on the same scenarios and models. It is also the experiment that would settle
 the causal direction that this thesis leaves open. If constrained runs deliver
 more residents, plan churn is a cause of the loss. If they deliver the same,
 churn is a symptom of runs that were already failing.
 
 \paragraph{2. Scenarios that pass Gate~0.} A test of adaptability needs a
-disruption that punishes a plan which ignores it. In our scenarios every
-disruption arrived as a message and left the declared world unchanged. A
-future scenario should change the state the scorer reads. When a shelter
-reports fewer beds, it should really hold fewer people, and a no-replan
-control should then lose residents. Only on such scenarios can the question
-behind RQ1, whether an agentic architecture can ever beat a scripted one, be
-answered.
+disruption that changes the state the scorer reads, so that a no-replan
+control loses residents (Section~\ref{sec:design:binding}). Only on such
+scenarios can the question behind RQ1, whether an agentic architecture can
+ever beat a scripted one, be answered.
 
-\paragraph{3. An evaluation that can detect an effect.} With $k = 10$
-replicates over five scenarios, the registered sign test could not return a
-$p$-value below 0.0625, whatever the data (Section~\ref{sec:crit:power}). A
-follow-up should size $k$ for the smallest effect it wants to detect. It
-should also run more than one simulation time scale, because hypothesis~H4
-was not tested at the single \code{SIM_TIME_SCALE} of 8.4. The model set
-should be fixed and its versions pinned before the first run.
+\paragraph{3. An evaluation that can detect an effect.} A follow-up should be
+sized before the first run, with its models fixed and pinned
+(Section~\ref{sec:design:gate0}). It should also run more than one simulation
+time scale, so that hypothesis~H4 can be tested.
 
 \paragraph{4. A broader case.} In our case the residents are a passive count
 of 100. Modelling them individually, for example with different mobility
 needs \parencite{alqahtani2025a}, would make it possible to ask about equity, which this study had to
-leave undefined. Beyond that, the architecture and the method should be
-tried on more facilities, other cities and other hazards. Only then can the
-design considerations in Chapter~\ref{ch:design} be tested beyond the one case
-they come from.
+leave undefined. The architecture and the method should also be tried on more
+facilities, cities and hazards. This would test the design considerations of
+Chapter~\ref{ch:design} beyond the one case they come from.
 
 \section{Closing Remarks}
 \label{sec:concl:closing}
 
 We expected LLM agents to handle disruptions that a script did not foresee.
-On the scenarios we had, the script delivered every resident and the agents
-did not, although they read the situation correctly. This result does not
-tell us how the agents would do where adaptation is really required. The
-first two items of the future work, a commitment boundary and scenarios that
-pass Gate~0, are the most direct way to find out.
+On the novel disruptions we tested, the script delivered every resident in
+every run, and the agents did not. This result does not tell us how the agents would do where
+adaptation is really required. A commitment boundary and scenarios that pass
+Gate~0 are the most direct way to find out.

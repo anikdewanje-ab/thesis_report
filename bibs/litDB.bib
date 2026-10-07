@@ -129,19 +129,16 @@
   keywords = {Agent Application,Coordination Model,Foreign Agent,Mobile Agent,Tuple Space}
 }
 
-@misc{cemri2025,
+@inproceedings{cemri2025,
   title = {Why {{Do Multi-Agent LLM Systems Fail}}?},
   author = {Cemri, Mert and Pan, Melissa Z. and Yang, Shuyi and Agrawal, Lakshya A. and Chopra, Bhavya and Tiwari, Rishabh and Keutzer, Kurt and Parameswaran, Aditya and Klein, Dan and Ramchandran, Kannan and Zaharia, Matei and Gonzalez, Joseph E. and Stoica, Ion},
+  booktitle = {Advances in {{Neural Information Processing Systems}} ({{NeurIPS}} 2025), {{Datasets}} and {{Benchmarks Track}}},
   year = 2025,
-  month = oct,
-  number = {arXiv:2503.13657},
+  url = {https://neurips.cc/virtual/2025/poster/121528},
   eprint = {2503.13657},
-  primaryclass = {cs.AI},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2503.13657},
-  urldate = {2026-07-31},
+  eprinttype = {arXiv},
+  urldate = {2026-10-07},
   abstract = {Despite enthusiasm for Multi-Agent LLM Systems (MAS), their performance gains on popular benchmarks are often minimal. This gap highlights a critical need for a principled understanding of why MAS fail. Addressing this question requires systematic identification and analysis of failure patterns. We introduce MAST-Data, a comprehensive dataset of 1600+ annotated traces collected across 7 popular MAS frameworks. MAST-Data is the first multi-agent system dataset to outline the failure dynamics in MAS for guiding the development of better future systems. To enable systematic classification of failures for MAST-Data, we build the first Multi-Agent System Failure Taxonomy (MAST). We develop MAST through rigorous analysis of 150 traces, guided closely by expert human annotators and validated by high inter-annotator agreement (kappa = 0.88). This process identifies 14 unique modes, clustered into 3 categories: (i) system design issues, (ii) inter-agent misalignment, and (iii) task verification. To enable scalable annotation, we develop an LLM-as-a-Judge pipeline with high agreement with human annotations. We leverage MAST and MAST-Data to analyze failure patterns across models (GPT4, Claude 3, Qwen2.5, CodeLlama) and tasks (coding, math, general agent), demonstrating improvement headrooms from better MAS design. Our analysis provides insights revealing that identified failures require more sophisticated solutions, highlighting a clear roadmap for future research. We publicly release our comprehensive dataset (MAST-Data), the MAST, and our LLM annotator to facilitate widespread research and development in MAS.},
-  archiveprefix = {arXiv},
   keywords = {Computer Science - Artificial Intelligence},
   file = {C\:\\Users\\dewanje\\Zotero\\storage\\KX7MBGK8\\Cemri et al. - 2025 - Why Do Multi-Agent LLM Systems Fail.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\NWBGS8VC\\2503.html}
 }
@@ -321,6 +318,7 @@
 }
 
 @techreport{fema2015,
+  shortauthor = {DHS},
   type = {Guide},
   title = {Incident {{Action Planning Guide}}, {{Revision}} 1},
   author = {{U.S. Department of Homeland Security}},
@@ -332,6 +330,7 @@
 }
 
 @techreport{fema2017,
+  shortauthor = {DHS},
   type = {Guide},
   title = {National {{Incident Management System}}, 3rd Edition},
   author = {{U.S. Department of Homeland Security}},
@@ -356,6 +355,7 @@
 }
 
 @book{fwdv100,
+  label = {FwDV},
   title = {{Feuerwehr-Dienstvorschrift 100 (FwDV 100): F\"uhrung und Leitung im Einsatz. F\"uhrungssystem}},
   shorttitle = {{FwDV 100}},
   year = 2004,
@@ -461,22 +461,15 @@
   abstract = {This paper presents a simple and widely applicable multiple test procedure of the sequentially rejective type, i.e. hypotheses are rejected one at a time until no further rejections can be done. It is shown that the test has a prescribed level of significance protection against error of the first kind for any combination of true hypotheses. The power properties of the test and a number of possible applications are also discussed.}
 }
 
-@misc{hong2024,
+@inproceedings{hong2024,
   title = {{{MetaGPT}}: {{Meta Programming}} for {{A Multi-Agent Collaborative Framework}}},
   shorttitle = {{{MetaGPT}}},
-  author = {Hong, Sirui and Zhuge, Mingchen and Chen, Jiaqi and Zheng, Xiawu and Cheng, Yuheng and Zhang, Ceyao and Wang, Jinlin and Wang, Zili and Yau, Steven Ka Shing and Lin, Zijuan and Zhou, Liyang and Ran, Chenyu and Xiao, Lingfeng and Wu, Chenglin and Schmidhuber, J{\"u}rgen},
+  booktitle = {International Conference on Learning Representations},
+  author = {Hong, Sirui and Zhuge, Mingchen and Chen, Jonathan and Zheng, Xiawu and Cheng, Yuheng and Wang, Jinlin and Zhang, Ceyao and Wang, Zili and Yau, Steven Ka Shing and Lin, Zijuan and Zhou, Liyang and Ran, Chenyu and Xiao, Lingfeng and Wu, Chenglin and Schmidhuber, J{\"u}rgen},
+  editor = {Kim, B. and Yue, Y. and Chaudhuri, S. and Fragkiadaki, K. and Khan, M. and Sun, Y.},
   year = 2024,
-  month = nov,
-  number = {arXiv:2308.00352},
-  eprint = {2308.00352},
-  primaryclass = {cs.AI},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2308.00352},
-  urldate = {2026-07-31},
-  abstract = {Remarkable progress has been made on automated problem solving through societies of agents based on large language models (LLMs). Existing LLM-based multi-agent systems can already solve simple dialogue tasks. Solutions to more complex tasks, however, are complicated through logic inconsistencies due to cascading hallucinations caused by naively chaining LLMs. Here we introduce MetaGPT, an innovative meta-programming framework incorporating efficient human workflows into LLM-based multi-agent collaborations. MetaGPT encodes Standardized Operating Procedures (SOPs) into prompt sequences for more streamlined workflows, thus allowing agents with human-like domain expertise to verify intermediate results and reduce errors. MetaGPT utilizes an assembly line paradigm to assign diverse roles to various agents, efficiently breaking down complex tasks into subtasks involving many agents working together. On collaborative software engineering benchmarks, MetaGPT generates more coherent solutions than previous chat-based multi-agent systems. Our project can be found at https://github.com/geekan/MetaGPT},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Multiagent Systems},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\ZFBFDZHP\\Hong et al. - 2024 - MetaGPT Meta Programming for A Multi-Agent Collaborative Framework.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\6TCZB9N7\\2308.html}
+  volume = {2024},
+  pages = {23247--23275}
 }
 
 @article{huang2012,
@@ -498,21 +491,14 @@
   file = {C:\Users\dewanje\Zotero\storage\XXGR36TG\S1366554511000639.html}
 }
 
-@misc{huang2024,
+@inproceedings{huang2024,
   title = {Large {{Language Models Cannot Self-Correct Reasoning Yet}}},
+  booktitle = {International Conference on Learning Representations},
   author = {Huang, Jie and Chen, Xinyun and Mishra, Swaroop and Zheng, Huaixiu Steven and Yu, Adams Wei and Song, Xinying and Zhou, Denny},
+  editor = {Kim, B. and Yue, Y. and Chaudhuri, S. and Fragkiadaki, K. and Khan, M. and Sun, Y.},
   year = 2024,
-  month = mar,
-  number = {arXiv:2310.01798},
-  eprint = {2310.01798},
-  primaryclass = {cs.CL},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2310.01798},
-  urldate = {2026-07-31},
-  abstract = {Large Language Models (LLMs) have emerged as a groundbreaking technology with their unparalleled text generation capabilities across various applications. Nevertheless, concerns persist regarding the accuracy and appropriateness of their generated content. A contemporary methodology, self-correction, has been proposed as a remedy to these issues. Building upon this premise, this paper critically examines the role and efficacy of self-correction within LLMs, shedding light on its true potential and limitations. Central to our investigation is the notion of intrinsic self-correction, whereby an LLM attempts to correct its initial responses based solely on its inherent capabilities, without the crutch of external feedback. In the context of reasoning, our research indicates that LLMs struggle to self-correct their responses without external feedback, and at times, their performance even degrades after self-correction. Drawing from these insights, we offer suggestions for future research and practical applications in this field.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computation and Language},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\4YPCRQEX\\Huang et al. - 2024 - Large Language Models Cannot Self-Correct Reasoning Yet.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\5P82T9B3\\2310.html}
+  volume = {2024},
+  pages = {32808--32824}
 }
 
 @inproceedings{ICLR2024_e9df36b2,
@@ -543,21 +529,16 @@
   file = {C\:\\Users\\dewanje\\Zotero\\storage\\HSCAB2WI\\Jacobs and Wallach - 2021 - Measurement and Fairness.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\FGKA44DY\\1912.html}
 }
 
-@misc{kambhampati2024,
-  title = {{{LLMs Can}}'t {{Plan}}, {{But Can Help Planning}} in {{LLM-Modulo Frameworks}}},
-  author = {Kambhampati, Subbarao and Valmeekam, Karthik and Guan, Lin and Verma, Mudit and Stechly, Kaya and Bhambri, Siddhant and Saldyt, Lucas and Murthy, Anil},
+@inproceedings{kambhampati2024,
+  title = {Position: {{LLMs Can}}'t {{Plan}}, {{But Can Help Planning}} in {{LLM-Modulo Frameworks}}},
+  booktitle = {Proceedings of the 41st {{International Conference}} on {{Machine Learning}}},
+  author = {Kambhampati, Subbarao and Valmeekam, Karthik and Guan, Lin and Verma, Mudit and Stechly, Kaya and Bhambri, Siddhant and Saldyt, Lucas Paul and Murthy, Anil B.},
+  editor = {Salakhutdinov, Ruslan and Kolter, Zico and Heller, Katherine and Weller, Adrian and Oliver, Nuria and Scarlett, Jonathan and Berkenkamp, Felix},
   year = 2024,
-  month = jun,
-  number = {arXiv:2402.01817},
-  eprint = {2402.01817},
-  primaryclass = {cs.AI},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2402.01817},
-  urldate = {2026-07-31},
-  abstract = {There is considerable confusion about the role of Large Language Models (LLMs) in planning and reasoning tasks. On one side are over-optimistic claims that LLMs can indeed do these tasks with just the right prompting or self-verification strategies. On the other side are perhaps over-pessimistic claims that all that LLMs are good for in planning/reasoning tasks are as mere translators of the problem specification from one syntactic format to another, and ship the problem off to external symbolic solvers. In this position paper, we take the view that both these extremes are misguided. We argue that auto-regressive LLMs cannot, by themselves, do planning or self-verification (which is after all a form of reasoning), and shed some light on the reasons for misunderstandings in the literature. We will also argue that LLMs should be viewed as universal approximate knowledge sources that have much more meaningful roles to play in planning/reasoning tasks beyond simple front-end/back-end format translators. We present a vision of \textbraceleft\textbackslash bf LLM-Modulo Frameworks\textbraceright{} that combine the strengths of LLMs with external model-based verifiers in a tighter bi-directional interaction regime. We will show how the models driving the external verifiers themselves can be acquired with the help of LLMs. We will also argue that rather than simply pipelining LLMs and symbolic components, this LLM-Modulo Framework provides a better neuro-symbolic approach that offers tighter integration between LLMs and symbolic components, and allows extending the scope of model-based planning/reasoning regimes towards more flexible knowledge, problem and preference specifications.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Machine Learning},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\2V7N24Q8\\Kambhampati et al. - 2024 - LLMs Can't Plan, But Can Help Planning in LLM-Modulo Frameworks.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\YPJ4LQGR\\2402.html}
+  series = {Proceedings of {{Machine Learning Research}}},
+  volume = {235},
+  pages = {22895--22907},
+  publisher = {PMLR}
 }
 
 @article{kerr1998,
@@ -924,6 +905,8 @@
 @inproceedings{rao1995,
   title = {{{BDI Agents}}: {{From Theory}} to {{Practice}}},
   author = {Rao, Anand S and Georgeff, Michael P},
+  booktitle = {Proceedings of the First International Conference on Multi-Agent Systems ({ICMAS}-95)},
+  publisher = {AAAI Press},
   year = 1995,
   pages = {312--319},
   abstract = {The study of computational agents capable of rational behaviour has received a great deal of attention in recent years. Theoretical formalizations of such agents and their implementations have proceededin parallel with little or no connection between them. Tkis paper exploresa particular typeof rational agent,a BeliefDesire-Intention (BDI) agent. The primary aim of this paper is to integrate (a) the theoretical foundations of BDIagents from both a quantitative decision-theoretic perspective anda symbolic reasoning perspective; (b) the implementations of BDIagents from an ideal theoretical perspective anda morepractical perspective; and (c) the building of large-scale applications basedon BDI agents. In particular, an air-trafflc management application will be described from both a theoretical and an implementationperspective.},
@@ -960,22 +943,17 @@
   langid = {english}
 }
 
-@misc{shinn2023,
+@inproceedings{shinn2023,
   title = {Reflexion: {{Language Agents}} with {{Verbal Reinforcement Learning}}},
   shorttitle = {Reflexion},
-  author = {Shinn, Noah and Cassano, Federico and Berman, Edward and Gopinath, Ashwin and Narasimhan, Karthik and Yao, Shunyu},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Shinn, Noah and Cassano, Federico and Gopinath, Ashwin and Narasimhan, Karthik and Yao, Shunyu},
+  editor = {Oh, A. and Naumann, T. and Globerson, A. and Saenko, K. and Hardt, M. and Levine, S.},
   year = 2023,
-  month = oct,
-  number = {arXiv:2303.11366},
-  eprint = {2303.11366},
-  primaryclass = {cs.AI},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2303.11366},
-  urldate = {2026-07-31},
-  abstract = {Large language models (LLMs) have been increasingly used to interact with external environments (e.g., games, compilers, APIs) as goal-driven agents. However, it remains challenging for these language agents to quickly and efficiently learn from trial-and-error as traditional reinforcement learning methods require extensive training samples and expensive model fine-tuning. We propose Reflexion, a novel framework to reinforce language agents not by updating weights, but instead through linguistic feedback. Concretely, Reflexion agents verbally reflect on task feedback signals, then maintain their own reflective text in an episodic memory buffer to induce better decision-making in subsequent trials. Reflexion is flexible enough to incorporate various types (scalar values or free-form language) and sources (external or internally simulated) of feedback signals, and obtains significant improvements over a baseline agent across diverse tasks (sequential decision-making, coding, language reasoning). For example, Reflexion achieves a 91\% pass@1 accuracy on the HumanEval coding benchmark, surpassing the previous state-of-the-art GPT-4 that achieves 80\%. We also conduct ablation and analysis studies using different feedback signals, feedback incorporation methods, and agent types, and provide insights into how they affect performance.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computation and Language,Computer Science - Machine Learning},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\7XYIYVRI\\Shinn et al. - 2023 - Reflexion Language Agents with Verbal Reinforcement Learning.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\3387MNRP\\2303.html}
+  volume = {36},
+  pages = {8634--8652},
+  publisher = {Curran Associates, Inc.},
+  doi = {10.52202/075280-0377}
 }
 
 @article{simonsohn2020,
@@ -1255,22 +1233,17 @@
   file = {C\:\\Users\\dewanje\\Zotero\\storage\\BTU8G2IF\\Wu et al. - 2023 - AutoGen Enabling Next-Gen LLM Applications via Multi-Agent Conversation.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\2ELRN8EV\\2308.html}
 }
 
-@misc{xie2024a,
+@inproceedings{xie2024a,
   title = {{{TravelPlanner}}: {{A Benchmark}} for {{Real-World Planning}} with {{Language Agents}}},
   shorttitle = {{{TravelPlanner}}},
+  booktitle = {Proceedings of the 41st {{International Conference}} on {{Machine Learning}}},
   author = {Xie, Jian and Zhang, Kai and Chen, Jiangjie and Zhu, Tinghui and Lou, Renze and Tian, Yuandong and Xiao, Yanghua and Su, Yu},
+  editor = {Salakhutdinov, Ruslan and Kolter, Zico and Heller, Katherine and Weller, Adrian and Oliver, Nuria and Scarlett, Jonathan and Berkenkamp, Felix},
   year = 2024,
-  month = oct,
-  number = {arXiv:2402.01622},
-  eprint = {2402.01622},
-  primaryclass = {cs.CL},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2402.01622},
-  urldate = {2026-08-04},
-  abstract = {Planning has been part of the core pursuit for artificial intelligence since its conception, but earlier AI agents mostly focused on constrained settings because many of the cognitive substrates necessary for human-level planning have been lacking. Recently, language agents powered by large language models (LLMs) have shown interesting capabilities such as tool use and reasoning. Are these language agents capable of planning in more complex settings that are out of the reach of prior AI agents? To advance this investigation, we propose TravelPlanner, a new planning benchmark that focuses on travel planning, a common real-world planning scenario. It provides a rich sandbox environment, various tools for accessing nearly four million data records, and 1,225 meticulously curated planning intents and reference plans. Comprehensive evaluations show that the current language agents are not yet capable of handling such complex planning tasks-even GPT-4 only achieves a success rate of 0.6\%. Language agents struggle to stay on task, use the right tools to collect information, or keep track of multiple constraints. However, we note that the mere possibility for language agents to tackle such a complex problem is in itself non-trivial progress. TravelPlanner provides a challenging yet meaningful testbed for future language agents.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Computation and Language},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\Z58UFZPQ\\Xie et al. - 2024 - TravelPlanner A Benchmark for Real-World Planning with Language Agents.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\76LMU2WV\\2402.html}
+  series = {Proceedings of {{Machine Learning Research}}},
+  volume = {235},
+  pages = {54590--54613},
+  publisher = {PMLR}
 }
 
 @misc{xu2025,
@@ -1307,22 +1280,13 @@
   langid = {english}
 }
 
-@misc{yao2023,
+@inproceedings{yao2023,
   title = {{{ReAct}}: {{Synergizing Reasoning}} and {{Acting}} in {{Language Models}}},
   shorttitle = {{{ReAct}}},
+  booktitle = {International Conference on Learning Representations ({{ICLR}} 2023)},
   author = {Yao, Shunyu and Zhao, Jeffrey and Yu, Dian and Du, Nan and Shafran, Izhak and Narasimhan, Karthik and Cao, Yuan},
   year = 2023,
-  month = mar,
-  number = {arXiv:2210.03629},
-  eprint = {2210.03629},
-  primaryclass = {cs.CL},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2210.03629},
-  urldate = {2026-07-31},
-  abstract = {While large language models (LLMs) have demonstrated impressive capabilities across tasks in language understanding and interactive decision making, their abilities for reasoning (e.g. chain-of-thought prompting) and acting (e.g. action plan generation) have primarily been studied as separate topics. In this paper, we explore the use of LLMs to generate both reasoning traces and task-specific actions in an interleaved manner, allowing for greater synergy between the two: reasoning traces help the model induce, track, and update action plans as well as handle exceptions, while actions allow it to interface with external sources, such as knowledge bases or environments, to gather additional information. We apply our approach, named ReAct, to a diverse set of language and decision making tasks and demonstrate its effectiveness over state-of-the-art baselines, as well as improved human interpretability and trustworthiness over methods without reasoning or acting components. Concretely, on question answering (HotpotQA) and fact verification (Fever), ReAct overcomes issues of hallucination and error propagation prevalent in chain-of-thought reasoning by interacting with a simple Wikipedia API, and generates human-like task-solving trajectories that are more interpretable than baselines without reasoning traces. On two interactive decision making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by an absolute success rate of 34\% and 10\% respectively, while being prompted with only one or two in-context examples. Project site with code: https://react-lm.github.io},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computation and Language,Computer Science - Machine Learning},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\2TD4JJQA\\Yao et al. - 2023 - ReAct Synergizing Reasoning and Acting in Language Models.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\PDRAZCMG\\2210.html}
+  url = {https://iclr.cc/virtual/2023/poster/11003}
 }
 
 @article{yin2024,
@@ -1358,21 +1322,17 @@
   file = {C\:\\Users\\dewanje\\Zotero\\storage\\CJJ3Z68R\\Yuan et al. - 2025 - Understanding and Mitigating Numerical Sources of Nondeterminism in LLM Inference.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\SH539CMX\\2506.html}
 }
 
-@misc{zheng2023,
+@inproceedings{zheng2023,
   title = {Judging {{LLM}}-as-a-{{Judge}} with {{MT-Bench}} and {{Chatbot Arena}}},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
   author = {Zheng, Lianmin and Chiang, Wei-Lin and Sheng, Ying and Zhuang, Siyuan and Wu, Zhanghao and Zhuang, Yonghao and Lin, Zi and Li, Zhuohan and Li, Dacheng and Xing, Eric P. and Zhang, Hao and Gonzalez, Joseph E. and Stoica, Ion},
+  editor = {Oh, A. and Naumann, T. and Globerson, A. and Saenko, K. and Hardt, M. and Levine, S.},
   year = 2023,
-  month = dec,
-  number = {arXiv:2306.05685},
-  eprint = {2306.05685},
-  primaryclass = {cs.CL},
-  publisher = {arXiv},
-  doi = {10.48550/arXiv.2306.05685},
-  urldate = {2026-07-31},
-  abstract = {Evaluating large language model (LLM) based chat assistants is challenging due to their broad capabilities and the inadequacy of existing benchmarks in measuring human preferences. To address this, we explore using strong LLMs as judges to evaluate these models on more open-ended questions. We examine the usage and limitations of LLM-as-a-judge, including position, verbosity, and self-enhancement biases, as well as limited reasoning ability, and propose solutions to mitigate some of them. We then verify the agreement between LLM judges and human preferences by introducing two benchmarks: MT-bench, a multi-turn question set; and Chatbot Arena, a crowdsourced battle platform. Our results reveal that strong LLM judges like GPT-4 can match both controlled and crowdsourced human preferences well, achieving over 80\% agreement, the same level of agreement between humans. Hence, LLM-as-a-judge is a scalable and explainable way to approximate human preferences, which are otherwise very expensive to obtain. Additionally, we show our benchmark and traditional benchmarks complement each other by evaluating several variants of LLaMA and Vicuna. The MT-bench questions, 3K expert votes, and 30K conversations with human preferences are publicly available at https://github.com/lm-sys/FastChat/tree/main/fastchat/llm\_judge.},
-  archiveprefix = {arXiv},
-  keywords = {Computer Science - Artificial Intelligence,Computer Science - Computation and Language},
-  file = {C\:\\Users\\dewanje\\Zotero\\storage\\NAKXHWJQ\\Zheng et al. - 2023 - Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena.pdf;C\:\\Users\\dewanje\\Zotero\\storage\\8A9RY64L\\2306.html}
+  volume = {36},
+  pages = {46595--46623},
+  publisher = {Curran Associates, Inc.},
+  note = {Datasets and Benchmarks Track},
+  doi = {10.52202/075280-2020}
 }
 
 @misc{zhuLLMBasedMultiAgentOrchestration2026a,

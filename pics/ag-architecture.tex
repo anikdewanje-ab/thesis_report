@@ -59,7 +59,7 @@
   \draw[link] (llm) -- node[lbl, right] {one call\\ per wake} (rgrp.south);
   \draw[link] (ui) -- node[lbl, right, xshift=1pt] {commands out,\\ world events in} (db.south);
 \end{tikzpicture}
-\caption{Architecture of the agentic system. Each agent is its own program on
+\caption[Architecture of the agentic system]{Architecture of the agentic system. Each agent is its own program on
 one shared engine. Agents never message each other directly. Every message,
 state change, world report and decision passes through PostgreSQL, which also
 wakes the recipient. Only the six reasoning agents call the language model.}

@@ -15,7 +15,7 @@ not have answered the question it was built for. We report that as a result,
 and we use the protocol's own negative control to define a gate that would
 have caught it.
 
-Everything in Sections~\ref{sec:crit:gate0} to~\ref{sec:crit:mechanism} was
+Everything in Sections~\ref{sec:crit:gate0} to~\ref{sec:crit:regret} was
 designed after we had seen the evaluation data. It is registered as
 Protocol~v2 in Amendment~16 and is exploratory, because choices made after
 seeing the data can bias a result even without intent \parencite{gelman2014}.
@@ -35,7 +35,8 @@ guaranteed it before we chose any model.
 
 The cause lies in how the scenarios are written. Every event in every one of
 the fourteen scenario files is an envelope of the form \texttt{\{at, send\}}:
-at a given time, send a given message. No event changes the declared world
+at a given time, send a given message. There are fourteen files, one per
+scored scenario for each of the two systems. No event changes the declared world
 state, that is the \code{world}, \code{sensing} or \code{hazard} blocks. When
 SC1 reports a partial capacity loss, SC1 keeps declaring 60 beds. When bus-1 is
 suspended, bus-1 keeps its seats. The baseline's physical plan is therefore
@@ -137,10 +138,13 @@ Section~\ref{sec:design:gate0}.
 
 We withdraw H2's verdict as a statement about adaptability. The sentence ``the
 workflow baseline recovers better from unanticipated disruption'' is not
-supported, because the disruption never disturbed the baseline. For the same
-reason we withdraw H1's verdict on \code{road_closure}, where the disruption
-changes the orders but not the outcome. Gate~0 fails on all seven scored
-scenarios, so the withdrawal reaches beyond the novel arm.
+supported, because the disruption never disturbed the baseline. H2 still fails
+as registered (Section~\ref{sec:res:findings}), but that failure is not
+evidence about adaptability in either direction. For the same
+reason we withdraw H1's verdict on \code{road_closure} as evidence about
+adaptation, since there the disruption changes the orders but not the outcome. No disruption scenario passes Gate~0,
+six of six, so the withdrawal reaches beyond the novel arm. Gate~0 does not
+apply to \code{closed_loop}, which has no disruption.
 
 The withdrawal works in one direction only. The agentic models lost between 10
 and 27 residents per 100 on scenarios where the correct plan needed no change
@@ -149,8 +153,8 @@ information about adaptation. It does not explain why the agentic score is
 low.
 
 Everything else stands. Protocol~v2 regenerates no score, so $S$, every risk
-difference, every recovery level and all 27 Gate~1 verdicts are unchanged.
-glm-5.2's non-inferiority pass on \code{closed_loop} stands, since that
+difference, every recovery level and all 27 Gate~1 verdicts, including those
+on \code{road_closure}, are unchanged as numbers. glm-5.2's non-inferiority pass on \code{closed_loop} stands, since that
 scenario tests base execution. The decision rubric does not use the null
 policy, so its split verdict stands as Section~\ref{sec:res:quality} reports
 it.
@@ -161,10 +165,16 @@ it.
 The first protocol compared the two systems only with each other. Protocol~v2
 also compares each system with doing nothing, as null-policy regret
 $R = S_{\text{system}} - S_{\text{null}}$, per run, on survival, against the
-no-replan control. $R > 0$ means responding helped, $R = 0$ means it bought
-nothing, and $R < 0$ means the system harmed itself by responding. We use
+no-replan control. $R > 0$ means the system did better than doing nothing,
+$R = 0$ means it did as well, and $R < 0$ means it did worse. A negative $R$
+does not by itself show that the response caused the loss, because the null
+policy also runs on the baseline's execution model. We use
 survival because the null-policy runs are capped at level 3, while scored runs
-reach level 4. As everywhere in this thesis, $S$ is capped at 1.0.
+reach level 4. Here $S$ is capped at 1.0, so that arrivals counted above the
+ceiling (Section~\ref{sec:res:integrity:ceiling}) cannot show up as help. The
+risk differences of Chapter~\ref{ch:results} use $S$ without the cap, which is
+why qwen3.5's mean regret here ($-0.106$) differs slightly from its risk
+difference ($-0.10$).
 
 \begin{table}[htbp]
 \centering
@@ -187,69 +197,30 @@ agentic / deepseek-v4-pro & $-0.273$ & 0 & 15 & 35 \\
 Table~\ref{tab:crit:regret} gives the counts. The baseline's regret is zero in
 all 50 runs, because its response changed no order and no kilometre. The
 headline that the baseline beats the agentic system on survival in every
-disruption is arithmetically true, but the baseline never had to compete.
+novel disruption is arithmetically true, but the baseline never had to compete.
 
 The agentic regret is negative in all 15 model and disruption cells. Of 150
 runs, none improved on the null policy, 82 tied it, and \textbf{68 came out
-worse than doing nothing}. Under the first protocol, the agentic system lost to
-a better system. Under regret, it lost to inaction. A negative regret is a
-self-inflicted loss, so we cannot blame it on a hard scenario. The model
-ordering of Section~\ref{sec:res:models} is unchanged.
+worse than doing nothing}. Without the cap, three qwen3.5 runs would count as
+improvements, but only through arrivals counted above the ceiling. Under the
+first protocol, the agentic system lost to a better system. Under regret, it
+also scored below inaction. Since doing nothing reaches the ceiling, the loss
+cannot be blamed on a hard scenario. The model ordering of
+Section~\ref{sec:res:models} is unchanged.
 
-% =====================================================================
-\section{The Mechanism, Corrected by Measurement}
-\label{sec:crit:mechanism}
-
-Our first write-up said the agents lost residents ``at the handshakes'': a
-driver's completion call that times out and is never retried, a facility query
-that is never answered. We had never measured this. Protocol~v2 measured it,
-and the measurement did not support it. Handshake closure is 0.938
-(Section~\ref{sec:res:loss:handshakes}), the loss comes in whole bus-loads
-(Figure~\ref{fig:res:delivery}), and it is dominated by residents who were
-never dispatched. The messages arrived and were answered. What went wrong was
-the agents' decision about which residents to move.
-Table~\ref{tab:crit:ruledout} lists the other causes we tested against the 150
-agentic novel runs.
-
-\begin{table}[htbp]
-\centering
-\caption[Candidate causes of the agentic loss, and the verdict on each]{Candidate
-causes of the agentic loss, tested against the 150 agentic novel runs.
-Exploratory.}
-\label{tab:crit:ruledout}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X}
-\toprule
-Candidate cause & Verdict \\
-\midrule
-The agents were told the wrong population & \textbf{No.} 100 residents were correctly reported in 150 of 150 runs. \\
-The database message layer failed & \textbf{No.} Handshake closure is 0.938. \\
-Too few missions dispatched, or the reserve bus held back & \textbf{No.} About 2.3 dispatch orders in failing and successful runs alike. Bus-2 was used in every run. \\
-The scorer's arrival de-duplication removed real deliveries & \textbf{No.} De-duplicated arrival sums track sheltered residents. \\
-Drivers over-claimed their headcount & \textbf{No.} 54 discrepancy rows, with $r = +0.061$ against $S$. \\
-The run ran out of clock & \textbf{Mostly no.} Only 5 of the 19 total-loss runs recorded a dropoff after 12:00. \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-What remains is a \textbf{commitment failure}, while comprehension held. The
-agents understood the disruption, addressed the right parties and got their
-messages answered. They could not carry one committed plan through to
-delivery. In agent theory, an intention is a plan the agent keeps until it has
-a reason to drop it, and this persistence separates an intention from a
-passing wish \parencite{rao1995}. Here, legs were re-planned while in flight,
-and the coordinator often could not establish whether a leg had finished. One
-of its abort messages reads ``zero deliveries across 8 transport plan
-revisions''. Re-planning on disruption is the capability the agentic design
-advertises, and on these scenarios the correct number of re-plans was zero.
-
-We do not claim a causal direction, because a run that is going badly may
-re-plan for that reason. Of 108 aborts, 57 (52.8\%) are stand-downs after a
-failure, 14 (13.0\%) are clearly started by a re-plan, and 37 (34.3\%) are
-other. A \textbf{commitment-constrained variant} would settle the direction.
-It caps the number of re-plans, or forbids cancelling a leg already in flight,
-and runs on the same scenarios with the same models. We leave it to future
-work.
+Not all of this regret comes from the response to the disruption. The agentic
+models also lose residents when there is no disruption at all. On
+\code{closed_loop}, glm-5.2 scores 1.000, qwen3.5 0.950 and deepseek-v4-pro
+0.790 (Table~\ref{tab:res:anticipated}). Compared with their capped novel
+means of 0.840, 0.894 and 0.727, this splits each deficit in two parts. For
+deepseek-v4-pro, about 0.21 of its 0.27 is already lost without a disruption,
+and only about 0.06 is added on the novel arm. For qwen3.5 the two parts are
+about 0.05 and 0.06. glm-5.2 is the clean case. It loses nothing undisrupted
+and about 0.16 on the novel arm. This split is descriptive only, because the
+\code{closed_loop} cells and the novel cells are different runs. It shows
+that regret measures how far a system falls below the null policy. For
+deepseek-v4-pro most of that distance is base execution, for qwen3.5 about
+half, and for glm-5.2 none.
 
 % =====================================================================
 \section{The Pre-Registered Primary Was Underpowered by Construction}
@@ -259,10 +230,12 @@ The registered primary test for H2 was implemented only after the result was
 known (Amendment~15), so it is exploratory
 (Section~\ref{sec:res:novel:prereg}). The cut-point sensitivity analysis
 \parencite{simonsohn2020} was added under the same amendment. The more
-important finding is about the design. At $k = 10$, a two-sided exact sign
-test on five scenarios cannot return a $p$ below 0.0625, even when every
-scenario points the same way. Ties push the floor higher. qwen3.5 and glm-5.2
-each tie two scenarios, which leaves a floor of 0.250, and both reached
+important finding is about the design. The sign test takes one observation
+per scenario. With five scenarios, a two-sided exact sign test cannot return a
+$p$ below $2 \times 0.5^5 = 0.0625$, even when every scenario points the same
+way, and this holds for any $k$. Ties push the floor higher. At $k = 10$, a
+scenario where five of ten runs go each way counts as a tie. qwen3.5 and
+glm-5.2 each tie two scenarios, which leaves a floor of 0.250, and both reached
 $p = 0.250$. A registered primary that cannot reach significance does not test
 anything, and a moderate effect would have been missed. Protocol~v2 draws
 three consequences.
@@ -273,7 +246,8 @@ three consequences.
   robustness check.
 \item The minimum detectable effect \parencite{cohen1988} is stated before any
   run. If it exceeds the registered margin, either $k$ rises or the claim is
-  dropped.
+  dropped. The sign test, as a robustness check, needs more scenarios, since
+  no value of $k$ lowers its floor.
 \item Cells that fail Gate~0 are excluded from confirmatory arms by a rule
   fixed before the result is known.
 \end{enumerate}
@@ -282,9 +256,10 @@ three consequences.
 \section{Limitations Declared, With the Position Taken on Each}
 \label{sec:crit:limitations}
 
-The invalid novel arm, the open causal direction and the late primary test are
-covered above. Table~\ref{tab:crit:limits} lists three further limitations
-that came out of executing the design, with the position we take on each.
+The invalid novel arm and the late primary test are covered above, and the
+open causal direction of the mechanism in Section~\ref{sec:disc:mechanism}.
+Table~\ref{tab:crit:limits} lists three further limitations that came out of
+executing the design, with the position we take on each.
 
 \begin{table}[htbp]
 \centering
@@ -295,58 +270,62 @@ that came out of executing the design, with the position we take on each.
 \toprule
 Limitation & Position \\
 \midrule
-Parity deviation 7 was still open when the campaign ran &
+Parity deviation~7 (Table~\ref{tab:eval:deviations}) was still open when the
+campaign ran &
 Closed by written re-argument, which the protocol's gate allows. The
-deviation runs against the baseline, so it could only have understated the
-margin (Section~\ref{sec:wf:world}). \\
+re-argument covers one side of the deviation. The declared world removes the
+scripted drop-off confirmations, and this works against the baseline. The
+other side is that the execution model plays the field agents in the
+baseline, while the agentic side runs them live with a language model. This
+favours the baseline, so part of the survival gap may come from the live field
+agents and not from the command post (Section~\ref{sec:wf:world}). We did not
+run the agentic command post against the execution model, so the two sources
+cannot be separated, and the net direction of the deviation is unknown. \\
 \addlinespace
-42 of 87 doctrine elements have no page citation &
+On the agentic side, arrivals are the headcounts the language-model drivers
+report &
+The baseline's arrivals come from the execution model
+(Section~\ref{sec:eval:survival}). We read the agentic reports as they are.
+Over-reports can only raise the agentic $S$
+(Section~\ref{sec:res:integrity:ceiling}). Under-reports would lower it, and
+the log has no independent count to rule them out. A future instrument should
+count arrivals in the world, not in the agents' messages. \\
+\addlinespace
+42 of the 87 entries in the baseline's doctrine citation table have no page
+citation &
 This limits the claim that the baseline is doctrine-grounded, and affects no
-number. 45 of 87 elements are cited to a page of the doctrine
+number. 45 of the 87 entries are cited to a page of the doctrine
 \parencite{fwdv100}, and we assert the rest ourselves. \\
-\addlinespace
-Only one time scale ran (8.4) &
-H4 was not tested. We make no crossover, trend or scale-dependence claim
-(Section~\ref{sec:res:h4}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 Chapter~\ref{ch:results} discloses further caveats where their effect shows
-(Sections~\ref{sec:res:models:levelcap}, \ref{sec:res:integrity:ceiling}
-and~\ref{sec:res:summary}). Four more apply to
-every table.
+(Sections~\ref{sec:res:models:levelcap}, \ref{sec:res:integrity:ceiling},
+\ref{sec:res:h4} and~\ref{sec:res:summary}). The following apply to every
+table.
 
 \begin{itemize}
+\item The design itself is small. Each cell has $k = 10$ replicates, only one
+  time scale ran, and the third model slot of the novel arm was held by four
+  models in turn.
 \item The cloud model tags are not version-frozen, so no digest pins these
   results.
-\item One run, \texttt{aaae313d}, is flagged for possible straight-line
-  routing during a routing-service quota outage.
-\item Equity is undefined. Relief logistics treats equity as an objective of
-  its own \parencite{huang2012}, but the resident population is homogeneous,
-  so a maximum-minimum subgroup difference is always zero.
+\item One run, deepseek-v4-pro on \code{unverified_persons_report} at
+  replicate 1000, is flagged for possible straight-line routing during a
+  routing-service quota outage.
+\item The results come from one facility, one city and one hazard. The
+  residents are a passive count of 100, and the population is homogeneous.
+\item Equity is therefore undefined. Relief logistics treats equity as an
+  objective of its own \parencite{huang2012}, but with a homogeneous
+  population a maximum-minimum subgroup difference is always zero.
 \item Four asymmetries favour the baseline. Two are parity deviations
-  accepted for doctrinal reasons: the consolidated situation picture, and the
+  accepted for doctrinal reasons, deviations~5 and~6 in
+  Table~\ref{tab:eval:deviations}: the consolidated situation picture, and the
   controller's access to road distance and duration. The other two are the
   anchor of a replacement bus leg and a fallback playbook that mis-frames two
-  message types for the agents. None of them can explain the agentic deficit
-  away. The reserve-bus serialisation also drives part of the gap, and we
-  treat it as a difference in decisions (Section~\ref{sec:wf:fleet}).
+  message types for the agents. We did not measure the size of any of them,
+  so we cannot say how much of the gap they explain. The later
+  release of the reserve bus may also cost the agentic side time. We treat it
+  as a difference in decisions (Section~\ref{sec:wf:fleet}).
 \end{itemize}
-
-In summary:
-
-\begin{enumerate}
-\item We ran the comparison on scenarios where the baseline could not lose.
-  The no-replan control shows this on every scored file.
-\item The agentic deficit is still real. 68 of 150 agentic runs came out worse
-  than doing nothing, and none did better.
-\item The agents failed at commitment, while their understanding of the
-  disruption held. The message layer closes 94\% of addressed requests, and
-  most of the loss is residents never dispatched. The causal direction is not
-  established.
-\item The architecture costs an order of magnitude more to coordinate
-  (Section~\ref{sec:res:responsetime}). No scenario here required that cost to
-  pay off. A campaign on scenarios that pass Gate~0 would show whether it ever
-  does.
-\end{enumerate}

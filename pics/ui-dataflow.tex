@@ -61,7 +61,7 @@
   \draw[wr] (ts.south) -- (ti.north);
   \draw[wr] (ti.south) -- node[lbl, right] {on demand,\\over HTTP} (br.north -| ti);
 \end{tikzpicture}
-\caption{How data moves through the observation interface. Each column is one
+\caption[How data moves through the observation interface]{How data moves through the observation interface. Each column is one
 path. State goes out from the agents to the browser. Scenario events go into
 the agents' mailboxes. Acknowledgements come back from the browser's animations
 and become the agents' world reports. Prompt records are fetched only when a

@@ -34,7 +34,7 @@ FIELD SEMANTICS:
 
   thinking
     One short paragraph of your inner reasoning. Always required. Lands in
-    the run's tick sidecar (not state.json), so be specific.
+    the run's tick sidecar (not the state file), so be specific.
 
   remaining_plan
     Your forward-looking sketch of the mission, as an ordered list of legs
@@ -84,7 +84,7 @@ ACTION VOCABULARY — exactly seven; others are silently dropped:
       the shelter. The runtime then fires it 2 minutes AHEAD of that drive, so the
       escort gets a warning rather than a starting gun — you do not (and must not)
       budget that lead time yourself. `recipients` is OPTIONAL: omit it to use the
-      default escort list from identity.yaml, which is the normal case.
+      default escort list from the identity file, which is the normal case.
       ONCE PER RUN is load-bearing on a shuttle: this is the ONLY thing that tells
       the escort and the ambulance to roll, and they are holding at the pickup
       waiting for it. Skip it on run 2 and the convoy leaves without them.

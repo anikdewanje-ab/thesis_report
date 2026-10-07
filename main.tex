@@ -18,6 +18,22 @@
 \usepackage{verbatim}
 \usepackage{longtable}
 \usepackage{tabularx}
+\usepackage{placeins} % \FloatBarrier keeps a float inside its own section
+% Float placement. A float page starts at the top instead of centring its
+% floats, so a lone figure no longer sits below a large gap. A float must fill
+% three quarters of a page before it gets a page to itself; a smaller one goes
+% at the top of a text page.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{\floatsep}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.5}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
 \usepackage{booktabs}
 \usepackage{multicol}
 \usepackage[automark]{scrlayer-scrpage}
@@ -49,20 +65,25 @@
 \usepackage[breaklinks,colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
 
 % --- Bibliography (biblatex, bibtex backend so Tectonic runs it) ---
-% Alphabetic labels ([BHG87]) as in the TU Ilmenau template. DOI, ISBN and
-% arXiv fields are not printed. A URL and its visited date are printed only
+% Alphabetic labels ([BHG87]) as in the TU Ilmenau template. DOI and ISBN
+% fields are not printed. The arXiv number is printed for a preprint, because
+% it is the only identifier, but never for a journal article (JSTOR ids are
+% dropped). A URL and its visited date are printed only
 % for web material the reader could not otherwise find: never for a journal
 % article, never for anything that has a DOI, and never a visited date with no
 % URL to visit.
 \usepackage[backend=bibtex,style=alphabetic,maxbibnames=99,giveninits=true,
-            doi=false,isbn=false,eprint=false]{biblatex}
+            doi=false,isbn=false,eprint=true]{biblatex}
 \newcommand{\dropurl}{%
   \clearfield{url}%
   \clearfield{urlyear}\clearfield{urlmonth}\clearfield{urlday}}
 \AtEveryBibitem{%
-  \ifentrytype{article}{\dropurl}{\iffieldundef{doi}{}{\dropurl}}%
+  \ifentrytype{article}{\dropurl\clearfield{eprint}}{\iffieldundef{doi}{}{\dropurl}}%
   \iffieldundef{url}{\dropurl}{}}
 \addbibresource{bibs/litDB.bib}
+% The reference list is set two sizes smaller than the body text.
+\renewcommand*{\bibfont}{\footnotesize}
+\setlength{\bibitemsep}{2pt}
 
 \usepackage{cleveref}
 
@@ -94,6 +115,8 @@
 \setlength{\voffset}{-2cm}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+% Lets a paragraph stretch a little more before a line runs into the margin.
+\setlength{\emergencystretch}{2em}
 
 \input{inc/profile.tex}
 
@@ -107,6 +130,8 @@
 
 \input{inc/abstract}
 
+% Chapters and sections only, so the contents fit on three pages.
+\setcounter{tocdepth}{1}
 \tableofcontents
 \listoffigures
 \listoftables

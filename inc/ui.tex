@@ -99,7 +99,7 @@ for each agent. Figure~\ref{fig:ui:main} shows the screen during a run.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{pics/ui-main.png}
-\caption{The observation interface during a run of the undisrupted scenario.
+\caption[The observation interface during a run]{The observation interface during a run of the undisrupted scenario.
 Left: the map of Hamburg with the two buses, the police escort car and the
 ambulance, each on its own route. Right, from the top: scenario selection and
 run controls, the process identifiers of the ten agents, one tab per agent,
@@ -134,11 +134,13 @@ table only when a tick is opened.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{pics/ui-tick-drawer.png}
-\caption{The tick drawer for one reasoning tick of BIS, woken by the storm
+\caption[The tick drawer for one reasoning tick]{The tick drawer for one reasoning tick of BIS, woken by the storm
 surge alarm from ZKD. Left: the trigger message and the prompts the model
 received. Right: the raw model output and the parts the runtime parsed from it,
 here the model's reasoning and its new remaining plan. The header gives the
-simulated time, the latency (6.82\,s) and the input and output tokens.}
+simulated time, the latency (6.82\,s) and the input and output tokens. The
+prompt lists one available bus, because BIS's fleet snapshot leaves out the
+reserve bus-2.}
 \label{fig:ui:tick}
 \end{figure}
 
@@ -164,8 +166,8 @@ live run, the browser's animation plays the role of the world.
 When a vehicle's animation reaches the end of its route, the frontend sends a
 \texttt{task\_complete} message back to the backend. The message carries the
 command's number, the vehicle and the vehicle's final position. The backend
-decides from the vehicle which agent owns it: the first bus and the car belong
-to Bus-Driver-1, the second bus to Bus-Driver-2, the patrol car to Polizei and
+decides from the vehicle which agent owns it: the first bus and the driver's
+car belong to Bus-Driver-1, the second bus to Bus-Driver-2, the patrol car to Polizei and
 the ambulance to DRK. It then appends the acknowledgement to that agent's
 \texttt{world\_events}. The agent wakes, closes the step and takes its real
 position from the report. If an agent changes its plan while a vehicle is

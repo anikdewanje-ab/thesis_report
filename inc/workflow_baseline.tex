@@ -13,15 +13,13 @@
 This chapter describes the control condition of the study, the workflow
 baseline. It is a single scripted Incident Commander (IC) that runs the same
 evacuation as the agentic system. It sees the same scenarios, may use the same
-commands and writes to the same event log. Only the way it decides is
-different. The IC follows a written command doctrine step by step, and no
+commands and writes to the same event log. The main difference is the way it
+decides. The IC follows a written command doctrine step by step, and no
 language model takes part in its coordination decisions.
 
 A weak control would prove nothing, so we built the baseline on an established
 emergency command doctrine. We froze it before the novel disruptions were
-revealed. The baseline scored the highest survival level on every disruption
-tested (Chapter~\ref{ch:results}). Section~\ref{sec:crit:gate0} discusses what
-this win does and does not show.
+revealed. Section~\ref{sec:wf:limits} explains how to read its score.
 
 % =====================================================================
 \section{Design}
@@ -35,17 +33,27 @@ agent would call its language model. We call this step the seam. Everything
 after the seam is the agentic side's own code.
 
 The IC takes over the two coordination agents that reason with a model, the
-command post (BIS) and the transport dispatcher (Hochbahn). Both conditions
-share all other agents unchanged. A bus driver still drives and still uses a
-language model to plan the route, because driving from A to B is the same act
-under either architecture.
+command post (BIS) and the transport dispatcher (Hochbahn). The code of the
+other agents is shared, but a baseline run does not start them. It is an
+offline walk through the scenario, with no clock, no language model and no agent
+processes. The execution model (Section~\ref{sec:wf:world}) carries out the
+IC's orders in place of the bus drivers, the police and the medic. In the
+road-closure scenario, the replies come from scripted messages in the scenario
+file. This is the largest difference between the two conditions apart from the
+command post itself, and Table~\ref{tab:eval:deviations} lists it as
+deviation~7.
 
 The doctrine is the German service regulation DV~100, \emph{Command and Control
 in Operations} (\emph{Führung und Leitung im Einsatz}), under which the Hamburg
-fire service works~\cite{fwdv100}. The code follows its elements one by one.
-The American Incident Command System (ICS) is the scholarly anchor, because it
-has a peer-reviewed research base~\cite{fema2017}. Where DV~100 gives too little
-detail, we borrowed from ICS. In DV~100 terms, a multi-agency evacuation of 100
+fire service works~\cite{fwdv100}. The code follows its elements one by one. A
+citation table in the code ties the rules to the doctrine, with 87 entries over
+24 doctrine elements (Section~\ref{sec:crit:limitations}).
+The American Incident Command System (ICS) is the second anchor. Its doctrine is
+written down in the National Incident Management System (NIMS)
+guidance~\cite{fema2017}, and it is the best-studied
+command system in the research literature
+\parencite{buck2006,chang2017}. Where
+DV~100 gives too little detail, we borrowed from ICS. In DV~100 terms, a multi-agency evacuation of 100
 residents is a level C or D incident, which calls for one commander with a
 staff~\cite[23]{fwdv100}. Central command is therefore the textbook form for
 this case (Section~\ref{sec:bg:workflow}). The IC implements three of the staff
@@ -81,8 +89,7 @@ The order follows the doctrine. The IC does not push a plan forward when it
 knows the plan is wrong or does not understand the situation. A correction
 written for the case comes before a general hold. The resulting orders then
 pass through the agentic engine's own code for checking, committing and
-messaging. A parity test checks that these are the very same functions the
-agents run, and not copies.
+messaging. A parity test checks that they are the agents' own functions.
 
 \input{pics/wf-cycle}
 
@@ -118,10 +125,11 @@ Mission report & 10 min & Residents have actually been set down & Report to ZKD 
 two buses of 50 seats and marks the second as a reserve. The baseline's run
 schedule does not read that mark. It gives each run to the bus that is free
 first, so both buses leave at the start. The agentic transport agent keeps the
-reserve parked by default. We treat the reserve role as soft. Both sides have
-the same fleet and both may send bus~2, so sending it at once and keeping it
-parked are two choices over the same capability. We therefore count this as a
-difference in decisions, and it explains part of the survival gap.
+reserve parked by default. Both sides have the same fleet and both may send
+bus~2, so we count this as a difference in decisions. Releasing bus~2 later may cost the agentic side time.
+We did not measure how much, and it does not explain the residents who were
+never delivered, because bus~2 was used in all 150 novel-arm runs of the three
+full models (Section~\ref{sec:disc:mechanism}).
 % source: ADR-0015 status note 2026-09-21 (rule 7 NOT implemented);
 % PARITY reserve-bus note; RESULTS sec.6.6. Never cite rule 7 as built.
 
@@ -131,9 +139,9 @@ difference in decisions, and it explains part of the survival gap.
 
 \subsection{Anticipated Disruptions}
 
-Three disruptions were known while we built the baseline, and the IC has a
-prepared branch for each. In workflow terms these are anticipated exceptions,
-with a handler written at build time~\cite{reichert2012}.
+Three types of disruption were known while we built the baseline, and the IC has
+a prepared branch for each. Only the road closure is part of the scored
+scenarios (Section~\ref{sec:cs:disruptions}).
 \begin{itemize}
   \item \textbf{Road closure.} The IC drops the shelter it can no longer reach
   and runs the allocation again over the shelters that remain.
@@ -148,11 +156,10 @@ picture. The branch fires when the two do not match, and clears itself once
 the correction makes them match again.
 
 The IC has no routing command, because routing belongs to the transport side
-and the drivers. It therefore answers a road closure over destinations. In the
-evaluated road-closure scenario this lowers what the baseline can deliver to
-60 of the 100 residents (Section~\ref{sec:cs:disruptions}). All 20 baseline
-runs on the anticipated arm, 10 on each of the two scenarios, scored
-$S = 1.000$. On the road closure that score is measured against the reduced
+and the drivers. It therefore answers a road closure over destinations. Losing a shelter
+would leave 40 of the 100 residents without a bed, so the baseline's
+road-closure file declares 60 residents (Section~\ref{sec:cs:disruptions}).
+All 20 anticipated-arm baseline runs scored $S = 1.000$. On the road closure that score is measured against the reduced
 ceiling of 60, so the share of the full 100 residents is 0.60.
 % source: ADR-0002 status note 2026-09-21; RESULTS sec.3. Verified by the
 % author 2026-09-29 in scores.jsonl.
@@ -162,7 +169,7 @@ ceiling of 60, so the share of the full 100 residents is 0.60.
 
 A novel disruption has no prepared branch. The baseline must not answer it
 with a fresh plan, because that ability belongs to the treatment condition.
-FwDV~100 requires a report back when the situation no longer matches the
+DV~100 requires a report back when the situation no longer matches the
 order~\cite[37]{fwdv100}. It does not describe a holding order. We chose one
 because it is the most careful response that needs no new plan. Two cases
 trigger it, and neither names a particular disruption.
@@ -203,12 +210,14 @@ plan from scoring well.
   zone at 12:00, and the scorer applies the same limit.
 \end{itemize}
 Only the baseline's scenario files declare such a world. The agentic scenarios
-reach the same effect through live agents. This difference works against the
-baseline. Without a declared world, the baseline would receive its drop-off
+reach the same effect through live agents. This difference has two sides.
+Without a declared world, the baseline would receive its drop-off
 confirmations from the script, whatever it had ordered, and the agentic side
-never had that help. The world therefore cannot explain a baseline win. If it
-had any effect, it made the baseline's margin look smaller. The argument holds
-because the baseline won (Section~\ref{sec:crit:limitations}).
+never had that help. In this respect the world works against the baseline. At
+the same time, the execution model carries out every order it receives, while
+the agentic side depends on bus drivers, police and a medic that each reason
+with a language model. In this respect the world favours the baseline. We did
+not measure how large either effect is (Section~\ref{sec:crit:limitations}).
 % source: workflow-baseline-README.md sec.4a and sec.9; ADR-0016.
 
 % =====================================================================
@@ -216,16 +225,15 @@ because the baseline won (Section~\ref{sec:crit:limitations}).
 \label{sec:wf:freeze}
 \label{sec:wf:cli}
 
-We tagged the baseline in git as commit \texttt{67a14f8} on 2026-09-10, before
-the novel scenarios arrived (Section~\ref{sec:eval:firewall}). One later change
-(\texttt{e9e20cd}) added a switch that turns re-planning off for the no-replan
+We froze the baseline in version control on 2026-09-10, before the novel
+scenarios arrived (Section~\ref{sec:eval:firewall}). One later change added a
+switch that turns re-planning off for the no-replan
 control (Section~\ref{sec:eval:noreplan}). It does not change what the doctrine
 does, and the pre-registration discloses it in Amendment~6.
 
 The baseline starts from a small command-line tool and reads the same scenario
 files as the agentic side. Its decision path has no randomness, no model and
-no network, so a run depends on its scenario file alone. The baseline writes the same decision rows as the agents, with token
-counts and latency recorded as zero.
+no network, so a run depends on its scenario file alone.
 
 % =====================================================================
 \section{What the Baseline Cannot Do}
@@ -233,35 +241,17 @@ counts and latency recorded as zero.
 
 The limits of the baseline follow from what pre-scripted branching is
 (Section~\ref{sec:bg:workflow}). An unanticipated disruption has no handler,
-and the IC cannot write itself a new plan at run time. The structure adds one
-more limit.
-Because the IC merges BIS and Hochbahn into one node, the link between them
-disappears, and with it four commands that only made sense on that link. The
-agentic system can negotiate a deadline extension. The baseline cannot, because
-under central command there is nobody to negotiate with. In return, the
+and the IC cannot write itself a new plan at run time. Because the IC merges
+BIS and Hochbahn into one node, the link between them also disappears, and with
+it four commands that only made sense on that link. One of them is the deadline
+extension, which under central command nobody is there to negotiate. In return, the
 baseline is fast, costs nothing to run, and every decision can be traced to a
 written rule.
 
 \paragraph{What this means for reading the results.} The original design
 expected the baseline to be at its weakest on novel disruptions, where only the
-holding order is left. The evaluation did not test that expectation. On all
-five novel scenarios the baseline scored $S = 1.000$, and it drove the same
-60.63 bus-kilometres as on the undisrupted run. A controller that ignores every
-disruption commits the same orders and gets the same score. The baseline's
-score is therefore the score of doing nothing different. It does not show that
-the baseline adapted, and it does not show that it could not have.
-Section~\ref{sec:crit:gate0} draws the consequence for the study.
+holding order is left. The evaluation did not test that expectation, and the
+baseline's $S = 1.000$ on the novel arm says nothing about whether it adapted
+(Section~\ref{sec:crit:gate0}).
 % source: RESULTS.md headline correction 1 (60.63 bus-km; S = 1.000 is the
 % null policy's score). Never write that the baseline adapted or recovered.
-
-% =====================================================================
-\section{Chapter Summary}
-\label{sec:wf:summary}
-
-The workflow baseline is one scripted Incident Commander that follows the
-DV~100 command cycle. It replaces the two coordination agents that use a model
-and shares everything else with the agentic system. At the seam, it corrects a
-plan that no longer fits, holds a situation it does not understand, and
-otherwise moves up the phase ladder. An execution model makes the outcome
-depend on the orders. Chapter~\ref{ch:data} describes the database that both
-systems write to.

@@ -57,7 +57,7 @@
   \draw[wr] (harness.north) -- node[lbl, right] {manifest} (harness.north |- au.south);
   \draw[wr] (au.south east) -- node[lbl, above, sloped] {read} (score.north west);
 \end{tikzpicture}
-\caption{The twelve tables of the database, grouped by job. The runtime tables
+\caption[The twelve tables of the database]{The twelve tables of the database, grouped by job. The runtime tables
 are cleared before each run. The event log is append-only and holds every run.
 Both systems write to it, and the scoring code reads only from it.}
 \label{fig:data:tables}

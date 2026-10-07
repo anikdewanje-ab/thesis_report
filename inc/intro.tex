@@ -48,13 +48,10 @@ LLM agent observes, reasons and acts in a loop, and it can revise its plan when
 something unexpected happens \parencite{yao2023}. If each organization is
 played by such an agent, and the agents coordinate through a shared database,
 the system could in principle respond to a disruption that nobody scripted.
-This possibility is what makes an agentic architecture attractive for
-emergency simulation. The critical literature on LLM planning gives reasons for
-doubt \parencite{cemri2025}. To our knowledge, however, no
-study had put LLM agents in the role of the coordinating organizations and
-measured them against a doctrine-grounded script on a scored evacuation.
-Whether the promise holds when the score is the number of residents who reach
-a shelter was an open question.
+The critical literature on LLM planning gives reasons for
+doubt \parencite{cemri2025}. Whether the promise holds when the score is the
+number of residents who reach a shelter was an open question
+(Section~\ref{sec:bg:related}).
 
 \section{Problem Statement}
 \label{sec:intro:problem}
@@ -103,8 +100,7 @@ win. RQ2 then looks for the cause of the result in the evidence, and RQ3 turns
 that cause into guidance for the next design.
 
 Building the two systems also raises four engineering questions. They support
-the research questions and are answered in the architecture and method
-chapters.
+the research questions.
 
 \begin{enumerate}
 \item How can the actors, states, events and dependencies of an evacuation be
@@ -128,43 +124,50 @@ database-centric agentic architecture for evacuation coordination across
 several organizations. Ten agents represent people at eight organizations.
 PostgreSQL is the single source of truth, and it also acts as the message
 broker that wakes the agents. Next to it we built a workflow baseline grounded
-in the DV~100 doctrine. The two share the scenarios, the world model, the
-action set and the scoring, and they differ only in how decisions are made
+in the DV~100 doctrine. The two share the scenarios, the action set and the
+scoring, and they differ mainly in how decisions are made. In the baseline, a
+simulator also stands in for the field agents
 (Chapters~\ref{ch:agentic}, \ref{ch:workflow} and~\ref{ch:data}).
 
 \paragraph{A scored comparison with a negative result.} To our knowledge, this
 is the first scored head-to-head comparison of the two approaches on a common
 evacuation case. It covers 310 runs over seven scenarios, with pre-registered
-hypotheses and deterministic scoring. The agentic architecture does not
-outperform the scripted baseline, and both pre-registered hypotheses fail.
-Gate~1, the test on resident survival, fails in 26 of 27 cells. The baseline
-sheltered every resident in all 50 novel runs, while the best agentic
-configuration reached a capped mean survival of 0.894. The agentic system also
-loses to a null policy that ignores every disruption. Its regret against that
-policy is negative in all 15 novel cells, and 68 of 150 runs ended worse than
-doing nothing. Decision quality is split. On the 16 criteria of a held-out
-decision rubric, the agentic models match the baseline on 5 and fall short
-on 5.
+hypotheses and deterministic scoring (Chapter~\ref{ch:eval}). The agentic
+architecture does not outperform the scripted baseline, and both confirmatory
+hypotheses fail. Our main test, Gate~1, compares resident survival with the
+baseline in each cell, one model on one scenario, run up to ten times
+(Section~\ref{sec:eval:gate1}). It fails in 26 of 27 cells. Three of them are
+on the road closure, where the two systems ran different versions of the
+scenario. Without them, 23 of 24 cells fail. On the five novel disruptions,
+written after the baseline was frozen, the baseline sheltered every resident
+in all 50 runs. The best agentic model reached a capped mean survival of 0.894
+(Section~\ref{sec:res:novel}). The agentic system also scores below a null
+policy, a control that ignores every disruption. In all 15 novel cells it did
+worse than this control, and 68 of 150 runs ended worse than doing nothing
+(Section~\ref{sec:crit:regret}). Part of this gap is there even without a
+disruption.
 
-\paragraph{A diagnosis of the loss.} We measured where the deficit comes
-from. The agents understood the disruptions, and their messages got through.
-Over 1,932 addressed requests, 93.8\% of the handshakes were closed. Residents
-were lost because the agents did not carry a committed plan through to
-delivery. The losses come in whole bus-loads. Of 150 novel runs, 102 delivered
-everyone, 19 delivered exactly 50 and 18 delivered exactly 90. Runs that
-rewrote their plan more often also delivered less. Full delivery falls from
-90\% at the minimum number of plan revisions to 32\% at six or more. We
-therefore describe the deficit as a failure of commitment, not of
-comprehension. The data show a strong association, and we do not claim its
-causal direction.
+\paragraph{A diagnosis of the loss.} A held-out decision rubric scores what
+each system decided with 16 checks on the event log, fixed before the novel
+runs (Section~\ref{sec:eval:heldout}). The agents matched the baseline on 5
+checks and fell short on 5. Their messages got through. Over 1,932 addressed requests,
+93.8\% of the handshakes were closed. Residents were lost on legs that were
+dispatched but not carried through to delivery. The losses come in
+discrete amounts. Of 150 novel runs, 102 delivered everyone, 19 delivered
+50, one bus-load short, and 18 delivered 90. Runs that rewrote their plan more
+often delivered less. Full delivery falls from 90\% at the fewest
+plan revisions to 32\% at six or more. Our leading hypothesis is a failure
+of commitment. We did not measure comprehension, and we do not claim
+a causal direction. Live LLM field agents carried out the orders where
+the baseline used a simulator, so a lost leg may have been dropped in the
+field.
 
 \paragraph{A method for a fair comparison.} The shared append-only event log is
 the backbone of the comparison. Both systems write to it, one scorer reads it,
 and every run can be replayed and audited. We also propose Gate~0, a check on
 treatment validity. Before a campaign starts, it tests whether a control that
-ignores a disruption scores worse than a system that responds to it. Our own
-novel arm fails this check, and Gate~0 is the test that would have caught it
-before the runs were scored (Chapter~\ref{ch:critique}).
+ignores a disruption scores worse than a system that responds to it (our own
+novel arm fails it, Section~\ref{sec:crit:gate0}).
 
 \section{Scope and Delimitations}
 \label{sec:intro:scope}
@@ -177,8 +180,9 @@ outside the scope. The study covers one facility, one city and one hazard.
 
 Other limits come from what was run. Every run uses one simulation time scale,
 a \code{SIM_TIME_SCALE} of 8.4, so hypothesis H4 about the effect of time scale
-was not tested. Each cell has $k = 10$ replicates, which is too few for the
-registered test to detect a moderate effect. Three models completed the full
+was not tested. Each cell has $k = 10$ replicates, and the registered sign
+test runs over only five scenarios, which is too few for it to detect a
+moderate effect. Three models completed the full
 novel arm: glm-5.2, deepseek-v4-pro and qwen3.5. The third model slot changed
 after data were seen, so the model set of the novel arm is exploratory.
 Chapter~\ref{ch:critique} discusses each of these limits and the position we
@@ -195,10 +199,8 @@ Chapters~\ref{ch:agentic} to~\ref{ch:ui} describe what we built: the agentic
 system, the workflow baseline, the data architecture that both share, and the
 interface we use to observe a run. Chapter~\ref{ch:eval} sets out the
 pre-registered method, and Chapter~\ref{ch:results} reports the results.
-Chapter~\ref{ch:critique} may be unexpected in a thesis of this kind. It reads
-the results back against the protocol and shows that the novel arm could not
-test adaptability, because ignoring the disruption already reached the top
-score. We report this as a finding and derive Gate~0 from it.
+Chapter~\ref{ch:critique} reads the results back against the protocol and
+derives Gate~0 from what it finds.
 Chapter~\ref{ch:discussion} interprets the results and answers RQ1 and RQ2.
 Chapter~\ref{ch:design} answers RQ3 with design considerations for agentic
 emergency simulation. Chapter~\ref{ch:conclusion} summarizes the thesis and

@@ -10,10 +10,9 @@
 Chapter~\ref{ch:agentic} showed that the ten agents never talk to each other
 directly and that every message, state change and decision passes through one
 PostgreSQL database (Figure~\ref{fig:ag:architecture}). In this chapter we
-describe that database. We show how it stores the actors, their states, the
-events between them and the resources they use. We also show how the same
-structures serve two purposes at once: they run the simulation, and they are
-the record that the evaluation scores.
+describe how that database stores the actors, their states, the events between
+them and the resources they use. The same structures run the simulation and
+form the record that the evaluation scores.
 
 % =====================================================================
 \section{Design Principles}
@@ -49,11 +48,6 @@ fair, checkable and repeatable. Section~\ref{sec:data:evalbackbone} makes this
 argument in full. The log follows the idea of event sourcing, where the history
 of events is stored and every later view is derived from it
 \parencite{overeem2021}.
-
-A single source of truth has a clear cost. If the database is down, the whole
-simulation is down, because no agent can load its state or receive a message.
-We accept this. Before the runtime starts the ten agent programs, it checks
-that the database answers, and it refuses to start if it does not.
 
 % =====================================================================
 \section{Data Model}
@@ -132,11 +126,6 @@ event log (Section~\ref{sec:data:eventlog}), which records every change to the
 step and the plan as it happens. A normalised state would add joins and
 migration work without serving a single measurement.
 
-\paragraph{One fleet table for three kinds of vehicle.} The \texttt{fleet}
-table carries both a bus number and a vehicle number. Hochbahn's sensing looks
-up buses by the first, and the police officer and the paramedic look up their
-cars by the second. One table serves all three readers.
-
 % =====================================================================
 \section{Append-Only Event Log}
 \label{sec:data:eventlog}
@@ -162,7 +151,8 @@ Three more columns place the row: the \textbf{run}, the \textbf{agent} and the
 \textbf{model}. With them, one table holds every run of every agent, and any
 single run or agent can be selected from it.
 
-\paragraph{The kinds of entry.} Five kinds cover everything the systems write.
+\paragraph{The kinds of entry.} Six kinds cover everything that is written to
+the log.
 \begin{description}
   \item[\texttt{event\_received}] An event woke the agent: a message, a
   finished step or a timing conflict. The details hold the event as it arrived.
@@ -255,16 +245,13 @@ gives the same result as scoring it without them.
   \item \textbf{Checkable parity.} Because both systems write the same rows
   into the same table, the claim that they are comparable can be tested
   against shared code instead of stated. An executable parity test suite
-  does this, and lists the seven places where the two systems still differ.
+  does this, and lists the seven places where the two systems still differ
+  (Table~\ref{tab:eval:deviations}).
   \item \textbf{Re-scoring.} The log keeps every run. When a scoring rule
   changes, every run can be scored again from its rows, without running it
   again. Because the log is append-only, a run that is dropped from an
   analysis still leaves its rows behind.
 \end{itemize}
-
-We repeat the limit from Section~\ref{sec:data:principles}. The contribution is
-the log as the shared backbone of a comparison and its scoring. The shared
-database as a coordination medium is not new, and we do not present it as new.
 
 % =====================================================================
 \section{Runtime State and Message Passing}
@@ -311,18 +298,17 @@ the same way as its mail and takes its real position from them
 \paragraph{Prompt records and timers.} Each model call writes one row to
 \texttt{tick\_sidecars} before the call and updates it after. The first write
 lets the interface show that a call is in progress. The second adds the
-model's full answer. Token counts and latency are not stored here. They are in
-the decision row of the event log. The \texttt{cronjobs} table records the
+model's full answer. Token counts and latency go to the decision row of the
+event log instead. The \texttt{cronjobs} table records the
 timers that an agent sets, but it does not run them. The clock that fires the
 timers stays inside each agent program. Moving it into the database would
 change how and when an agent acts, and that behaviour is part of what we
 measure.
 
 \paragraph{Separation between runs.} The \texttt{messages} and
-\texttt{world\_events} tables have no run column. What keeps one run's mail
-out of the next run is the reset that clears these tables before every run.
-The harness performs this reset at the start of each cell. A run started
-without it would inherit unread mail from the run before. We record this as a
+\texttt{world\_events} tables have no run column. Only the reset that the
+harness performs at the start of each cell keeps one run's mail out of the
+next. We record this as a
 limitation of the schema. The event log is not affected, because it carries
 the run on every row.
 
@@ -355,14 +341,41 @@ or for five seconds, whichever comes first, and then looks at its mailbox.
 A lost notification makes an agent slower, but it never leaves the agent
 stuck. No part of the system depends on a notification arriving to be correct.
 
-The listener runs on its own thread with its own event loop. The database
-driver cannot listen asynchronously on the event loop that Python uses by
-default on Windows, and the agents need that default loop for other reasons.
-The same code path runs on every operating system.
-
 The observation interface uses the same mechanism. It listens on the state
 channel of every agent and redraws the map when a state changes
 (Chapter~\ref{ch:ui}).
+
+% =====================================================================
+\section{Design Alternatives}
+\label{sec:data:alternatives}
+% Source: ADR-0005 (Context, Consequences), DATABASE_IMPLEMENTATION.md Phase 5;
+% row counts from 11-results/data/runs.jsonl (n_event_rows, 310 runs).
+
+Two other designs could do parts of this work. A message broker such as
+RabbitMQ or Apache Kafka could carry the mail between agents, and a dedicated
+event store could hold the log. We kept all three jobs in one PostgreSQL
+database for three reasons.
+
+First, one save is one transaction. An agent's new state and its new log rows
+commit together or not at all (Section~\ref{sec:data:runtime}). With a separate
+broker, a message and the state change behind it would sit in two systems with
+no shared transaction. A crash between the two writes would leave them out of
+step, and the log would no longer match what the agents did.
+
+Second, the agents and the scorer read the same rows with plain SQL. An event
+store would hold the log well, but agent state and mailboxes would still need a
+second store beside it. We removed one such second store, the file backend.
+
+Third, the load is small. The 310 scored runs wrote 83,661 rows to the event
+log. An agentic run wrote a median of 345.5 rows, with the middle half between
+294 and 392, and a baseline run wrote 25 to 29. At this scale a broker's
+throughput brings no benefit. The one broker feature the agents need is a prompt
+wake-up, and LISTEN and NOTIFY provide it.
+
+The cost is a single point of failure. If the database is down, no agent can
+load its state or receive a message. Before the runtime starts the ten agent
+programs, it checks that the database answers, and it refuses to start if it
+does not.
 
 % =====================================================================
 \section{External Data Sources}
@@ -373,8 +386,7 @@ channel of every agent and redraws the map when a state changes
 
 Two kinds of data come from outside the database. Addresses are turned into
 coordinates by a geocoder, and drives are routed over real Hamburg roads with
-OpenRouteService. The places themselves, meaning the Augustinum, the two
-schools and the depots, are part of the case (Chapter~\ref{ch:casestudy}).
+OpenRouteService.
 
 Both services are called through caches on disk. Each agent keeps these caches
 in its own working directory, together with its program log. No state is kept
@@ -417,13 +429,7 @@ change the sampling \parencite{yuan2025}. We therefore claim that runs are seede
 that they can be reproduced at the level of each model answer. This is also why
 every cell is repeated (Section~\ref{sec:eval:analysis}). Models served from a
 hosted endpoint cannot be pinned to one version. For them, the model's details
-are captured with every run, so that a change of model would at least be
-visible.
-
-\paragraph{The time scale.} The ratio of simulated to wall-clock time is a
-logged constant of each run. Every scored run used the value 8.4. The log
-records it so that a run could be priced again at another scale, but this
-thesis makes no claim about other scales (Section~\ref{sec:eval:responsetime}).
+are logged with every run, so that a change of model would be visible.
 
 \paragraph{Why runs cannot run in parallel.} The data layer sets one practical
 limit on the evaluation. The \texttt{states} table has one row per agent key,
@@ -431,20 +437,3 @@ and the agent keys are fixed names. Two runs on one database would overwrite
 each other's state. The agents' working directories are fixed paths as well,
 and the route cache is a single file. The evaluation therefore runs its cells
 one after another (Section~\ref{sec:eval:harness}).
-
-% =====================================================================
-\section{Chapter Summary}
-\label{sec:data:summary}
-
-One PostgreSQL database is the state store, the message broker and the scoring
-backbone of the whole system. Twelve tables serve these jobs. Five runtime
-tables keep agent states, mailboxes, world reports, prompt records and timers,
-and they are cleared between runs. Six sensing tables hold what agents
-perceive. The event log is append-only, enforced by a trigger, and every row
-names its run, agent and model. Both the agentic system and the workflow
-baseline write the same rows into it, and one scorer reads them for both.
-Notifications wake agents without polling, and a five-second fallback keeps a
-lost notification from stalling anything. We do not claim the shared database
-as a new coordination medium. We claim the shared log as the backbone of a
-fair, checkable and repeatable comparison. Chapter~\ref{ch:ui} describes the
-interface that watches this database during a live run.

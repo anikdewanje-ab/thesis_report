@@ -185,8 +185,8 @@ it returns an answer that is not valid JSON, the engine does not ask again. It
 records the failure and moves on. We decided against retries because a retry
 gives a weak model a second attempt that a strong model never needed, and that
 would hide a real difference between models. The cost is that one bad answer
-can lose one decision. The evaluation protocol lists this among its limitations
-(Chapter~\ref{ch:eval}).
+can lose one decision. The evaluation design states this rule
+(Section~\ref{sec:eval:overview}).
 
 % =====================================================================
 \section{Prompt Structure}
@@ -340,13 +340,12 @@ real person, and this cost has an upper bound.
 \section{Agent Roster}
 \label{sec:ag:roster}
 
-Table~\ref{tab:cs:roster} lists the agents. This section only describes how
-the shared engine is used differently by each class of agent.
+Table~\ref{tab:cs:roster} lists the agents. This section describes how each
+class of agent uses the shared engine.
 
 \paragraph{The bus drivers.} Both drivers use the same engine and the same
-prompts. Only their identity is different. They have the richest action set:
-walk, board a vehicle, leave a vehicle, drive, drive via a detour, stop, and
-inform the escorts. They are the only agents that hold a step that cannot be
+prompts. Only their identity is different. They have the richest action set
+(Section~\ref{sec:ag:actions}), and they are the only agents that hold a step that cannot be
 done in time. A held step is not sent to the world, so the bus does not leave
 while the driver negotiates. A driver who runs more than one trip goes back to
 the nursing home after each run, and returns to the depot only after the last
@@ -360,8 +359,7 @@ only a warning. The step still runs, and they tell BIS they will be late.
 
 \paragraph{The coordinators.} BIS and Hochbahn move nothing physical. Their
 actions are administrative: ask the schools for beds, request buses, order an
-escort, send a dispatch, submit a report. BIS has eleven such actions and
-Hochbahn seven. Each action produces a message, so BIS sends messages only
+escort, send a dispatch, submit a report. Each action produces a message, so BIS sends messages only
 through its actions. Because nothing is dispatched to the world, their clock
 does a different job. When a step's deadline arrives, it checks whether the
 replies the step was waiting for have come in. If they have, the step is
@@ -376,7 +374,8 @@ the run numbers and the list of runs on to the two escorts. Hochbahn tells each
 driver which run it is on and how many there are. By default bus-1 makes two
 runs in sequence and bus-2 stays in reserve. Hochbahn releases the reserve for
 only four reasons: a leg needs more seats than bus-1 has, bus-1 is not
-available, BIS names bus-2, or the schedule fails Hochbahn's deadline test. The
+available, BIS asks for two buses, or the schedule fails Hochbahn's deadline
+test. The
 baseline treats the reserve bus differently. Section~\ref{sec:wf:fleet}
 describes this and what it means for the comparison.
 
@@ -466,7 +465,7 @@ delivered everyone less often (Table~\ref{tab:res:commitment}). Language agents
 are also known to struggle to carry a long plan through under many constraints
 \parencite{xie2024a}. Whether the
 revisions caused the losses, or followed from them, cannot be told from these
-data. Section~\ref{sec:crit:mechanism} discusses this.
+data. Section~\ref{sec:disc:mechanism} discusses this.
 
 % =====================================================================
 \section{Action Vocabulary}
@@ -488,29 +487,14 @@ Each agent has a closed set of actions. The model may use nothing else.
 \end{itemize}
 Every action is checked against the set when a step is committed, and every
 message against the address book and the allowed types
-(Section~\ref{sec:ag:runtime}). Every rejected entry is counted. The count is
-one of the evaluation's measures of decision quality
-(Section~\ref{sec:eval:metrics}).
+(Section~\ref{sec:ag:runtime}). Every rejected entry is counted, and the
+evaluation reports the rejected messages per cell
+(Section~\ref{sec:res:quality}).
 
 The vocabulary is also one leg of the parity argument. The workflow baseline
 replaces only the two reasoning coordinators, BIS and Hochbahn
 (Section~\ref{sec:wf:rationale}). The four field agents, meaning the two drivers,
-the police officer and the paramedic, are the same programs in both systems.
-Their action sets are therefore identical by construction, and no audit is
-needed to show it.
-
-% =====================================================================
-\section{Chapter Summary}
-\label{sec:ag:summary}
-
-The agentic system is ten small programs on one shared engine, joined only by a
-PostgreSQL database. Six agents reason with a language model, and four are
-scripted. A model call happens only when a message arrives, a step finishes, or
-a timing conflict appears. Everything else, including sending actions to the
-world, runs without the model. The model proposes a step and a plan. The
-runtime owns time, checks every action and message, keeps the real position,
-and writes one audit row per decision into the same event log that the baseline
-uses. Replanning has no module of its own. Any new step that differs from the
-committed one is handled as an echo, a splice or a supersede, with a limit on
-repeated timing conflicts. Chapter~\ref{ch:workflow} describes the baseline
-that we compare this design against.
+the police officer and the paramedic, are not started in a baseline run. The
+execution model plays their part and carries out the IC's orders
+(Section~\ref{sec:wf:world}). The baseline therefore gains no field action the
+agentic side lacks.

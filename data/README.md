@@ -25,6 +25,7 @@ Run from the `thesis_report` directory, not from here:
 python data/scripts/plot_forest_rd.py
 python data/scripts/plot_delivery_histogram.py
 python data/scripts/plot_regret.py
+python data/scripts/supp_tables.py
 ```
 
 Each script writes its CSV into `data/` and its figure into `../pics/`. Set
@@ -37,6 +38,7 @@ includes the PDF.
 | `plot_delivery_histogram.py` | `pics/results-delivery-histogram.pdf` | `delivery_distribution.csv` | `scores.jsonl`, field `sheltered_residents` |
 | `plot_rubric_split.py` | `pics/results-rubric-split.pdf` | `rubric_split.csv` | `RESULTS.md` §4, parsed |
 | `plot_commitment_scatter.py` | `pics/results-commitment-scatter.pdf` | `commitment_per_run.csv` | `scores.jsonl` **plus the event log**, see below |
+| `supp_tables.py` | Tables D.1 to D.3, written to `inc/app_supp_tables.tex` | none | `summary.md` level, Gate 1 and sensitivity tables; `scores.jsonl` for bus-km, `resource_efficiency`, `invalid_routings` |
 
 ### The one script that needs the database
 

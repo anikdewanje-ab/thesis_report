@@ -7,85 +7,138 @@
 % workflows". THAT IS THE OPPOSITE OF WHAT HAPPENED. It was the proposal's
 % expected finding, written in before the data existed. It has been removed.
 % If any draft still carries it, delete it.
+%
+% ROLE. This chapter interprets RQ1 and RQ2. The numbers live in
+% Chapter~\ref{ch:results}, the validity corrections and all limitations in
+% Chapter~\ref{ch:critique}. Point to them; do not restate them.
 % ===========================================================================
 
 In this chapter we interpret the results. The numbers are in
 Chapter~\ref{ch:results} and the corrections to the protocol are in
-Chapter~\ref{ch:critique}, so we refer to them here. One boundary applies
-throughout. No scenario in this thesis required adaptation. We therefore
-answer RQ1 as ``did the agentic architecture win here'', and we say nothing
-about whether it can ever win.
+Chapter~\ref{ch:critique}.
 
-\section{What the Result Means}
+\section{RQ1: Did the Agentic Architecture Win?}
 \label{sec:disc:interpretation}
 
-\paragraph{RQ1.} RQ1 asked whether a database-centric agentic architecture
-can coordinate an evacuation better than a scripted workflow baseline. On
-these scenarios the answer is no, on both arms of the evaluation. On the
-anticipated disruptions the agentic system was not even as good as the
-baseline. Non-inferiority holds in only 1 of 8 cells, glm-5.2 on the
-undisrupted \code{closed_loop}. On the novel disruptions, where we expected
-the agentic system to win, none of the 19 cells passes. The baseline sheltered
-every resident in all 50 novel runs, while the best agentic configuration
-reached a capped mean survival of 0.894. Across both arms, Gate~1 fails in 26
-of 27 cells.
+RQ1 asked whether a database-centric agentic architecture can coordinate an
+evacuation better than a scripted workflow baseline. On these scenarios it
+could not. None of them required adaptation, so we answer RQ1 as ``did the
+agentic architecture win here'' and say nothing about whether it can ever win.
+It lost to the baseline on all five novel disruptions. On the
+anticipated arm, only glm-5.2 on the undisrupted \code{closed_loop} was shown
+to be no worse than the baseline (Section~\ref{sec:res:findings}). We leave
+the road closure out of this reading, because there the two systems ran
+different versions of the scenario.
 
-The baseline's perfect score does not mean that it adapted. The disruptions in
-our scenarios arrive as messages and do not change the world state, so the
-baseline drove the same 60.63 bus-km with and without them. A null policy,
-which is the baseline with re-planning switched off, scores the same. The
-baseline's regret against that policy is therefore zero in every run, and its
-plan was never touched by any disruption.
-
-This reading does not help the agentic side, because its loss cannot be
-blamed on a hard scenario. Where the correct plan needed no change, the
-agentic models lost between 10 and 27 residents per 100. Their regret is
-negative in all 15 novel cells, and 68 of 150 runs ended worse than doing
-nothing (Section~\ref{sec:crit:regret}).
-
-\paragraph{RQ2.} RQ2 asked why the agentic architecture fell short. The
-agents lost residents because they did not carry their plans through. Their
-understanding of the situation was sound. We tested and ruled out the other
-candidate causes: wrong population, a failing message layer, too few missions,
-a parked reserve bus, the scorer and the drivers' headcounts
-(Table~\ref{tab:crit:ruledout}). The loss also comes in whole bus-loads
-(Figure~\ref{fig:res:delivery}). This is the pattern a dropped leg leaves,
-while a slow loss of quality would spread the results more evenly. In
-addition, runs that rewrote their plan more often delivered less. Full
-delivery falls from 90\% at the minimum number of plan revisions to 32\% at
-six or more (Figure~\ref{fig:res:commitment}). This runs against the
-architecture's own promise. Its main feature is re-planning when a disruption
-arrives, and in our scenarios the right number of re-plans was zero. We do
-not claim the causal direction, because a failing run may also re-plan
-because it is failing.
-
-The rubric shows the same pattern from another side
-(Figure~\ref{fig:res:rubric}). The agentic models match the baseline on five
-criteria, and those are about deciding: informing the authority, committing
-the reserve, planning for the whole population. They fall short on five that
-are about finishing what was decided. In the medical emergency, the agents
-named the right action in their reasoning, and in 16 of 20 runs no medical
-order left the agent.
+The baseline's perfect score does not mean that it adapted. Its disruptions
+arrived as messages and changed no world state, so a controller that ignores
+them scores the same (Section~\ref{sec:crit:defect}). The agentic side gains
+nothing from this reading, because its models lost residents on scenarios
+where the correct plan needed no change, and many of their runs ended below doing nothing
+(Section~\ref{sec:crit:regret}). Part of that gap has nothing to do with the
+disruption. deepseek-v4-pro already loses 21 residents per 100 on the
+undisrupted \code{closed_loop}, while glm-5.2 loses none there.
 
 The choice of model changes how large the loss is, but every model still
-loses. The risk difference is the agentic survival minus the baseline
-survival, so a value of $-0.10$ means ten fewer residents sheltered per 100.
-Averaged over the five novel disruptions it is $-0.27$ for deepseek-v4-pro,
-$-0.16$ for glm-5.2 and $-0.10$ for qwen3.5. deepseek-v4-pro is the weakest of
-the three on every disruption, and qwen3.5 leads glm-5.2 on four of the five
-(Table~\ref{tab:res:rd}). Since the baseline scores the same as the null
-policy, these values are also the regret of each model. They tell us how many
-residents each model's response cost, compared with doing nothing.
+loses (Table~\ref{tab:res:rd}). The models also lose in different ways.
+deepseek-v4-pro and glm-5.2 lose mostly residents who are never delivered.
+qwen3.5 leaves far fewer of them, and most of its loss comes from residents
+who arrive late or who are not counted because a shelter was filled past its
+declared beds (Section~\ref{sec:res:loss:nevermoved}). We tested only
+three models with a complete novel arm, so we cannot say whether another
+model would close the gap. The design shows no capability threshold, and it
+does not support extrapolating beyond qwen3.5.
 
-The models also fail in different ways. deepseek-v4-pro and glm-5.2 leave
-10 to 22.5 residents per 100 who are never moved. qwen3.5 leaves only 2.0 to
-5.0. Most of its loss comes from residents who arrive late or who are not
-counted because a shelter was filled past its declared beds
-(Section~\ref{sec:res:loss:nevermoved}). A stronger model therefore reduced
-the commitment failure without removing it. We tested only three models with
-a complete novel arm, so we cannot say whether a still stronger model would
-close the gap. The design shows no capability threshold, and it does not
-support extrapolating beyond qwen3.5.
+\section{RQ2: Why the Agentic System Lost}
+\label{sec:disc:mechanism}
+
+RQ2 asked why the agentic architecture fell short. Our first analysis, under
+Protocol~v1, placed the loss ``at the handshakes'': a driver's completion call
+that times out and is never retried, or a facility query that is never
+answered. That explanation had not been measured. Protocol~v2 measured it,
+and the measurement did not support it. Handshake closure is 0.938
+(Section~\ref{sec:res:loss:handshakes}). For two of the three models most of
+the loss is residents who were never delivered, although the missions for
+them were dispatched. Table~\ref{tab:disc:ruledout} lists the other causes we
+tested against the 150 agentic novel runs. These tests were designed after
+the data were seen, so they are exploratory.
+
+\begin{table}[htbp]
+\centering
+\caption[Candidate causes of the agentic loss, and the verdict on each]{Candidate
+causes of the agentic loss, tested against the 150 agentic novel runs.
+Exploratory.}
+\label{tab:disc:ruledout}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X}
+\toprule
+Candidate cause & Verdict \\
+\midrule
+The agents were told the wrong population & \textbf{No.} 100 residents were correctly reported in 150 of 150 runs. \\
+The database message layer failed & \textbf{No.} Handshake closure is 0.938. \\
+Too few missions dispatched, or the reserve bus held back & \textbf{No.} About 2.3 dispatch orders in failing and successful runs alike. Bus-2 was used in all 150 runs. \\
+The scorer's arrival de-duplication removed real deliveries & \textbf{No.} De-duplicated arrival sums track sheltered residents. \\
+Drivers over-claimed their headcount & \textbf{Does not explain the loss.} Boarding reports overshot the residents remaining 54 times, and six runs report more arrivals than the ceiling. An over-report raises $S$ and cannot lower it (Section~\ref{sec:res:integrity:ceiling}). \\
+The run ran out of clock & \textbf{Mostly no.} Only 5 of the 19 total-loss runs recorded a dropoff after 12:00. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+What remains is that legs already dispatched were not carried through to a
+drop-off. Two patterns in the results support this. First, the loss comes in
+discrete amounts (Figure~\ref{fig:res:delivery}). A slow loss of quality would
+spread the runs out. Dropped legs leave a clustered pattern, with spikes at 50 and 90 delivered residents and gaps around them. The
+spike at 50 matches one bus-load, while the spike at 90 matches none. Second,
+runs that rewrote their plan more often delivered less. Full delivery falls
+from 90\% at the minimum number of plan revisions to 32\% at six or more
+(Figure~\ref{fig:res:commitment}).
+
+Our leading hypothesis is a \textbf{commitment failure}. It fits better than a
+failure of comprehension, but we cannot rule out a failure in the field (see
+below). The agents had the right population, addressed the right
+parties and got their messages answered, and on five rubric criteria they
+decided as the baseline did. In agent theory, an intention is a plan the agent
+keeps until it has a reason to drop it \parencite{rao1995}. In our runs, legs were
+re-planned while in flight, and the coordinator often could not establish
+whether a leg had finished. One of its abort messages reads ``zero deliveries
+across 8 transport plan revisions''. Re-planning on disruption is the
+capability the agentic design advertises, and on these scenarios the correct
+number of re-plans was zero.
+
+The rubric shows the same pattern from another side
+(Figure~\ref{fig:res:rubric}). The five criteria where the agentic models
+match the baseline are about deciding: informing the authority, committing the
+reserve, planning for the whole population. Three of the five where they fall short
+are about closing the loop on a decision. The medical emergency shows
+the same gap on a criterion the baseline also fails. Only two of the twenty
+qwen3.5 and glm-5.2 runs sent a medical team to the shelter the bus was
+bound for.
+
+We did not measure comprehension directly. The rubric does not read message
+text, so the evidence comes from behaviour. Two rubric results fit the
+commitment reading less well. No agentic model was judged to answer the
+facility in time in any run (\code{facility_answered_in_time}, 0
+\texttt{yes} out of 10 for each model). On the partial loss of shelter
+capacity, half of the qwen3.5 runs gave an order that raised a shelter above
+its beds (\code{no_order_raises_shelter_above_beds}, 5 of 10). Each result
+could come from a report the agent misread, or from an order it never
+updated. The rubric cannot tell the two apart, so these results neither
+confirm nor rule out a failure of comprehension.
+
+The causal direction is also open, because a run that is going badly may
+re-plan for that reason. Of 108 aborts, 57 (52.8\%) are stand-downs after a
+failure, 14 (13.0\%) are clearly started by a re-plan, and 37 (34.3\%) are
+other. A commitment-constrained variant of the system would settle the
+direction (Section~\ref{sec:concl:future}).
+
+Finally, the design cannot separate the command post from the field agents.
+The coordinator's abort messages name failures on both sides, for example
+``Hochbahn unresponsive to 3 redispatch requests over 18 min'' and ``bus-1
+found no residents staged at the pickup''. We did not trace each lost leg to
+the agent that dropped it. In the baseline a simulator carries out the orders,
+so the baseline never meets this kind of failure (deviation~7 in
+Table~\ref{tab:eval:deviations}). A lost leg may therefore have been dropped
+by the command post or by a live field agent.
 
 \paragraph{Relation to prior work.} This pattern is consistent with the
 literature reviewed in Section~\ref{sec:bg:llmlimits}.
@@ -103,48 +156,22 @@ but they cannot show that the same mechanisms were at work here.
 
 The baseline wins on response time, cost and determinism, and in our
 evaluation it also won the primary outcome. The agentic system needs nine to
-ten times as many messages per resident delivered, about 800\,000 tokens per
-run, and 1.8 to 2.7 times the wall-clock that the compressed clock allows
-(Section~\ref{sec:res:responsetime}). Here that cost bought nothing in return.
-Whether it pays off on a scenario that requires adaptation is a question this
-thesis cannot answer.
+ten times as many messages per resident delivered, and most of its runs
+overran the time budget (Table~\ref{tab:res:surface}). On these scenarios that
+cost bought no survival. Whether it pays off on a scenario that requires
+adaptation is a question this thesis cannot answer.
 
-The case was built around two conditions: a space of possible disruptions too
-large to write down in advance, and many organisations that each hold local
-information. Other emergency domains share these conditions. What carries over
-to such domains is our method and our diagnosis. The method is the shared
-event log, the treatment-validity gate and the regret against a null policy.
-The diagnosis is that the agents understood the situation and then failed to
-carry out their own plans.
+Other emergency domains share the two conditions the case was built around: a
+space of possible disruptions too large to write down in advance, and many
+organisations that each hold local information. What carries over to them is
+our method and our diagnosis. The method is the shared event log, the
+treatment-validity gate and the regret against a null policy. The diagnosis is
+that the agents' plans were not carried through, and that this fits the
+evidence better than a misreading of the situation.
 
-\section{Validity and Limitations}
-\label{sec:disc:limits}
-
-The parity asymmetries that remain between the two systems favour the
-baseline (Section~\ref{sec:crit:limitations}). The one that works against
-the baseline, deviation~7, could only have made the margin look smaller
-(Section~\ref{sec:wf:world}). The asymmetries may explain part of
-the margin, but none of them can reverse it. The reserve bus was used in every
-agentic run, so it does not explain the residents who were never dispatched.
-Beyond the fairness of the comparison, the results come from one facility, one
-city and one hazard. The residents are a passive count, and the population is
-homogeneous, so we cannot say anything about equity. The design also had
-limits of its own: $k = 10$, one time scale and a novel arm whose third model
-changed four times. Table~\ref{tab:crit:limits} gives each limitation with the
-position we take on it.
-
-\section{Lessons Learned}
-\label{sec:disc:lessons}
-
-If we built and evaluated the system again, we would keep the shared event
-log. Every instrument of Protocol~v2 was written after the campaign had
-finished, including the handshake closure, the loss attribution and the regret
-against the null policy. We could still compute all of them, and reach the
-diagnosis in this chapter, because every message and decision of both systems
-was already in the same append-only log.
-
-We would also change several things: a commitment boundary on legs in
-flight, a delivery confirmation for every leg, Gate~0 before the campaign, an
-analysis sized before the runs and a model set fixed in advance.
-Chapter~\ref{ch:design} sets these out as design considerations, each with the
-measurement behind it.
+\paragraph{Lessons learned.}\label{sec:disc:lessons} If we did the study again,
+we would keep the shared event log. Every instrument of Protocol~v2, including
+the handshake closure, the loss attribution and the regret, was written after
+the campaign. We could still compute them all, because every message and
+decision of both systems was already in that log. Chapter~\ref{ch:design} sets
+out what we would change.
