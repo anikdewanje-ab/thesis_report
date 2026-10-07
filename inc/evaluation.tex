@@ -68,14 +68,15 @@ two conditions, with the direction of each.}
 \paragraph{Pairing.} Paired runs use matched scenario
 files, read by the same loader, and write to the same append-only
 \code{event_log}. The files are not byte-identical. The baseline files declare
-a world (deviation~7), except the road-closure file. That file declares no
-world, and its drop-offs come from the script, so the baseline's road-closure
-score does not depend on its orders (Section~\ref{sec:crit:gate0}). In the
+a world (deviation~7), except the road-closure file, whose drop-offs come
+from the script, so its score does not depend on the baseline's orders
+(Section~\ref{sec:crit:gate0}). In the
 same file one school cannot be reached and only 60 residents are declared, so
-its ceiling is 60 in place of 100
+its ceiling is 60
 (Section~\ref{sec:cs:disruptions}). The road-closure cells are therefore not
 like-for-like (Section~\ref{sec:res:anticipated}). The simulator has no model of resident behaviour, sensors or
-message latency, so only the policy varies between runs. Its seed is derived
+message latency, so only the policy varies between runs. The seed that every model call
+receives is derived
 from the scenario, the time scale and the replicate index, never from the
 model, so the agentic runs of one replicate draw the same seed, a design known
 as common random numbers. The baseline is deterministic and ignores the seed,
@@ -176,7 +177,7 @@ kept it as the fixture for the negative control
 (Section~\ref{sec:eval:noreplan}).
 
 Our company supervisor, the domain expert Rüdiger Höfert,
-wrote them blind to the baseline. The brief named only the kind of disruption we wanted:
+wrote the five novel scenarios blind to the baseline. The brief named only the kind of disruption we wanted:
 compound, involving several actors, and unfolding during the mission. Their
 identifiers \code{novel_1} to \code{novel_5} were reserved before their content
 existed, and every supplied scenario had to be run, however hard, badly formed
@@ -276,8 +277,9 @@ largely successful operation. The cut at 0.10 is one part-load of a single
 50-seat bus, so a run below it never started an evacuation. The
 25\,\% band at the top leaves room for a legitimate detour or second pickup.
 
-$K^\ast$ is the median bus-kilometres of the control runs in the same cell that
-delivered everyone, and it needs at least three such runs. Without $K^\ast$, no
+$K^\ast$ is the median bus-kilometres of the same system and model's
+undisrupted \code{closed_loop} runs that delivered everyone, and needs at
+least three. Without $K^\ast$, no
 run may rise above level 3. The comparison stays within one system and asks
 whether it drove further than it needed to. Level 4 is the one place where the
 ladder mixes safety with efficiency, so the protocol defines it as passing both

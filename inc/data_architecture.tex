@@ -364,7 +364,7 @@ step, and the log would no longer match what the agents did.
 
 Second, the agents and the scorer read the same rows with plain SQL. An event
 store would hold the log well, but agent state and mailboxes would still need a
-second store beside it. We removed one such second store, the file backend.
+second store beside it.
 
 Third, the load is small. The 310 scored runs wrote 83,661 rows to the event
 log. An agentic run wrote a median of 345.5 rows, with the middle half between

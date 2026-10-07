@@ -39,11 +39,11 @@ Table~\ref{tab:res:whatran} lists what was executed.
 \small
 \begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
 \toprule
-Case & Augustinum nursing home, 100 residents, Hamburg storm surge. Feasibility ceiling 100 residents. \\
+Case & Augustinum nursing home, 100 residents, Hamburg storm surge. Feasibility ceiling 100 residents, 60 in the baseline's road-closure file. \\
 Systems & \texttt{agentic} (10 agents across 8 organizations, database-centric) against \texttt{baseline} (workflow). \\
 Anticipated arm & \code{closed_loop} and \code{road_closure}. Both were visible during development. \\
 Novel arm & Five disruptions supplied by the domain expert and held out: \code{medical_emergency_in_flight}, \code{unverified_persons_report}, \code{conflicting_evacuation_orders}, \code{bus1_suspension_capacity_reduction}, \code{sc1_partial_capacity_loss}. \\
-Replicates & $k = 10$ per cell, replicates 1000 to 1009, paired baseline and agentic under common random numbers. \\
+Replicates & $k = 10$ per cell, replicates 1000 to 1009, agentic runs under common random numbers, paired with the deterministic baseline. \\
 Scale & \code{SIM_TIME_SCALE} = 8.4, one value only. \\
 Scored runs & 310. Zero censored, zero unscored, zero invalid model bindings. \\
 Primary outcome & Recovery-Outcome Level 0 to 4, and survival $S$ = valid residents divided by the feasibility ceiling. \\
@@ -110,23 +110,22 @@ than the baseline. H1 also fails without the road closure. On
 deepseek-v4-pro and minimax-m3.
 
 \textsuperscript{*} On \code{road_closure} the baseline's feasibility ceiling
-is 60 in all 10 runs, because its scenario file declares only 60 residents
+is 60 in all 10 runs, because its file declares only 60 residents
 (Equation~\ref{eq:eval:ceiling}). It sheltered all 60, so its $S$ of 1.000 is
 against this smaller denominator, and its
 completeness against the nominal 100 residents is \textbf{0.60}. We quote the
 nominal figure whenever this cell is compared with anything else. At 0.60, the baseline is below glm-5.2 (0.84) and deepseek-v4-pro
-(0.70). The cell differs from the others in two ways. First, the two systems
-ran different versions of the road closure. The baseline has no routing
+(0.70). The cell differs in two ways. First, the two systems
+ran different versions of the closure. The baseline has no routing
 command, so in its version a 60-bed shelter becomes unreachable, and the file
 leaves out the 40 residents who would have no bed. In the agentic
 version the closure only costs a detour, and
 both shelters stay reachable for all 100 (Section~\ref{sec:cs:disruptions}).
 Second,
 the baseline's file declares no world, so its drop-offs come from the script,
-and its score here does not depend on its orders
+and its score does not depend on its orders
 (Section~\ref{sec:crit:gate0}). We keep the recorded Gate~1 verdicts for the
-three \code{road_closure} cells, but we do not read them as a like-for-like
-comparison.
+three \code{road_closure} cells, but do not read them as like-for-like.
 
 \textsuperscript{\dag} We added the qwen3.5 \code{closed_loop} cell under
 Amendment~13 to give that model a level reference
