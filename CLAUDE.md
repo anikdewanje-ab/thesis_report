@@ -187,7 +187,7 @@ scripts and their inputs in `data/`, and every figure needs a caption plus a
 
 The figure set is built (as of 2026-10-05). `pics/` holds TikZ diagrams
 (`ag-architecture`, `ag-engine`, `cs-storyline`, `data-backbone`,
-`data-tables`, `method-gates`, `method-ladder`, `ui-dataflow`, `wf-cycle`),
+`data-tables`, `method-gates`, `ui-dataflow`, `wf-cycle`),
 the plotted PDFs (`results-forest-rd`, `results-delivery-histogram`,
 `results-rubric-split`, `results-commitment-scatter`, `critique-regret`) and
 two UI screenshots. Plot scripts and their CSV inputs are in `data/`. The

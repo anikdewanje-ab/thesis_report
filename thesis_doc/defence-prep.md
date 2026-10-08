@@ -51,7 +51,7 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 9 | Agentic system | The model proposes a step and a plan; the runtime owns time, validation and the audit row. Replanning is any rewrite of the step (echo, splice, supersede), not a separate module | Bus-Driver-1 walkthrough, or the replanning cases as a small table | draft |
 | 10 | Observation interface | We can watch a live agentic run on the map and open the full prompt and answer behind any single decision (the baseline has no live view) | UI screenshot (Fig. `fig:ui:main`); tick drawer (Fig. `fig:ui:tick`) as backup | draft |
 | 11 | Evaluation method | Three gates read in order: a system that loses residents has lost, however fast it was | Three-gates diagram (Fig. `fig:eval:gates`) | draft |
-| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (`pics/method-ladder.tex`, slide only, no longer in the thesis) | draft |
+| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (`pics/method-ladder.tex`, slide only, deleted 2026-10-08, restore with `git show ebc49e0:pics/method-ladder.tex`) | draft |
 | 12b | Validity (backup only) | Chapter dropped from the report on 2026-10-02. Keep the parity points below as backup answers; in the text they now live in Sec. `sec:wf:fleet`, `sec:wf:world` and `sec:crit:limitations` | none | dropped |
 | 13 | Results: anticipated | H1 is rejected: non-inferiority holds in 1 of 8 anticipated cells | Anticipated-arm table | todo |
 | 14 | Results: novel disruption | H2 is rejected outright: the baseline wins survival in every novel cell | Forest plot of the 15 risk differences | todo |
@@ -173,7 +173,7 @@ traces to `thesis-pack/00-start-here/RESULTS.md`, which is authoritative.
 - Sign-test floor: **0.0625** at five scenarios, **0.250** with two ties.
   qwen3.5 and glm-5.2 sit exactly on it.
 
-**From the validity chapter** (`inc/validity.tex`, drafted 2026-09-23, dropped
+**From the validity chapter** (`inc/validity.tex`, drafted 2026-09-23, deleted 2026-10-08 and in git at ebc49e0, dropped
 from the report 2026-10-02; kept as backup material for parity questions; source
 `thesis-pack/08-validity/PARITY.md`)
 
@@ -320,7 +320,7 @@ From the data architecture chapter:
 From the method and critique chapters:
 
 - [x] **The three gates** (`pics/method-gates.tex`, `fig:eval:gates`). Slide 11.
-- [x] **The level ladder** (`pics/method-ladder.tex`). Cut from the thesis on
+- [x] **The level ladder** (`pics/method-ladder.tex`, in git at ebc49e0). Cut from the thesis on
       2026-10-02 (it restated the equation), still good for slide 12.
 - [x] **Null-policy regret, helped / neutral / harmed** — built,
       `pics/critique-regret.pdf`, via `python data/scripts/plot_regret.py`,

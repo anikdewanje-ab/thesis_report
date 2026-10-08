@@ -424,7 +424,7 @@ the setup of a run cannot be separated from the run.
 \paragraph{Seeded, but not reproducible.} Every model call receives a seed that
 is derived from the scenario, the time scale and the replicate number. The seed
 is logged. A seeded call to a language model is still only close to
-deterministic, because batching and cache state inside the inference server
+deterministic, because batching and GPU configuration inside the inference server
 change the sampling \parencite{yuan2025}. We therefore claim that runs are seeded and logged, not
 that they can be reproduced at the level of each model answer. This is also why
 every cell is repeated (Section~\ref{sec:eval:analysis}). Models served from a
