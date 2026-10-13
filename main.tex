@@ -62,7 +62,14 @@
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
 
 % --- Cross-references (load LAST) ---------------------------------
-\usepackage[breaklinks,colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
+% main-print.tex defines \printversion before loading this file. The print
+% version sets every link in black, so only the title logo and the figures
+% carry colour. Links stay clickable in both PDFs.
+\ifdefined\printversion
+  \usepackage[breaklinks,hidelinks]{hyperref}
+\else
+  \usepackage[breaklinks,colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue,filecolor=blue]{hyperref}
+\fi
 
 % --- Bibliography (biblatex, bibtex backend so Tectonic runs it) ---
 % Alphabetic labels ([BHG87]) as in the TU Ilmenau template. DOI and ISBN

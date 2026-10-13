@@ -249,3 +249,23 @@ not a limit.
   chapter's one key message, any figure worth showing on a slide, numbers worth
   quoting, and any examiner question the chapter invites. Keep it current as we
   go, not at the end.
+
+## Defence presentation
+
+- The slides are `Thesis_presentation/defence.tex` (Metropolis, 16:9). Build
+  from that folder with `tectonic -X compile defence.tex`. It inputs the TikZ
+  files from `pics/` directly, so slides and report share one drawing.
+  `demo.tex` is the theme's own example and is not part of the talk.
+- The spoken script is the claude.ai doc **"Defence Speech, Slide by Slide"**:
+  <https://claude.ai/code/artifact/85547c24-0d48-4b47-9b80-07a5b470d9b1>
+  It has one speech per slide, numbered as the slide counter shows, plus a
+  table of short answers for the backup slides.
+- **Standing rule (2026-10-13): every change to the presentation must also
+  update the Defence Speech in the same session.** When a slide is added,
+  removed, reordered, retitled or changes its content, edit the matching
+  speech so the two never disagree, and renumber the speeches if slide numbers
+  move. A new backup slide gets a row in the backup table. Read the doc first,
+  because the author may have edited it. Say in the reply what changed in both.
+- The speech follows the same writing rules as the report: plain B2 English,
+  short sentences, "we" for the work, no "—" dash, and every number from
+  RESULTS.md.

@@ -1,0 +1,44 @@
+% The Recovery-Outcome Level on the completeness axis, with the sensitivity
+% cuts. Source: EVALUATION_PROTOCOL sec.6 and sec.6.3, thresholds.py.
+% Input from inc/evaluation.tex, Section "Recovery-Outcome Level".
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=11cm, y=1cm,
+  band/.style={draw, thick, minimum height=1cm, align=center, font=\footnotesize},
+  lab/.style={font=\footnotesize},
+]
+  % Bands on the completeness axis C in [0, 1).
+  \draw[band, fill=red!18]    (0.00,0) rectangle (0.10,1);
+  \draw[band, fill=orange!18] (0.10,0) rectangle (0.50,1);
+  \draw[band, fill=yellow!22] (0.50,0) rectangle (1.00,1);
+  \node[lab, align=center] at (0.05,0.5) {\textbf{0}};
+  \node[lab, align=center] at (0.30,0.5) {\textbf{1} \ major loss};
+  \node[lab, align=center] at (0.75,0.5) {\textbf{2} \ partial};
+  \node[lab, above] at (0.05,1.0) {collapse};
+
+  % The point C = 1.00, split by bus-km against the clean-run reference.
+  \draw[band, fill=green!12] (1.04,0.52) rectangle (1.30,1.12);
+  \draw[band, fill=green!30] (1.04,-0.12) rectangle (1.30,0.48);
+  \node[lab, align=center] at (1.17,0.82) {\textbf{3} \ degraded\\[-2pt] $K > 1.25\,K^\ast$};
+  \node[lab, align=center] at (1.17,0.18) {\textbf{4} \ efficient\\[-2pt] $K \leq 1.25\,K^\ast$};
+  \draw[-{Stealth[length=2mm]}, thick] (1.00,0.5) -- (1.04,0.5);
+  \node[lab, above] at (1.17,1.12) {$C = 1.00$};
+
+  % Axis and ticks.
+  \draw[-{Stealth[length=2mm]}] (0,-0.35) -- (1.02,-0.35) node[right, lab] {$C$};
+  \foreach \x/\t in {0/0, 0.10/0.10, 0.50/0.50, 1.00/1.00}
+    \draw (\x,-0.28) -- (\x,-0.42) node[below, lab] {\t};
+
+  % Sensitivity cuts for the level-1/2 boundary.
+  \foreach \x in {0.40, 0.60}
+    \draw[dashed, gray!70!black] (\x,-0.1) -- (\x,1.25);
+  \node[lab, text=gray!40!black, align=center] at (0.50,1.55)
+    {sensitivity cuts 0.40 / 0.50 / 0.60};
+\end{tikzpicture}
+\caption[The Recovery-Outcome Level]{The Recovery-Outcome Level $L$ as a
+function of valid completeness $C$. Levels 0 to 2 are read off $C$ alone.
+Only a complete run ($C = 1.00$) is split, by its bus-kilometres $K$ against
+the clean-run reference $K^\ast$. The dashed lines mark the alternative
+level-1/2 cuts used in the sensitivity check.}
+\label{fig:eval:ladder}
+\end{figure}

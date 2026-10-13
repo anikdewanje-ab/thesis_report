@@ -28,3 +28,6 @@ Thumbs.db
 # which that repository deliberately keeps out of git. Rebuild the folder
 # rather than editing it; see thesis-pack/README.md.
 thesis-pack/
+
+# Per-chapter PDFs split from main.pdf (build products).
+chapter-pdfs/

@@ -37,6 +37,12 @@ abstract.
 
 Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 
+The deck is `Thesis_presentation/defence.tex` (Metropolis, 16:9, built with
+`tectonic -X compile defence.tex` from that folder). It inputs the TikZ files
+from `pics/` directly, so slides and report show the same drawings. Each
+slide carries its key message as a beamer `
+ote`.
+
 | # | Slide | Key message (one sentence) | Visual to show | Status |
 |---|-------|----------------------------|----------------|--------|
 | 1 | Title | Who I am, title, supervisors | TU logo | draft |
@@ -51,16 +57,16 @@ Each row becomes one slide. Keep the "key message" to a single spoken sentence.
 | 9 | Agentic system | The model proposes a step and a plan; the runtime owns time, validation and the audit row. Replanning is any rewrite of the step (echo, splice, supersede), not a separate module | Bus-Driver-1 walkthrough, or the replanning cases as a small table | draft |
 | 10 | Observation interface | We can watch a live agentic run on the map and open the full prompt and answer behind any single decision (the baseline has no live view) | UI screenshot (Fig. `fig:ui:main`); tick drawer (Fig. `fig:ui:tick`) as backup | draft |
 | 11 | Evaluation method | Three gates read in order: a system that loses residents has lost, however fast it was | Three-gates diagram (Fig. `fig:eval:gates`) | draft |
-| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (`pics/method-ladder.tex`, slide only, deleted 2026-10-08, restore with `git show ebc49e0:pics/method-ladder.tex`) | draft |
+| 12 | Metrics | One ordinal ladder over valid completeness, every cut justified before the runs | Level-ladder diagram (`Thesis_presentation/figs/method-ladder.tex`, restored from `ebc49e0`) | draft |
 | 12b | Validity (backup only) | Chapter dropped from the report on 2026-10-02. Keep the parity points below as backup answers; in the text they now live in Sec. `sec:wf:fleet`, `sec:wf:world` and `sec:crit:limitations` | none | dropped |
 | 13 | Results: anticipated | H1 is rejected: non-inferiority holds in 1 of 8 anticipated cells | Anticipated-arm table | todo |
-| 14 | Results: novel disruption | H2 is rejected outright: the baseline wins survival in every novel cell | Forest plot of the 15 risk differences | todo |
+| 14 | Results: novel disruption | H2 fails: the baseline wins survival on all five novel disruptions, and no cell shows superiority | Forest plot of the 15 risk differences | todo |
 | 14b | Why it lost | Leading hypothesis: a commitment failure. Comprehension not measured; live field agents (deviation 7) are an unseparated rival. In the report this is Ch. 11 (`sec:disc:mechanism`), moved there from the methods critique on 2026-10-05 | Quantised delivery histogram + ruled-out table (`tab:disc:ruledout`) | todo |
 | 14c | The test could not be lost | Ignoring the disruption scored the ceiling, so the baseline's 1.000 is the null policy's score, and the agentic system lost to doing nothing | Gate 0 table (`tab:crit:gate0`) + regret bars (`pics/critique-regret.pdf`, slide only) | draft |
 | 15 | Trade-offs | Baseline wins on speed and cost, and it also won the primary outcome | Coordination-surface table | todo |
 | 15b | Design considerations (RQ3) | Commit before re-planning, confirm delivery, make the disruption change the world, and run Gate 0 before the campaign | Four-line list, each with its number (90 % to 32 %; 93.8 % closure; byte-identical control); reuse the plan-revision figure | draft |
-| 16 | Contributions and limits | Two contributions, honest scope | Bullet list | todo |
-| 17 | Conclusion | The agents read the situation correctly but did not keep a plan once it was moving; the next experiment is the commitment-constrained variant | Three RQ answers in one box, then the ranked future-work list (variant first) | draft |
+| 16 | Contributions and limits | Four contributions: the artefact, the negative comparison, the diagnosis, the method | Bullet list | todo |
+| 17 | Conclusion | Messages worked and missions were dispatched, but committed legs were not carried through (comprehension not measured); the next experiment is the commitment-constrained variant | Three RQ answers in one box, then the ranked future-work list (variant first) | draft |
 
 ---
 
